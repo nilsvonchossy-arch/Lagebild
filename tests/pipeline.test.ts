@@ -203,3 +203,30 @@ describe('Normalisierung', () => {
     expect(normalizeVerdict('???')).toBe('nicht_belegt');
   });
 });
+
+describe('Ablage', () => {
+  it('schreibt den Index und räumt altes Audio samt Verweisen auf', async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const { pruneAudio, writeIndex, previousHeadlines, writeJSON } = await import('../pipeline/store');
+    const out = mkdtempSync(join(tmpdir(), 'lagebild-'));
+    const line = (src: string) => ({ role: 'LAGE' as const, text: 't', audio: { src, dur: 1 } });
+    const day = (date: string, headline: string) => ({
+      schema: 1, date, generated: `${date}T07:00:00+01:00`, categories: [],
+      intro: { morning: line('a'), day: line('b'), evening: line('c') }, outro: [line('d')],
+      stories: [{ id: 'x', category: 'k', topic: 'T', country: 'DEU', label: 'B', flag: '', lon: 0, lat: 0, zoom: 2, headline, brief: 'b', source: { name: 'Q', url: 'https://q.de', date }, short: 's', opener: line('e'), lines: [line('f')] }]
+    });
+    writeJSON(join(out, '2026-10-01.json'), day('2026-10-01', '[Alt] Meldung'));
+    writeJSON(join(out, '2026-10-27.json'), day('2026-10-27', '[Gestern] Meldung'));
+    for (const d of ['2026-10-01', '2026-10-27']) { mkdirSync(join(out, 'audio', d), { recursive: true }); writeFileSync(join(out, 'audio', d, 'x.mp3'), ''); }
+    const idx = writeIndex(out, 'jetzt');
+    expect(idx.days.map(d => d.date)).toEqual(['2026-10-27', '2026-10-01']);
+    expect(previousHeadlines(out, '2026-10-28')).toEqual(['Gestern Meldung']);
+    expect(pruneAudio(out, '2026-10-28', 14)).toEqual(['2026-10-01']);
+    expect(existsSync(join(out, 'audio', '2026-10-01'))).toBe(false);
+    expect(existsSync(join(out, 'audio', '2026-10-27'))).toBe(true);
+    expect(readFileSync(join(out, '2026-10-01.json'), 'utf8')).not.toContain('"audio"');
+    expect(readFileSync(join(out, '2026-10-27.json'), 'utf8')).toContain('"audio"');
+  });
+});

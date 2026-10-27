@@ -1,7 +1,7 @@
 // Ablage im Daten-Branch: ein JSON pro Tag, ein Index fürs Archiv, Audio nur für die letzten Tage.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Briefing, DayIndex } from '../src/shared/types.ts';
+import type { Briefing, DayIndex, Line } from '../src/shared/types.ts';
 import { SCHEMA_VERSION } from '../src/shared/types.ts';
 
 const DAY = /^(\d{4}-\d{2}-\d{2})\.json$/;
@@ -40,7 +40,15 @@ export function previousHeadlines(out: string, date: string): string[] {
   return b?.stories.map(s => s.headline.replace(/[[\]]/g, '')) ?? [];
 }
 
-/** Audio älter als `keepDays` löschen (die Texte bleiben im Archiv). */
+/** Alle Zeilen eines Tages (Begrüßung, Meldungen, Märkte, Schluss). */
+export function allLines(b: Briefing): Line[] {
+  return [b.intro.morning, b.intro.day, b.intro.evening, ...b.stories.flatMap(s => [s.opener, ...s.lines]), ...(b.markets ? [b.markets.opener, ...b.markets.lines] : []), ...b.outro];
+}
+
+/**
+ * Audio älter als `keepDays` löschen. Die Texte bleiben im Archiv; die Verweise auf die MP3s werden
+ * entfernt, damit die App bei alten Tagen gleich die Systemstimme nimmt.
+ */
 export function pruneAudio(out: string, today: string, keepDays: number): string[] {
   const dir = join(out, 'audio');
   if (!existsSync(dir)) return [];
@@ -50,6 +58,11 @@ export function pruneAudio(out: string, today: string, keepDays: number): string
     if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d < limit) {
       rmSync(join(dir, d), { recursive: true, force: true });
       removed.push(d);
+      const b = readJSON<Briefing>(dayPath(out, d));
+      if (b) {
+        for (const l of allLines(b)) delete l.audio;
+        writeJSON(dayPath(out, d), b);
+      }
     }
   }
   return removed;
