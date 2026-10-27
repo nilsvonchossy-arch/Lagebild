@@ -14,7 +14,9 @@ const SYMBOLS: (Omit<MarketItem, 'value' | 'changePct' | 'date'> & { symbol: str
   { id: 'btc', name: 'Bitcoin', symbol: 'BTC-USD', dec: 0, unit: '$' }
 ];
 
-interface Chart { chart: { result?: { timestamp?: number[]; indicators: { quote: { close: (number | null)[] }[] } }[] } }
+interface Chart {
+  chart: { result?: { meta?: { regularMarketPrice?: number; regularMarketTime?: number }; timestamp?: number[]; indicators: { quote: { close: (number | null)[] }[] } }[] };
+}
 
 const berlinDate = (ts: number): string => new Date(ts * 1000).toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' });
 
@@ -26,6 +28,12 @@ async function quote(s: (typeof SYMBOLS)[number]): Promise<MarketItem | null> {
     const ts = r?.timestamp ?? [];
     const closes = r?.indicators.quote[0]?.close ?? [];
     const valid = ts.map((t, i) => ({ t, c: closes[i] })).filter((x): x is { t: number; c: number } => typeof x.c === 'number');
+    // Die letzte Tageskerze hat manchmal noch keinen Schlusskurs; dann gilt der letzte Kurs aus den Metadaten
+    const meta = r?.meta;
+    const tail = valid[valid.length - 1];
+    if (meta?.regularMarketPrice && meta.regularMarketTime && (!tail || (meta.regularMarketTime > tail.t && berlinDate(meta.regularMarketTime) !== berlinDate(tail.t)))) {
+      valid.push({ t: meta.regularMarketTime, c: meta.regularMarketPrice });
+    }
     const last = valid[valid.length - 1];
     const prev = valid[valid.length - 2];
     if (!last || !prev) return null;
