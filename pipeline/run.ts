@@ -7,6 +7,7 @@
 import { appendFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
+import Anthropic from '@anthropic-ai/sdk';
 import pipelineCfg from '../config/pipeline.json' with { type: 'json' };
 import quellenJson from '../config/quellen.json' with { type: 'json' };
 import themenJson from '../config/themen.json' with { type: 'json' };
@@ -114,8 +115,11 @@ async function buildOne(claude: Claude, sel: Selection, cands: Map<number, Candi
       const sourceName = a.siteName && a.siteName.length <= 40 ? a.siteName : c.source;
       return { sel, topic, article: a, sourceName, published: c.published, draft: checked.draft, place };
     } catch (e) {
-      if (e instanceof RefusalError) { slog.attempts.push({ url: c.url, result: e.message }); continue; }
-      throw e;
+      // Falscher Schlüssel oder fehlendes Guthaben: sofort abbrechen; alles andere kostet nur diese Quelle
+      if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) throw e;
+      if (e instanceof Anthropic.BadRequestError && /credit|billing/i.test(e.message)) throw e;
+      slog.attempts.push({ url: c.url, result: e instanceof RefusalError ? e.message : `Fehler: ${(e as Error).message}` });
+      continue;
     }
   }
   slog.result ||= 'keine nutzbare Quelle';
@@ -147,7 +151,7 @@ async function produce(claude: Claude, selections: Selection[], cands: Candidate
   };
   // Erst die besten parallel, dann Reserven der Reihe nach, bis genug Meldungen da sind
   const first = queue.slice(0, want);
-  results.push(...(await pool(first, 3, s => buildOne(claude, s, byId, mkLog(s)))));
+  results.push(...(await pool(first, 2, s => buildOne(claude, s, byId, mkLog(s)))));
   for (const s of queue.slice(want)) {
     if (results.filter(Boolean).length >= want) break;
     results.push(await buildOne(claude, s, byId, mkLog(s)));

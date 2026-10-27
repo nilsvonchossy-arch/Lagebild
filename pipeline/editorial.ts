@@ -104,13 +104,17 @@ export const WriteSchema = z.object({
   headline: z.string(),
   brief: z.string(),
   figure: z.object({ value: z.number(), decimals: z.number().int(), prefix: z.string(), suffix: z.string(), label: z.string() }).nullable(),
-  lines: z.array(z.object({ role: z.enum(['LAGE', 'EINORDNUNG']), text: z.string(), say: z.string().nullable() })),
+  lines: z.array(z.object({ role: z.string().describe('LAGE oder EINORDNUNG'), text: z.string(), say: z.string().nullable() })),
   opener: z.object({ first: z.string(), mid: z.string(), last: z.string() }),
   short: z.string(),
   place: z.object({ label: z.string(), country_iso3: z.string(), lon: z.number(), lat: z.number() }),
   source_date: z.string().nullable()
 });
-export type Draft = z.infer<typeof WriteSchema>;
+type RawDraft = z.infer<typeof WriteSchema>;
+export type Draft = Omit<RawDraft, 'lines'> & { lines: { role: 'LAGE' | 'EINORDNUNG'; text: string; say: string | null }[] };
+
+/** Rollen vereinheitlichen („Lage“, „Einordnung:“ …); das SDK prüft Auswahlwerte erst nach der Antwort. */
+export const normalizeRole = (r: string): 'LAGE' | 'EINORDNUNG' => (/einord/i.test(r) ? 'EINORDNUNG' : 'LAGE');
 
 export function writePrompt(a: Article, meta: { topic: string; category: string; title: string; source: string; date: string | null }): string {
   return `Thema: ${meta.topic} (Kategorie ${meta.category})
@@ -124,8 +128,10 @@ ${a.title ? `${a.title}\n\n` : ''}${a.text}
 >>>`;
 }
 
-export const writeStory = (claude: Claude, a: Article, meta: Parameters<typeof writePrompt>[1]): Promise<Draft> =>
-  claude.ask(`Schreiben „${meta.title}“`, WRITE_SYSTEM, writePrompt(a, meta), WriteSchema);
+export async function writeStory(claude: Claude, a: Article, meta: Parameters<typeof writePrompt>[1]): Promise<Draft> {
+  const raw = await claude.ask(`Schreiben „${meta.title}“`, WRITE_SYSTEM, writePrompt(a, meta), WriteSchema);
+  return { ...raw, lines: raw.lines.map(l => ({ ...l, role: normalizeRole(l.role) })) };
+}
 
 /* ---------- 3. Faktencheck ---------- */
 
@@ -144,12 +150,19 @@ Bei belegt sind problem und correction null.`;
 export const VerifySchema = z.object({
   items: z.array(z.object({
     id: z.string().describe('headline, brief, figure, short, line1, line2, …'),
-    verdict: z.enum(['belegt', 'teilweise', 'nicht_belegt']),
+    verdict: z.string().describe('belegt, teilweise oder nicht_belegt'),
     problem: z.string().nullable(),
     correction: z.string().nullable()
   }))
 });
-export type Verdict = z.infer<typeof VerifySchema>['items'][number];
+export interface Verdict { id: string; verdict: 'belegt' | 'teilweise' | 'nicht_belegt'; problem: string | null; correction: string | null }
+
+export const normalizeVerdict = (v: string): Verdict['verdict'] => (/nicht/i.test(v) ? 'nicht_belegt' : /teil/i.test(v) ? 'teilweise' : /beleg/i.test(v) ? 'belegt' : 'nicht_belegt');
+
+async function check(claude: Claude, label: string, a: Article, d: Draft): Promise<Verdict[]> {
+  const out = await claude.ask(label, VERIFY_SYSTEM, verifyPrompt(a, d), VerifySchema);
+  return out.items.map(v => ({ ...v, id: v.id.trim().toLowerCase(), verdict: normalizeVerdict(v.verdict) }));
+}
 
 export function verifyPrompt(a: Article, d: Draft): string {
   const fig = d.figure ? `${d.figure.prefix}${d.figure.value}${d.figure.suffix} (${d.figure.label})` : '(keine)';
@@ -204,12 +217,12 @@ export function applyVerdicts(d: Draft, items: Verdict[]): Checked & { changed: 
 
 /** Faktencheck; nach Korrekturen wird ein zweites Mal geprüft, was dann noch fehlt, fliegt raus. */
 export async function verifyStory(claude: Claude, a: Article, d: Draft, label: string): Promise<Checked> {
-  const first = await claude.ask(`Prüfen „${label}“`, VERIFY_SYSTEM, verifyPrompt(a, d), VerifySchema);
-  const r1 = applyVerdicts(d, first.items);
+  const first = await check(claude, `Prüfen „${label}“`, a, d);
+  const r1 = applyVerdicts(d, first);
   if (!r1.draft || !r1.changed) return r1;
-  const second = await claude.ask(`Nachprüfen „${label}“`, VERIFY_SYSTEM, verifyPrompt(a, r1.draft), VerifySchema);
+  const second = await check(claude, `Nachprüfen „${label}“`, a, r1.draft);
   // Beim zweiten Durchgang keine weiteren Korrekturen: Unbelegtes wird gestrichen
-  const strict = second.items.map(v => ({ ...v, correction: null }));
+  const strict = second.map(v => ({ ...v, correction: null }));
   const r2 = applyVerdicts(r1.draft, strict);
   return { draft: r2.draft, issues: [...r1.issues, ...r2.issues.map(i => `2. Prüfung: ${i}`)] };
 }

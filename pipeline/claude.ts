@@ -30,8 +30,18 @@ export class Claude {
     this.effort = effort;
   }
 
-  /** Eine Anfrage mit festem System-Prompt (wird gecacht) und strukturierter Antwort. */
+  /** Eine Anfrage mit festem System-Prompt (wird gecacht) und strukturierter Antwort; bei Formatfehlern ein zweiter Versuch. */
   async ask<S extends z.ZodType>(label: string, system: string, user: string, schema: S, maxTokens = 16000): Promise<z.infer<S>> {
+    try {
+      return await this.askOnce(label, system, user, schema, maxTokens);
+    } catch (e) {
+      if (e instanceof RefusalError || e instanceof Anthropic.APIError) throw e;
+      log(`${label}: ${(e as Error).message} – zweiter Versuch`);
+      return this.askOnce(label, system, user, schema, maxTokens);
+    }
+  }
+
+  private async askOnce<S extends z.ZodType>(label: string, system: string, user: string, schema: S, maxTokens: number): Promise<z.infer<S>> {
     const fallback = FALLBACK_MODELS.has(this.model);
     const res = await this.client.beta.messages.parse({
       model: this.model,

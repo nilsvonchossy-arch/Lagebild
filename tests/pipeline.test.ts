@@ -191,3 +191,15 @@ describe('Marktdaten', () => {
     expect(lines[1]!.say).toContain('S und P 500');
   });
 });
+
+describe('Normalisierung', () => {
+  it('vereinheitlicht Rollen und Prüfergebnisse', async () => {
+    const { normalizeRole, normalizeVerdict } = await import('../pipeline/editorial');
+    expect(normalizeRole('Einordnung')).toBe('EINORDNUNG');
+    expect(normalizeRole('LAGE:')).toBe('LAGE');
+    expect(normalizeVerdict('Belegt')).toBe('belegt');
+    expect(normalizeVerdict('nicht belegt')).toBe('nicht_belegt');
+    expect(normalizeVerdict('teilweise belegt')).toBe('teilweise');
+    expect(normalizeVerdict('???')).toBe('nicht_belegt');
+  });
+});
