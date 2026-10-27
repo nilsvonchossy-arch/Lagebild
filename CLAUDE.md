@@ -16,6 +16,9 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine
 - **Flüssigkeit:** Der Globus wird in einen Zwischenspeicher gezeichnet und nur bei Kamerabewegung neu berechnet; unsichtbare Flächen werden übersprungen.
 - **Themen:** `config/themen.json`, bearbeitbar in der App (Einstellungen). Gespeichert wird per GitHub-API mit einem Fine-grained Token, der nur auf dem iPad liegt.
 - **Pipeline:** `pipeline/run.ts`, gestartet von `.github/workflows/update.yml` (ab 6:45 Uhr Berlin, Wiederholungen bis 8:45). Schritte: `sources.ts` (RSS + GDELT) → `editorial.ts` (Auswahl, Schreiben, Faktencheck mit Claude) → `extract.ts` (Volltext) → `geo.ts` (Ort, Zoom) → `assemble.ts` → `tts.ts` (Azure) → `store.ts`. Einstellungen in `config/pipeline.json`.
+- **Querformat:** Ab 900 px Breite (iPad quer) steht der Globus links, Untertitel, Karte und Steuerung rechts (`#app.wide`, Ziele des Globus rechnet `measure()` in `main.ts`).
+- **Recherche:** 59 RSS-Feeds (`config/quellen.json`). Die Suchbegriffe aller Themen werden zusätzlich auf alle Feed-Artikel angewendet, damit wirken auch eigene Themen ohne eigene Feeds. GDELT nur für Themen mit zu wenig Treffern (drosselt geteilte GitHub-Server).
+- **Marktdaten:** `pipeline/markets.ts` holt Kurse (Yahoo Finance) und baut die gesprochenen Sätze ohne KI aus den Zahlen. In der App ein eigener Abschnitt nach den Meldungen.
 - **Daten:** Branch `daten` mit `JJJJ-MM-TT.json`, `index.json`, `audio/` (14 Tage) und `logs/` (Kosten, verworfene Meldungen und Prüfprotokoll). Der Branch wird bei jedem Lauf als einzelner Commit neu geschrieben, damit das Repo nicht wächst. Ohne Daten zeigt die App `public/demo/2026-10-27.json`.
 - **Befehle:** `npm run dev`, `npm run build`, `npm test`, `npm run typecheck`, `npm run update`, `npm run check-feeds`.
 
@@ -35,8 +38,10 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine
 4. Feinschliff: Querformat am iPad, flüssigere Übergänge, Steuerung über den Sperrbildschirm.
 
 ## Bekannte Probleme
-- Die Systemstimme klingt je nach Gerät blechern (wird durch Azure ersetzt).
-- Die Meldungen sind noch statisch (Demo), bis die Pipeline läuft.
+- Claude- und Azure-Teil der Pipeline sind erst live getestet, wenn die Schlüssel eingetragen sind (`docs/einrichtung.md`). Bis dahin überspringt der tägliche Lauf das Update mit einer Warnung, und der Deploy überspringt sich, solange GitHub Pages aus ist.
+- Times of Israel und AP sperren GitHub-Server (403), dafür Jerusalem Post. Feeds prüfen: Workflow „Tages-Update“ mit `check-feeds`, neue Adressen testen mit `probe`.
+- Das Claude-SDK reicht Auswahlwerte (enum) nur als Beschreibung an das Modell weiter; Rollen und Prüfergebnisse werden deshalb im Code normalisiert.
+- Ohne Audiodatei (Archiv älter als 14 Tage, Azure-Kontingent leer) spricht die Systemstimme des Geräts.
 
 ## Datenschema (`src/shared/types.ts`, Version 1)
 Ein Tag ist ein `Briefing`; Kategorien bringen ihre Farben mit, damit ältere Tage im Archiv gleich aussehen.
