@@ -8,46 +8,63 @@ Ich will TikTok deinstallieren und trotzdem jeden Tag auf dem neuesten Stand ble
 - Meldungen dürfen nur Fakten aus der verlinkten Quelle enthalten. Nichts dazuerfinden und keine eigene Interpretation als Fakt ausgeben. Jede Meldung braucht Quelle, URL und Datum.
 - Nur den Stil der Vorbilder übernehmen, nicht ihre Inhalte und nicht ihr Militär-Drama. Keine Videoclips aus unklarer Quelle.
 
-## Stand (27.10.2026)
-Der Prototyp ist in einem Claude-Chat entstanden: `index.html`. Es ist eine einzelne Datei ohne Build-Schritt, die man direkt im Browser öffnen kann.
-- **Globus:** D3 v7 von cdnjs, orthografische Projektion auf einem Canvas. Die Weltkarte kommt aus `datamaps@0.5.9` (`Datamap.prototype.worldTopo`), weil die Artifact-Umgebung Daten nur per Script-Tag laden durfte. Dafür gibt es einen eigenen kleinen TopoJSON-Decoder (`topoFeatures`).
-- **Ablauf pro Meldung:** BRIEFING-Satz während der Kamerafahrt → Land wird hervorgehoben → Pin mit Linie zur Karte → Karte baut sich auf → Zeilen mit den Rollen LAGE und EINORDNUNG. Dazu Intro mit Glitch, Datum und Begrüßung sowie ein Outro mit Zusammenfassung und Endbildschirm samt Quellenliste.
-- **Stimme:** Web Speech API (`speechSynthesis`), also die Systemstimme des Geräts. Untertitel mit Schreibmaschinen-Effekt. Ohne Stimme läuft ein Timer-Modus.
-- **Ton:** WebAudio, ein leiser Bass-Teppich und ein Blip, wenn die Karte erscheint.
-- **Einstellungen** (in localStorage): Themen (8 Ressorts), Stimme, Tempo, Atmo-Sound.
-- **Inhalte:** Fünf Meldungen vom 27.10.2026 sind fest im Objekt `DATA` eingebaut.
+## Stand
+Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) wird eine richtige App. Den Fortschritt halte ich hier fest.
+- **App:** Vite + TypeScript ohne Framework, Module in `src/`: `globe.ts` (Canvas, Kamerafahrt, Pin), `player.ts` (Ablauf Intro → Meldungen → Outro), `card.ts`, `fx.ts` (Entschlüsseln, Hochzählen, Untertitel), `audio.ts` (Bass-Teppich, Stimme), `main.ts` (Oberfläche).
+- **Weltkarte:** lokal aus `world-atlas` (110m für den Globus, 50m wird nachgeladen und bei engem Ausschnitt gezeichnet). `src/geo/countries.json` übersetzt ISO-3 in die Zahlencodes von world-atlas (erzeugt mit `npm run gen:countries`).
+- **Flüssigkeit:** Der Globus wird in einen Zwischenspeicher gezeichnet und nur bei Kamerabewegung neu berechnet; unsichtbare Flächen werden übersprungen.
+- **Stimme:** vorproduzierte MP3s pro Zeile (kommt mit der Pipeline), Systemstimme als Rückfallebene, sonst Timer-Modus. Untertitel laufen synchron zur Audioposition.
+- **Daten:** `data/JJJJ-MM-TT.json` und `data/index.json` kommen beim Deploy aus dem Branch `daten`. Bis dahin zeigt die App `public/demo/2026-10-27.json` (die fünf Prototyp-Meldungen).
+- **Befehle:** `npm run dev`, `npm run build`, `npm test`, `npm run typecheck`.
+
+## Entscheidungen (27.10.2026)
+- **Hosting:** Repo öffentlich, GitHub Pages, Deploy per GitHub Actions. Als PWA auf dem iPad-Homescreen.
+- **Stimme:** Azure Speech (Gratis-Kontingent F0), zwei Stimmen: eine für BRIEFING, eine für LAGE und EINORDNUNG.
+- **Claude-Modell:** Erst Opus 5.5, Sonnet 5.5 und Haiku 5.5 auf denselben Artikeln vergleichen, dann entscheide ich.
+- **Uhrzeit:** Update um 8:00 Uhr fertig (Europe/Berlin).
+- **Themen:** 5 Kategorien: Geopolitik & Sicherheit (USA-Politik, Nahost, Russland/Ukraine & NATO, China & Taiwan), Deutschland, Wirtschaft & Märkte (Wirtschaft, Marktanalyse), KI & Technologie (KI-Neuentwicklungen, KI & Arbeit, KI-Risiken & Regulierung, Cybersicherheit), Wissenschaft & Klima. Jede Meldung bekommt eine Relevanz 1–5. Eigene Themen kann ich im Interface hinzufügen; sie steuern die Recherche.
+- **Quellen:** deutsche und internationale Medien gemischt, nur frei lesbare Artikel (der Faktencheck braucht den Volltext).
+- **Weiter offen:** Budget-Grenze für die API, sobald der Modellvergleich vorliegt.
+
+## Nächste Schritte
+1. PWA und Deploy auf GitHub Pages.
+2. Themen-Konfiguration (`config/themen.json`) und Themen-Editor im Interface.
+3. Pipeline (GitHub Actions): Recherche aus RSS und GDELT → Auswahl mit Relevanz → Volltext → Schreiben nur aus dem Quelltext → Faktencheck → JSON.
+4. Azure-Stimmen mit Wort-Zeitmarken.
+5. Täglicher Lauf um 8:00, Archiv, Marktdaten.
 
 ## Bekannte Probleme
-- Die Weltkarte von datamaps über das CDN wurde **nie live getestet**, nur mit einer synthetischen Testgeometrie. Das zuerst im Browser prüfen.
-- Die Systemstimme klingt je nach Gerät blechern.
-- Die Meldungen sind statisch und aktualisieren sich nicht.
+- Die Systemstimme klingt je nach Gerät blechern (wird durch Azure ersetzt).
+- Die Meldungen sind noch statisch (Demo), bis die Pipeline läuft.
 
-## Nächste Schritte (Vorschlag, noch nicht entschieden)
-1. Ein echtes Projekt aufsetzen (z. B. Vite und TypeScript), den Prototyp übernehmen und die Weltkarte lokal aus `world-atlas` (countries-110m) laden statt aus datamaps.
-2. Datenpipeline als täglicher Job (GitHub Actions cron oder Vercel Cron): Meldungen aus RSS-Feeds oder News-APIs nach meinen Themen holen, per Claude API im Schema unten zusammenfassen und als `data/YYYY-MM-DD.json` speichern.
-3. Stimme: Im Job pro Zeile Audio per TTS-API erzeugen (ElevenLabs oder OpenAI) und als MP3 ablegen. Das Untertitel-Timing ergibt sich aus der Audiolänge. Für BRIEFING eine zweite Stimme verwenden.
-4. Hosting als PWA (z. B. Vercel), damit es als Icon auf meinem iPad-Homescreen liegt.
-5. Die Themen-Einstellungen sollen schon die Recherche steuern, nicht nur nachträglich filtern.
-
-## Offene Entscheidungen (mich fragen)
-- Uhrzeit des täglichen Updates und finale Themenliste
-- Sprachdienst und Budget dafür (API-Kosten)
-- Hosting und welche News-Quellen und Feeds
-
-## Datenschema einer Meldung (wie in `DATA.stories`)
+## Datenschema (`src/shared/types.ts`, Version 1)
+Ein Tag ist ein `Briefing`; Kategorien bringen ihre Farben mit, damit ältere Tage im Archiv gleich aussehen.
 ```js
 {
+  schema: 1, date: '2026-10-27', generated: '2026-10-27T07:12:00+01:00',
+  categories: [{ id: 'geopolitik', name: 'Geopolitik & Sicherheit', color: '#ff7a3d' }],
+  intro: { morning: Line, day: Line, evening: Line },   // Begrüßung je nach Tageszeit
+  outro: [Line, …],                                       // Zusammenfassung, „Bis morgen.“
+  stories: [Story, …]
+}
+// Line
+{ role: 'BRIEFING' | 'LAGE' | 'EINORDNUNG', text: 'Untertitel', say: 'optional: abweichender Sprechtext',
+  audio: { src: 'audio/2026-10-28/israel-1.mp3', dur: 4.2, words: [[0.31, 0.12], …] } }  // [Sekunde, Anteil] am Wortende
+// Story
+{
   id: 'israel',
-  ressort: 'welt',              // Schlüssel aus RESSORTS
-  country: 'ISR',               // ISO-3-Code für die Hervorhebung des Landes
+  category: 'geopolitik',        // Kategorie-ID, bestimmt die Farbe
+  topic: 'Nahost-Konflikt',      // Anzeigename des Themas
+  relevance: 4,                  // 1–5, Einschätzung, kein Fakt
+  country: 'ISR',                // ISO-3-Code für die Hervorhebung
   label: 'ISRAEL', flag: '🇮🇱',
   lon: 35.21, lat: 31.77, zoom: 10,
   headline: '[Israel] wählt mit [Rekord]beteiligung',   // [..] = Akzentfarbe
   brief: 'Kurz gesagt-Absatz, 2–4 Sätze',
-  figure: { value: 55.7, dec: 1, prefix: '', suffix: ' %', label: 'Wahlbeteiligung um 16 Uhr' },
-  source: { name: 'Times of Israel', url: 'https://…' },
+  figure: { value: 55.7, dec: 1, prefix: '', suffix: ' %', label: 'Wahlbeteiligung um 16 Uhr' },  // optional
+  source: { name: 'Times of Israel', url: 'https://…', date: '2026-10-27' },
   short: 'Rekordbeteiligung in Israel',                 // für die Zusammenfassung im Outro
-  open: { first: '…', mid: '…', last: '…' },            // BRIEFING-Überleitung je nach Position
-  lines: [['LAGE', 'Untertitel', 'optional: abweichender Sprechtext'], ['EINORDNUNG', '…']]
+  opener: Line,                                         // BRIEFING-Überleitung vor der Meldung
+  lines: [Line, …]                                      // LAGE und EINORDNUNG
 }
 ```

@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "generated": "2026-10-27T17:40:00+01:00",
+  "note": "Demo mit den Prototyp-Meldungen vom 27.10.2026, aus den verlinkten Quellen zusammengefasst. Die täglichen Updates folgen, sobald die Pipeline läuft.",
+  "categories": [
+    { "id": "welt", "name": "Weltpolitik", "color": "#ff7a3d" },
+    { "id": "boerse", "name": "Wirtschaft & Börse", "color": "#f2bf45" },
+    { "id": "tech", "name": "Tech & KI", "color": "#4cc9ff" },
+    { "id": "oesterreich", "name": "Österreich", "color": "#ff4d5e" },
+    { "id": "europa", "name": "Europa", "color": "#8f9cff" }
+  ],
+  "intro": {
+    "morning": { "role": "BRIEFING", "text": "Guten Morgen. Hier ist dein Lagebild für Dienstag, den 27. Oktober. Heute: fünf Meldungen." },
+    "day": { "role": "BRIEFING", "text": "Guten Tag. Hier ist dein Lagebild für Dienstag, den 27. Oktober. Heute: fünf Meldungen." },
+    "evening": { "role": "BRIEFING", "text": "Guten Abend. Hier ist dein Lagebild für Dienstag, den 27. Oktober. Heute: fünf Meldungen." }
+  },
+  "outro": [
+    { "role": "BRIEFING", "text": "Das war dein Update: Rekordbeteiligung in Israel, Kursgewinne an der Wall Street, neue Macs von Apple, Druck auf das Penicillin-Werk in Kundl und kleinere Klassen in Frankreich." },
+    { "role": "BRIEFING", "text": "Bis morgen." }
+  ],
+  "stories": [
+    {
+      "id": "israel",
+      "category": "welt",
+      "topic": "Weltpolitik",
+      "country": "ISR",
+      "label": "ISRAEL",
+      "flag": "🇮🇱",
+      "lon": 35.21,
+      "lat": 31.77,
+      "zoom": 10,
+      "headline": "[Israel] wählt mit [Rekord]beteiligung",
+      "brief": "Bis 16 Uhr Ortszeit gaben 55,7 % ihre Stimme ab, so viele wie nie zuvor zu dieser Uhrzeit (2022: 47,5 %). Netanjahus Likud tritt gegen Gadi Eisenkots Partei Yashar an. Die Wahllokale schließen um 22 Uhr.",
+      "figure": { "value": 55.7, "dec": 1, "suffix": " %", "label": "Wahlbeteiligung um 16 Uhr" },
+      "source": { "name": "Times of Israel", "url": "https://timesofisrael.com/liveblog-october-27-2026", "date": "2026-10-27" },
+      "short": "Rekordbeteiligung in Israel",
+      "opener": { "role": "BRIEFING", "text": "Wir starten in Israel." },
+      "lines": [
+        { "role": "LAGE", "text": "Israel wählt heute ein neues Parlament, die Knesset." },
+        { "role": "LAGE", "text": "Bis 16 Uhr Ortszeit lag die Wahlbeteiligung bei 55,7 Prozent." },
+        { "role": "EINORDNUNG", "text": "Laut Wahlkomitee ist das der höchste Wert zu dieser Uhrzeit seit Beginn der Messungen 1973. 2022 waren es 47,5 Prozent." },
+        { "role": "EINORDNUNG", "text": "Hauptherausforderer von Premier Netanjahu ist Gadi Eisenkot. Die Wahllokale schließen um 22 Uhr." }
+      ]
+    },
+    {
+      "id": "wallstreet",
+      "category": "boerse",
+      "topic": "Wirtschaft & Börse",
+      "country": "USA",
+      "label": "NEW YORK",
+      "flag": "🇺🇸",
+      "lon": -74.01,
+      "lat": 40.71,
+      "zoom": 2.6,
+      "headline": "[KI]-Meldungen treiben die [Wall Street]",
+      "brief": "Am Montag stieg der Nasdaq um 0,8 % auf 26.169 Punkte, der S&P 500 um 0,7 %. Technologiewerte legten 1,7 % zu. Auslöser waren KI-Nachrichten: Meta will 95 Mrd. Dollar für KI-Infrastruktur aufnehmen, Anthropic hat den Börsengang beantragt.",
+      "figure": { "value": 0.8, "dec": 1, "prefix": "+", "suffix": " %", "label": "Nasdaq am Montag" },
+      "source": { "name": "Zacks via Yahoo Finance", "url": "https://finance.yahoo.com/markets/stocks/articles/stock-market-news-oct-27-072700640.html", "date": "2026-10-27" },
+      "short": "Kursgewinne an der Wall Street",
+      "opener": { "role": "BRIEFING", "text": "Und an den Märkten?" },
+      "lines": [
+        { "role": "LAGE", "text": "Die Wall Street hat am Montag zugelegt. Der Nasdaq stieg um 0,8 Prozent, der S&P 500 um 0,7 Prozent.", "say": "Die Wall Street hat am Montag zugelegt. Der Nasdaq stieg um 0,8 Prozent, der S und P 500 um 0,7 Prozent." },
+        { "role": "EINORDNUNG", "text": "Getragen wurde das von KI-Meldungen. Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen, Anthropic hat den Börsengang beantragt." },
+        { "role": "LAGE", "text": "Der Technologiesektor im S&P 500 legte um 1,7 Prozent zu.", "say": "Der Technologiesektor im S und P 500 legte um 1,7 Prozent zu." }
+      ]
+    },
+    {
+      "id": "apple",
+      "category": "tech",
+      "topic": "Tech & KI",
+      "country": "USA",
+      "label": "CUPERTINO",
+      "flag": "🇺🇸",
+      "lon": -122.03,
+      "lat": 37.32,
+      "zoom": 2.6,
+      "headline": "[Apple] bringt Macs mit [M6]-Chip",
+      "brief": "Der neue iMac kostet ab 1.499 Dollar, das 14-Zoll-MacBook-Pro ab 1.999 Dollar. Ausgeliefert wird ab 6. November. Die Neural Engine soll laut Apple 1,9-mal so schnell sein wie beim M5.",
+      "figure": { "value": 1.9, "dec": 1, "suffix": "×", "label": "Neural Engine vs. M5, Apple-Angabe" },
+      "source": { "name": "Apple via AI Weekly", "url": "https://aiweekly.co/ai-news-today", "date": "2026-10-27" },
+      "short": "neue Macs von Apple",
+      "opener": { "role": "BRIEFING", "text": "Zu Tech." },
+      "lines": [
+        { "role": "LAGE", "text": "Apple bringt neue Macs mit dem M6-Chip: einen iMac ab 1.499 Dollar und ein 14-Zoll-MacBook-Pro ab 1.999 Dollar.", "say": "Apple bringt neue Macs mit dem M6-Chip: einen iMac ab 1499 Dollar und ein 14-Zoll MacBook Pro ab 1999 Dollar." },
+        { "role": "LAGE", "text": "Ausgeliefert wird ab 6. November.", "say": "Ausgeliefert wird ab dem 6. November." },
+        { "role": "EINORDNUNG", "text": "Die Neural Engine für KI-Aufgaben soll laut Apple 1,9-mal so schnell sein wie beim Vorgänger M5." }
+      ]
+    },
+    {
+      "id": "kundl",
+      "category": "oesterreich",
+      "topic": "Österreich",
+      "country": "AUT",
+      "label": "KUNDL · TIROL",
+      "flag": "🇦🇹",
+      "lon": 11.99,
+      "lat": 47.47,
+      "zoom": 10,
+      "headline": "Europas letztes [Penicillin]-Werk unter [Druck]",
+      "brief": "Sandoz nennt die Produktion in Kundl „wirtschaftlich nicht tragfähig“, wenn Regierungen nicht mehr für Penicillin zahlen. Grund ist günstigere Konkurrenz aus China; Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht. Am Standort arbeiten mehr als 2.000 Menschen.",
+      "figure": { "value": 2000, "dec": 0, "suffix": "+", "label": "Beschäftigte in Kundl" },
+      "source": { "name": "APA/Reuters", "url": "https://www.vienna.at/europas-letztes-penicillin-werk-unter-druck/10571465", "date": "2026-10-21" },
+      "short": "Druck auf das Penicillin-Werk in Kundl",
+      "opener": { "role": "BRIEFING", "text": "Jetzt nach Österreich." },
+      "lines": [
+        { "role": "LAGE", "text": "In Kundl in Tirol steht Europas letztes großes Penicillin-Werk unter Druck." },
+        { "role": "LAGE", "text": "Betreiber Sandoz nennt die Produktion wirtschaftlich nicht tragfähig, wenn Regierungen nicht mehr für Penicillin zahlen." },
+        { "role": "EINORDNUNG", "text": "Der Grund ist günstigere Konkurrenz aus China. Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht." },
+        { "role": "EINORDNUNG", "text": "Am Standort arbeiten mehr als 2.000 Menschen.", "say": "Am Standort arbeiten mehr als 2000 Menschen." }
+      ]
+    },
+    {
+      "id": "frankreich",
+      "category": "europa",
+      "topic": "Europa",
+      "country": "FRA",
+      "label": "FRANKREICH",
+      "flag": "🇫🇷",
+      "lon": 2.35,
+      "lat": 48.86,
+      "zoom": 6,
+      "headline": "[Frankreich] deckelt Klassen bei [28] Schülern",
+      "brief": "Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an. Eingangsklassen an öffentlichen Gymnasien sollen höchstens 28 Schüler haben. Die Vergabeplattform Parcoursup soll bis 2028 abgeschafft werden.",
+      "figure": { "value": 28, "dec": 0, "label": "Schüler pro Eingangsklasse, maximal" },
+      "source": { "name": "WSJ/AP via Just Security", "url": "https://www.justsecurity.org/162113/early-edition-october-27-2026/", "date": "2026-10-27" },
+      "short": "kleinere Klassen in Frankreich",
+      "opener": { "role": "BRIEFING", "text": "Zum Schluss Frankreich." },
+      "lines": [
+        { "role": "LAGE", "text": "Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an." },
+        { "role": "LAGE", "text": "Eingangsklassen an öffentlichen Gymnasien sollen höchstens 28 Schüler haben." },
+        { "role": "EINORDNUNG", "text": "Die Vergabeplattform für Studienplätze, Parcoursup, soll bis 2028 abgeschafft werden." }
+      ]
+    }
+  ]
+}
