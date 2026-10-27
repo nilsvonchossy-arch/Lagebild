@@ -13,13 +13,21 @@ import { easeInOutCubic, hexA, lerp, reduceMotion, speed } from './util';
 
 export type GlobeMode = 'menu' | 'brief';
 
+/** Wo der Globus stehen soll: Mittelpunkt und Radius in Pixeln (relativ zu #app). */
+export interface Spot {
+  cx: number;
+  cy: number;
+  R: number;
+}
+
 export interface GlobeLayout {
   width: number;
   height: number;
-  /** Bühne zwischen Untertitel und Karte (relativ zu #app) */
-  stage: { top: number; height: number } | null;
+  /** Ziel im Menü und während des Updates; das Layout (hoch/quer) rechnet main.ts aus */
+  menu: Spot;
+  brief: Spot;
   /** Meldungskarte, solange sie sichtbar ist */
-  card: { top: number; left: number; width: number } | null;
+  card: { top: number; left: number; width: number; height: number } | null;
 }
 
 /** Unterhalb dieses sichtbaren Winkels (Radius, Bogenmaß) wird die 50m-Karte gezeichnet. */
@@ -44,12 +52,13 @@ export class Globe {
   private readonly path: GeoPath;
   private readonly basePath: GeoPath;
   private readonly grat = geoGraticule10();
-  private layout: GlobeLayout = { width: 0, height: 0, stage: null, card: null };
+  private layout: GlobeLayout = { width: 0, height: 0, menu: { cx: 0, cy: 0, R: 0 }, brief: { cx: 0, cy: 0, R: 0 }, card: null };
   private dpr = 1;
 
   private rot: [number, number] = [-14, -28];
   private zoom = 1;
   private idle = true;
+  private cx: number | null = null;
   private cy: number | null = null;
   private R: number | null = null;
 
@@ -174,13 +183,8 @@ export class Globe {
     return layer ? findCountry(layer, iso3) : null;
   }
 
-  private target(): { cy: number; R: number } {
-    const { width: W, height: H, stage } = this.layout;
-    if (this.mode === 'brief' && stage) {
-      const sh = Math.max(120, stage.height);
-      return { cy: stage.top + sh * 0.5, R: Math.min(W * 0.43, sh * 0.47) };
-    }
-    return { cy: H * 0.29, R: Math.min(W * 0.4, H * 0.22) };
+  private target(): Spot {
+    return this.mode === 'brief' ? this.layout.brief : this.layout.menu;
   }
 
   /** Kugel, Gradnetz, Länder und Rand in den Zwischenspeicher zeichnen. */
@@ -225,15 +229,16 @@ export class Globe {
 
     // Mittelpunkt und Größe weich nachführen, nahe am Ziel einrasten (sonst nie „still“)
     const tl = this.target();
-    if (this.cy == null || this.R == null) { this.cy = tl.cy; this.R = tl.R; }
-    this.cy = Math.abs(tl.cy - this.cy) < 0.05 ? tl.cy : this.cy + (tl.cy - this.cy) * 0.07;
-    this.R = Math.abs(tl.R - this.R) < 0.05 ? tl.R : this.R + (tl.R - this.R) * 0.07;
+    const ease = (cur: number | null, to: number): number => (cur == null || Math.abs(to - cur) < 0.05 ? to : cur + (to - cur) * 0.07);
+    this.cx = ease(this.cx, tl.cx);
+    this.cy = ease(this.cy, tl.cy);
+    this.R = ease(this.R, tl.R);
     if (this.idle && !reduce) this.rot[0] += dt * 0.003;
     this.hlA += (this.hlT - this.hlA) * 0.07;
     this.pinA += (this.pinT - this.pinA) * 0.1;
 
     const R = this.R * this.zoom;
-    const cx = W / 2;
+    const cx = this.cx;
     const cy = this.cy;
     const ctx = this.ctx;
     this.proj.translate([cx, cy]).scale(R).rotate([this.rot[0], this.rot[1], 0]);
@@ -266,7 +271,7 @@ export class Globe {
     const view = reach >= R ? Math.PI / 2 : Math.asin(reach / R);
     // Drehung auf ~½ Pixel am Äquator runden: beim langsamen Drehen im Menü reicht so etwa jedes zweite Bild
     const q = (0.5 / R) * (180 / Math.PI);
-    const key = `${cy.toFixed(2)}|${R.toFixed(2)}|${Math.round(this.rot[0] / q)}|${Math.round(this.rot[1] / q)}|${this.worldVersion}|${W}x${H}@${this.dpr}`;
+    const key = `${cx.toFixed(2)}|${cy.toFixed(2)}|${R.toFixed(2)}|${Math.round(this.rot[0] / q)}|${Math.round(this.rot[1] / q)}|${this.worldVersion}|${W}x${H}@${this.dpr}`;
     if (key !== this.baseKey) {
       this.drawBase(cx, cy, R, view);
       this.baseKey = key;
@@ -312,12 +317,18 @@ export class Globe {
     ctx.beginPath(); ctx.arc(px, py, 5 + ph * 16, 0, 7); ctx.strokeStyle = hexA(this.acc, (1 - ph) * 0.9); ctx.lineWidth = 1.2; ctx.stroke();
     ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 7); ctx.fillStyle = '#fff'; ctx.shadowColor = this.acc; ctx.shadowBlur = 10; ctx.fill();
     const card = this.layout.card;
-    if (card && card.top > py + 14) {
+    ctx.shadowBlur = 0; ctx.strokeStyle = hexA(this.acc, 0.85); ctx.lineWidth = 1; ctx.fillStyle = this.acc;
+    if (card && card.left > px + 40) {
+      // Karte rechts daneben: waagerecht hinüber, dann auf Höhe der Kartenoberkante einmünden
+      const y2 = Math.max(card.top + 22, Math.min(card.top + card.height - 22, py));
+      const mid = (px + card.left) / 2;
+      ctx.beginPath(); ctx.moveTo(px + 5, py); ctx.lineTo(mid, py); ctx.lineTo(mid, y2); ctx.lineTo(card.left, y2); ctx.stroke();
+      ctx.fillRect(card.left - 2.5, y2 - 2.5, 5, 5);
+    } else if (card && card.top > py + 14) {
       const x2 = Math.max(card.left + 26, Math.min(card.left + card.width - 26, px));
       const mid = (py + card.top) / 2;
-      ctx.shadowBlur = 0; ctx.strokeStyle = hexA(this.acc, 0.85); ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(px, py + 5); ctx.lineTo(px, mid); ctx.lineTo(x2, mid); ctx.lineTo(x2, card.top); ctx.stroke();
-      ctx.fillStyle = this.acc; ctx.fillRect(x2 - 2.5, card.top - 2.5, 5, 5);
+      ctx.fillRect(x2 - 2.5, card.top - 2.5, 5, 5);
     }
     ctx.restore();
     pinEl.style.transform = `translate(${px}px,${py}px) translate(-50%,calc(-100% - 14px))`;

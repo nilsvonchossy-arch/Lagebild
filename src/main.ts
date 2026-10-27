@@ -45,15 +45,33 @@ const atmo = new Atmo();
 atmo.enabled = S.atmo;
 const voice = new Voice(() => ({ speak: S.speak, rate: S.rate, systemVoice: S.systemVoice }), () => DATA_BASE);
 
+/** Hochformat: alles in einer Spalte. Querformat (iPad quer): Globus links, Text und Karte rechts. */
 function measure(): void {
-  const app = $('#app').getBoundingClientRect();
+  const el = $('#app');
+  const W = el.clientWidth;
+  const H = el.clientHeight;
+  el.classList.toggle('wide', W >= 900 && W > H * 1.15);
+  const wide = el.classList.contains('wide');
+  const app = el.getBoundingClientRect();
   const st = $('#stage').getBoundingClientRect();
   const cr = card.visible ? $('#card').getBoundingClientRect() : null;
+  const stage = { left: st.left - app.left, top: st.top - app.top, width: st.width, height: Math.max(120, st.height) };
+  let menu, brief;
+  if (wide) {
+    const panel = $('#start .panel').getBoundingClientRect();
+    const left = Math.max(320, panel.left - app.left - 24);
+    menu = { cx: left / 2, cy: H * 0.5, R: Math.min(left * 0.4, H * 0.36) };
+    brief = { cx: stage.left + stage.width / 2, cy: stage.top + stage.height / 2, R: Math.min(stage.width * 0.44, stage.height * 0.43) };
+  } else {
+    menu = { cx: W / 2, cy: H * 0.29, R: Math.min(W * 0.4, H * 0.22) };
+    brief = { cx: W / 2, cy: stage.top + stage.height * 0.5, R: Math.min(W * 0.43, stage.height * 0.47) };
+  }
   globe.setLayout({
-    width: app.width,
-    height: app.height,
-    stage: { top: st.top - app.top, height: st.height },
-    card: cr ? { top: cr.top - app.top, left: cr.left - app.left, width: cr.width } : null
+    width: W,
+    height: H,
+    menu,
+    brief,
+    card: cr ? { top: cr.top - app.top, left: cr.left - app.left, width: cr.width, height: cr.height } : null
   });
 }
 
