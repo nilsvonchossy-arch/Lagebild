@@ -7,5 +7,9 @@
   },
   "audioDays": 14,
   "targetSeconds": 170,
-  "candidates": { "perTopic": 14, "total": 260, "hours": 30 }
+  "candidates": {
+    "perTopic": 18,
+    "total": 260,
+    "hours": 30
+  }
 }

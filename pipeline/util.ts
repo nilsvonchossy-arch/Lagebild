@@ -1,6 +1,7 @@
 // Gemeinsame Helfer der Pipeline: Netzwerk, Zeit, Logging.
 
-export const UA = 'Mozilla/5.0 (compatible; Lagebild/1.0; persönlicher Nachrichtenüberblick; +https://github.com/nilsvonchossy-arch/Lagebild)';
+// Nur ASCII: Umlaute im User-Agent lassen manche Server mit 400/403 antworten.
+export const UA = 'Mozilla/5.0 (compatible; Lagebild/1.0; personal news briefing; +https://github.com/nilsvonchossy-arch/Lagebild)';
 
 export const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
 

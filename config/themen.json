@@ -72,7 +72,7 @@
       ],
       "feeds": [
         "tagesschau-asien",
-        "times-of-israel",
+        "jpost",
         "aljazeera",
         "bbc-nahost",
         "guardian-nahost"
@@ -121,7 +121,9 @@
         "scmp",
         "the-diplomat",
         "bbc-asien",
-        "guardian-china"
+        "guardian-china",
+        "dw-en-asien",
+        "cna-asien"
       ]
     },
     {
@@ -141,9 +143,10 @@
       "feeds": [
         "tagesschau-inland",
         "dlf-nachrichten",
-        "zdfheute",
         "zeit-politik",
-        "spiegel-politik"
+        "spiegel-politik",
+        "ntv-politik",
+        "dw-de"
       ]
     },
     {
@@ -216,7 +219,8 @@
         "mit-tr-ai",
         "guardian-ki",
         "openai-news",
-        "deepmind-blog"
+        "deepmind-blog",
+        "google-ki"
       ]
     },
     {
