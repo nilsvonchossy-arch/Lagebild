@@ -79,7 +79,7 @@ export class Card {
     grid.innerHTML = m.items.map(it => {
       const dir = Math.abs(it.changePct) < 0.05 ? 'flat' : it.changePct > 0 ? 'up' : 'down';
       const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '■';
-      const ch = `${it.changePct > 0 ? '+' : ''}${it.changePct.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
+      const ch = dir === 'flat' ? '0,0 %' : `${it.changePct > 0 ? '+' : ''}${it.changePct.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
       return `<div class="mrow"><span class="mname">${esc(it.name)}</span><span class="mval">${it.value.toLocaleString('de-DE', { minimumFractionDigits: it.dec, maximumFractionDigits: it.dec })}<small> ${esc(it.unit)}</small></span><span class="mch ${dir}">${arrow} ${ch}</span></div>`;
     }).join('');
     $('#cSrcName').textContent = m.source.name;

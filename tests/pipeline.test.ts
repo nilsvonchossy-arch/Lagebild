@@ -178,3 +178,16 @@ describe('Suchbegriffe', () => {
     expect(items.map(i => i.topic)).toEqual(['wissen', 'h2']);
   });
 });
+
+describe('Marktdaten', () => {
+  it('baut die Sätze nur aus den Zahlen', async () => {
+    const { marketLines } = await import('../pipeline/markets');
+    const item = (id: string, name: string, value: number, changePct: number) => ({ id, name, value, dec: 0, unit: 'Pkt.', changePct, date: '2026-10-27' });
+    const lines = marketLines([item('dax', 'DAX', 24512, 0.42), item('spx', 'S&P 500', 6912, -0.71), item('ndq', 'Nasdaq', 26169, 0.01)]);
+    expect(lines.map(l => l.text)).toEqual([
+      'Der DAX schloss am Dienstag bei 24.512 Punkten, plus 0,4 Prozent.',
+      'In New York gab der S&P 500 um 0,7 Prozent nach, der Nasdaq blieb nahezu unverändert.'
+    ]);
+    expect(lines[1]!.say).toContain('S und P 500');
+  });
+});

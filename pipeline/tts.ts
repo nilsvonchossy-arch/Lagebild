@@ -69,6 +69,7 @@ export async function synthesize(b: Briefing, out: string, opts: TtsOptions): Pr
     { line: b.intro.day, name: 'intro-tag' },
     { line: b.intro.evening, name: 'intro-abend' },
     ...b.stories.flatMap(s => [{ line: s.opener, name: `${s.id}-0` }, ...s.lines.map((line, k) => ({ line, name: `${s.id}-${k + 1}` }))]),
+    ...(b.markets ? [b.markets.opener, ...b.markets.lines].map((line, k) => ({ line, name: `maerkte-${k}` })) : []),
     ...b.outro.map((line, k) => ({ line, name: `outro-${k + 1}` }))
   ];
 

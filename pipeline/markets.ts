@@ -40,39 +40,41 @@ async function quote(s: (typeof SYMBOLS)[number]): Promise<MarketItem | null> {
 const de = (v: number, dec: number): string => v.toLocaleString('de-DE', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 const pct = (v: number): string => de(Math.abs(v), 1);
 
-function move(name: string, c: number): string {
-  if (Math.abs(c) < 0.05) return `${name} blieb nahezu unverändert`;
-  return c > 0 ? `${name} legte um ${pct(c)} Prozent zu` : `${name} gab um ${pct(c)} Prozent nach`;
+/** Satzteil zur Bewegung; `inverted` für Verb-zweit nach „In New York …“. */
+function move(name: string, c: number, inverted = false): string {
+  const [verb, rest] = Math.abs(c) < 0.05 ? ['blieb', 'nahezu unverändert'] : c > 0 ? ['legte', `um ${pct(c)} Prozent zu`] : ['gab', `um ${pct(c)} Prozent nach`];
+  return inverted ? `${verb} ${name} ${rest}` : `${name} ${verb} ${rest}`;
 }
 
-/** Gesprochene Zeile aus den Zahlen. */
-export function marketLine(items: MarketItem[]): Line | null {
+/** Gesprochene Zeilen aus den Zahlen: eine für den DAX, eine für New York. */
+export function marketLines(items: MarketItem[]): Line[] {
   const get = (id: string): MarketItem | undefined => items.find(i => i.id === id);
   const dax = get('dax');
   const us = [get('spx'), get('ndq')].filter((x): x is MarketItem => Boolean(x));
-  const parts: string[] = [];
+  const lines: Line[] = [];
   if (dax) {
     const wd = dateParts(dax.date).weekday;
     const c = dax.changePct;
-    parts.push(`Der DAX schloss am ${wd} bei ${de(dax.value, 0)} Punkten, ${Math.abs(c) < 0.05 ? 'nahezu unverändert' : `${c > 0 ? 'plus' : 'minus'} ${pct(c)} Prozent`}.`);
+    lines.push({ role: 'LAGE', text: `Der DAX schloss am ${wd} bei ${de(dax.value, 0)} Punkten, ${Math.abs(c) < 0.05 ? 'nahezu unverändert' : `${c > 0 ? 'plus' : 'minus'} ${pct(c)} Prozent`}.` });
   }
-  if (us.length) parts.push(`In New York: ${us.map(u => move(u.name === 'S&P 500' ? 'der S&P 500' : `der ${u.name}`, u.changePct)).join(', ')}.`);
-  if (!parts.length) return null;
-  const text = parts.join(' ');
-  return { role: 'LAGE', text, say: text.replace(/S&P 500/g, 'S und P 500') };
+  if (us.length) {
+    const text = `In New York ${us.map((u, i) => move(`der ${u.name}`, u.changePct, i === 0)).join(', ')}.`;
+    lines.push({ role: 'LAGE', text, ...(text.includes('S&P') ? { say: text.replace(/S&P 500/g, 'S und P 500') } : {}) });
+  }
+  return lines;
 }
 
 export async function fetchMarkets(): Promise<Markets | null> {
   const items = (await pool(SYMBOLS, 3, quote)).filter((x): x is MarketItem => x !== null);
   if (items.length < 3) { log(`Marktdaten unvollständig (${items.length} Werte), Kachel entfällt`); return null; }
-  const line = marketLine(items);
-  if (!line) return null;
+  const lines = marketLines(items);
+  if (!lines.length) return null;
   const asOf = items.map(i => i.date).sort().reverse()[0]!;
   return {
     asOf,
     source: { name: 'Yahoo Finance', url: 'https://finance.yahoo.com/markets/', date: asOf },
     items,
     opener: { role: 'BRIEFING', text: 'Und die Märkte?' },
-    lines: [line]
+    lines
   };
 }
