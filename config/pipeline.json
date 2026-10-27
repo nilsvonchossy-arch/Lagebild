@@ -1,0 +1,11 @@
+{
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "voices": {
+    "briefing": "de-DE-ConradNeural",
+    "main": "de-DE-SeraphinaMultilingualNeural"
+  },
+  "audioDays": 14,
+  "targetSeconds": 170,
+  "candidates": { "perTopic": 14, "total": 260, "hours": 30 }
+}

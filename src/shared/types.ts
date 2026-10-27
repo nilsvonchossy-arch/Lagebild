@@ -87,6 +87,8 @@ export interface Briefing {
   intro: { morning: Line; day: Line; evening: Line };
   outro: Line[];
   stories: Story[];
+  /** Wie das Update entstanden ist (Modell, Kosten in US-Dollar) */
+  meta?: { model: string; costUsd: number };
 }
 
 export interface DayIndex {
