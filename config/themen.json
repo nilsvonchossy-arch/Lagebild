@@ -1,0 +1,309 @@
+{
+  "version": 1,
+  "stories": {
+    "min": 5,
+    "max": 7
+  },
+  "categories": [
+    {
+      "id": "geopolitik",
+      "name": "Geopolitik & Sicherheit",
+      "color": "#ff7a3d"
+    },
+    {
+      "id": "deutschland",
+      "name": "Deutschland",
+      "color": "#ff4d5e"
+    },
+    {
+      "id": "wirtschaft",
+      "name": "Wirtschaft & Märkte",
+      "color": "#f2bf45"
+    },
+    {
+      "id": "ki",
+      "name": "KI & Technologie",
+      "color": "#4cc9ff"
+    },
+    {
+      "id": "wissen",
+      "name": "Wissenschaft & Klima",
+      "color": "#38d9b5"
+    }
+  ],
+  "topics": [
+    {
+      "id": "usa",
+      "name": "USA-Politik",
+      "category": "geopolitik",
+      "priority": 3,
+      "active": true,
+      "description": "US-Regierung, Präsident, Kongress, Gerichte, Wahlen und Außenpolitik der USA",
+      "search": [
+        "US-Regierung",
+        "Weißes Haus",
+        "US-Kongress",
+        "Supreme Court",
+        "White House",
+        "Congress"
+      ],
+      "feeds": [
+        "tagesschau-amerika",
+        "npr-politik",
+        "bbc-usa",
+        "guardian-uspolitik",
+        "politico"
+      ]
+    },
+    {
+      "id": "nahost",
+      "name": "Nahost-Konflikt",
+      "category": "geopolitik",
+      "priority": 3,
+      "active": true,
+      "description": "Israel, Gaza, Westjordanland, Libanon, Iran und die Diplomatie in der Region",
+      "search": [
+        "Israel",
+        "Gaza",
+        "Westjordanland",
+        "Hisbollah",
+        "Iran",
+        "Hamas"
+      ],
+      "feeds": [
+        "tagesschau-asien",
+        "times-of-israel",
+        "aljazeera",
+        "bbc-nahost",
+        "guardian-nahost"
+      ]
+    },
+    {
+      "id": "russland-nato",
+      "name": "Russland, Ukraine & NATO",
+      "category": "geopolitik",
+      "priority": 3,
+      "active": true,
+      "description": "Krieg in der Ukraine, Spannungen zwischen Russland und der NATO, Sicherheit an Europas Ostgrenze",
+      "search": [
+        "Ukraine",
+        "Russland",
+        "NATO",
+        "Kreml",
+        "Selenskyj",
+        "Putin"
+      ],
+      "feeds": [
+        "tagesschau-europa",
+        "kyiv-independent",
+        "meduza",
+        "bbc-europa",
+        "guardian-ukraine",
+        "guardian-russland"
+      ]
+    },
+    {
+      "id": "china",
+      "name": "China & Taiwan",
+      "category": "geopolitik",
+      "priority": 2,
+      "active": true,
+      "description": "Politik und Wirtschaft Chinas, Taiwan, Südchinesisches Meer, Beziehungen zu USA und EU",
+      "search": [
+        "China",
+        "Peking",
+        "Taiwan",
+        "Xi Jinping",
+        "Südchinesisches Meer"
+      ],
+      "feeds": [
+        "tagesschau-asien",
+        "scmp",
+        "the-diplomat",
+        "bbc-asien",
+        "guardian-china"
+      ]
+    },
+    {
+      "id": "deutschland",
+      "name": "Deutschland",
+      "category": "deutschland",
+      "priority": 3,
+      "active": true,
+      "description": "Bundesregierung, Bundestag, Parteien, Gesetze und große Ereignisse in Deutschland",
+      "search": [
+        "Bundesregierung",
+        "Bundestag",
+        "Bundeskanzler",
+        "Bundesrat",
+        "Koalition"
+      ],
+      "feeds": [
+        "tagesschau-inland",
+        "dlf-nachrichten",
+        "zdfheute",
+        "zeit-politik",
+        "spiegel-politik"
+      ]
+    },
+    {
+      "id": "wirtschaft",
+      "name": "Wirtschaft & Konjunktur",
+      "category": "wirtschaft",
+      "priority": 2,
+      "active": true,
+      "description": "Konjunktur, Inflation, Zinsen, Handel und Zölle, Arbeitsmarkt, große Unternehmen",
+      "search": [
+        "Konjunktur",
+        "Inflation",
+        "EZB",
+        "Federal Reserve",
+        "Zölle",
+        "Arbeitsmarkt"
+      ],
+      "feeds": [
+        "tagesschau-wirtschaft",
+        "zeit-wirtschaft",
+        "bbc-wirtschaft",
+        "guardian-wirtschaft",
+        "cnbc-wirtschaft"
+      ]
+    },
+    {
+      "id": "maerkte",
+      "name": "Märkte & Marktanalyse",
+      "category": "wirtschaft",
+      "priority": 2,
+      "active": true,
+      "description": "Börsentag, Aktienindizes, Anleihen, Rohstoffe, Währungen und Einschätzungen von Analysten",
+      "search": [
+        "DAX",
+        "Wall Street",
+        "Börse",
+        "Aktienmarkt",
+        "Ölpreis",
+        "Goldpreis"
+      ],
+      "feeds": [
+        "tagesschau-boerse",
+        "cnbc-investing",
+        "marketwatch-pulse",
+        "marketwatch-top"
+      ]
+    },
+    {
+      "id": "ki-neu",
+      "name": "KI-Neuentwicklungen",
+      "category": "ki",
+      "priority": 3,
+      "active": true,
+      "minPerDay": 1,
+      "description": "Neue KI-Modelle, Produkte und Forschungsergebnisse, wichtige Ankündigungen der KI-Firmen",
+      "search": [
+        "KI-Modell",
+        "künstliche Intelligenz",
+        "OpenAI",
+        "Anthropic",
+        "Google DeepMind",
+        "Sprachmodell"
+      ],
+      "feeds": [
+        "the-decoder",
+        "heise",
+        "the-verge-ai",
+        "techcrunch-ai",
+        "ars-ai",
+        "mit-tr-ai",
+        "guardian-ki",
+        "openai-news",
+        "deepmind-blog"
+      ]
+    },
+    {
+      "id": "ki-arbeit",
+      "name": "KI & Arbeit",
+      "category": "ki",
+      "priority": 3,
+      "active": true,
+      "description": "Wie KI Jobs, Berufe, Stellenabbau, Weiterbildung und den Arbeitsmarkt verändert",
+      "search": [
+        "KI Arbeitsplätze",
+        "KI Stellenabbau",
+        "Automatisierung Jobs",
+        "AI jobs",
+        "AI layoffs"
+      ],
+      "feeds": [
+        "the-decoder",
+        "t3n",
+        "guardian-ki",
+        "techcrunch-ai",
+        "cnbc-tech"
+      ]
+    },
+    {
+      "id": "ki-risiken",
+      "name": "KI-Risiken & Regulierung",
+      "category": "ki",
+      "priority": 3,
+      "active": true,
+      "description": "Gefahren durch KI, KI-Sicherheit, Deepfakes, Missbrauch, Gesetze wie der AI Act",
+      "search": [
+        "KI-Regulierung",
+        "AI Act",
+        "KI-Sicherheit",
+        "Deepfake",
+        "AI safety"
+      ],
+      "feeds": [
+        "the-decoder",
+        "netzpolitik",
+        "guardian-ki",
+        "mit-tr-ai",
+        "ars-ai"
+      ]
+    },
+    {
+      "id": "cyber",
+      "name": "Cybersicherheit",
+      "category": "ki",
+      "priority": 2,
+      "active": true,
+      "description": "Cyberangriffe, Datenlecks, Sicherheitslücken und Ransomware mit großer Tragweite",
+      "search": [
+        "Cyberangriff",
+        "Hackerangriff",
+        "Sicherheitslücke",
+        "Ransomware",
+        "Datenleck"
+      ],
+      "feeds": [
+        "heise-security",
+        "bleepingcomputer",
+        "the-record",
+        "guardian-cyber"
+      ]
+    },
+    {
+      "id": "wissen",
+      "name": "Wissenschaft & Klima",
+      "category": "wissen",
+      "priority": 1,
+      "active": true,
+      "description": "Nur große Meldungen: wichtige Studien, Klima und Energie, Raumfahrt, Medizin",
+      "search": [
+        "Studie",
+        "Klimawandel",
+        "Forschung",
+        "Raumfahrt"
+      ],
+      "feeds": [
+        "tagesschau-wissen",
+        "spektrum",
+        "guardian-wissen",
+        "guardian-klima",
+        "bbc-wissen"
+      ]
+    }
+  ]
+}
