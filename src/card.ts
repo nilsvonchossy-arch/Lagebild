@@ -1,6 +1,6 @@
 // Meldungskarte im Netwatch-Stil: Themen-Tag, Headline mit Akzentwörtern, „Kurz gesagt“, Zahl, Quelle.
 import { countUp, fmtNum, scramble } from './fx';
-import type { Category, Story } from './shared/types';
+import type { Category, Markets, Story } from './shared/types';
 import { $, esc, pad2, shortDate, sleep } from './util';
 
 /** "[Israel] wählt" → Wörter einzeln einblenden, [..] in Akzentfarbe. */
@@ -30,6 +30,9 @@ export class Card {
 
   private fill(s: Story, i: number, total: number, cats: Category[], date: string): void {
     const c = this.el;
+    c.dataset.kind = 'story';
+    $('#cMarkets').hidden = true;
+    $('.brief').hidden = false;
     c.style.setProperty('--acc', this.categoryColor(cats, s.category));
     $('#cCount').innerHTML = relevanceHTML(s.relevance) + `<span>${pad2(i + 1)}/${pad2(total)}</span>`;
     $('#cHead').innerHTML = '<span>' + headlineHTML(s.headline, 0.35) + '</span>';
@@ -58,6 +61,35 @@ export class Card {
       const f = s.figure;
       void sleep(850).then(() => { if (my === this.seq) countUp($('#cFig'), f); });
     }
+    await sleep(1000);
+  }
+
+  /** Marktdaten statt Meldung: Kurse mit Tagesveränderung, Quelle mit Stand. */
+  async showMarkets(m: Markets, color: string, date: string): Promise<void> {
+    const c = this.el;
+    ++this.seq;
+    c.dataset.kind = 'markets';
+    c.style.setProperty('--acc', color);
+    $('#cCount').innerHTML = `<span>STAND ${shortDate(m.asOf)}</span>`;
+    $('#cHead').innerHTML = '<span>' + headlineHTML('Die [Märkte]', 0.35) + '</span>';
+    $('.brief').hidden = true;
+    $('#cFigure').hidden = true;
+    const grid = $('#cMarkets');
+    grid.hidden = false;
+    grid.innerHTML = m.items.map(it => {
+      const dir = Math.abs(it.changePct) < 0.05 ? 'flat' : it.changePct > 0 ? 'up' : 'down';
+      const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '■';
+      const ch = `${it.changePct > 0 ? '+' : ''}${it.changePct.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
+      return `<div class="mrow"><span class="mname">${esc(it.name)}</span><span class="mval">${it.value.toLocaleString('de-DE', { minimumFractionDigits: it.dec, maximumFractionDigits: it.dec })}<small> ${esc(it.unit)}</small></span><span class="mch ${dir}">${arrow} ${ch}</span></div>`;
+    }).join('');
+    $('#cSrcName').textContent = m.source.name;
+    $('#cSrcDate').textContent = shortDate(m.source.date);
+    $<HTMLAnchorElement>('#cSrc').href = m.source.url;
+    $('#cMark').textContent = 'LAGEBILD // ' + shortDate(date);
+    c.dataset.state = 'hidden';
+    void c.offsetWidth;
+    c.dataset.state = 'in';
+    scramble($('#cTag'), 'MÄRKTE', 600);
     await sleep(1000);
   }
 

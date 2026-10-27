@@ -56,7 +56,7 @@ export class Player {
     this.voice.stop();
     $('#title').classList.remove('on');
     this.introDone = true;
-    const target = Math.min(Math.max(0, i), this.count);
+    const target = Math.min(Math.max(0, i), this.count + (this.briefing?.markets ? 1 : 0));
     setTimeout(() => void this.run(target), 80);
   }
 
@@ -165,9 +165,49 @@ export class Player {
     this.check(my);
   }
 
+  /** Marktdaten: Fahrt nach Frankfurt, Kurskarte, ein gesprochener Satz aus den Zahlen. */
+  private async markets(my: number): Promise<void> {
+    const b = this.briefing!;
+    const m = b.markets!;
+    this.curIdx = this.count;
+    this.lineK = 0;
+    this.hooks.progress(this.count, 0);
+    this.hooks.state();
+    this.voice.prefetch([m.opener, ...m.lines]);
+    await this.card.hide();
+    this.hooks.layout();
+    this.check(my);
+    this.globe.highlight(null);
+    this.globe.pin(null);
+    await sleep(250);
+    this.check(my);
+    const color = b.categories.find(c => c.id === 'wirtschaft')?.color ?? '#f2bf45';
+    this.globe.acc = color;
+    $('#pin').style.setProperty('--acc', color);
+    const frankfurt: [number, number] = [8.68, 50.11];
+    await Promise.all([this.globe.fly(frankfurt, 3, 2600), this.say(my, m.opener)]);
+    this.check(my);
+    $('#pinFlag').textContent = '📈';
+    scramble($('#pinName'), 'FRANKFURT', 650);
+    this.globe.pin(frankfurt);
+    await sleep(420);
+    this.check(my);
+    const shown = this.card.showMarkets(m, color, b.date);
+    this.hooks.layout();
+    await shown;
+    this.check(my);
+    for (let k = 0; k < m.lines.length; k++) {
+      this.lineK = k;
+      await this.say(my, m.lines[k]!);
+      this.hooks.progress(this.count, (k + 1) / m.lines.length);
+    }
+    await sleep(500);
+    this.check(my);
+  }
+
   private async outro(my: number): Promise<void> {
     const b = this.briefing!;
-    this.curIdx = this.count;
+    this.curIdx = this.count + (b.markets ? 1 : 0);
     this.hooks.state();
     await this.card.hide();
     this.hooks.layout();
@@ -198,6 +238,7 @@ export class Player {
     try {
       if (from === 0 && !this.introDone) await this.intro(my);
       for (let i = from; i < this.count; i++) await this.story(my, i);
+      if (this.briefing?.markets && from <= this.count) await this.markets(my);
       await this.outro(my);
     } catch (e) {
       if (e !== CANCEL) console.error(e);

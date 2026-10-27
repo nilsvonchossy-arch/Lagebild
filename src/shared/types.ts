@@ -74,6 +74,27 @@ export interface Story {
   lines: Line[];
 }
 
+export interface MarketItem {
+  id: string;
+  name: string;
+  value: number;
+  dec: number;
+  unit: string;
+  /** Veränderung zum Vortag in Prozent */
+  changePct: number;
+  /** Handelstag JJJJ-MM-TT */
+  date: string;
+}
+
+/** Marktdaten-Kachel nach den Meldungen; Sätze werden ohne KI aus den Zahlen gebaut. */
+export interface Markets {
+  asOf: string;
+  source: Source;
+  items: MarketItem[];
+  opener: Line;
+  lines: Line[];
+}
+
 export interface Briefing {
   schema: number;
   /** JJJJ-MM-TT */
@@ -87,6 +108,7 @@ export interface Briefing {
   intro: { morning: Line; day: Line; evening: Line };
   outro: Line[];
   stories: Story[];
+  markets?: Markets;
   /** Wie das Update entstanden ist (Modell, Kosten in US-Dollar) */
   meta?: { model: string; costUsd: number };
 }

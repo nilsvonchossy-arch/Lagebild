@@ -89,7 +89,7 @@ const catColor = (b: Briefing, id: string): string => b.categories.find(c => c.i
 const catName = (b: Briefing, id: string): string => b.categories.find(c => c.id === id)?.name ?? id;
 
 function durationMin(b: Briefing): number {
-  const lines = [b.intro.morning, ...b.outro, ...b.stories.flatMap(s => [s.opener, ...s.lines])];
+  const lines = [b.intro.morning, ...b.outro, ...b.stories.flatMap(s => [s.opener, ...s.lines]), ...(b.markets ? [b.markets.opener, ...b.markets.lines] : [])];
   const ms = lines.reduce((a, l) => a + (l.audio ? l.audio.dur * 1000 : estimateMs(l.say ?? l.text)) + 240, 0);
   const visuals = b.stories.length * 4200;
   return Math.max(1, Math.round((ms + visuals) / 60000));
@@ -99,7 +99,7 @@ function renderStart(b: Briefing): void {
   const d = dateParts(b.date);
   const n = b.stories.length;
   $('#metaDate').textContent = `${pad2(d.day)}//${d.short}//${d.year}`;
-  $('#progress').innerHTML = b.stories.map(() => '<span class="seg"><i></i></span>').join('');
+  $('#progress').innerHTML = '<span class="seg"><i></i></span>'.repeat(b.stories.length + (b.markets ? 1 : 0));
   $('#sKicker').textContent = isDemo ? 'LAGEBILD · DEMO' : 'LAGEBILD · TAGESUPDATE';
   $('#sTitle').textContent = `${d.weekday}, ${d.day}. ${d.monthName}`;
   const hasAudio = b.stories.some(s => s.lines.some(l => l.audio));
