@@ -164,3 +164,17 @@ describe('Helfer', () => {
     expect(escapeXml('S&P <500>')).toBe('S&amp;P &lt;500&gt;');
   });
 });
+
+describe('Suchbegriffe', () => {
+  it('treffen Wörter, kurze nur ganz', async () => {
+    const { termPattern, matchTopics } = await import('../pipeline/sources');
+    expect(termPattern('KI').test('Neue KI-Regeln')).toBe(true);
+    expect(termPattern('KI').test('Kiel feiert')).toBe(false);
+    expect(termPattern('Israel').test('israelische Armee')).toBe(true);
+    expect(termPattern('AI Act').test('EU AI Act enters force')).toBe(true);
+    expect(termPattern('S&P 500').test('Der S&P 500 steigt')).toBe(true);
+    const items = matchTopics([{ title: 'Elektrolyse in Leuna', teaser: '', url: 'https://e.org/1', source: 'Q', domain: 'e.org', published: null, lang: 'de', topic: 'wissen', via: 'rss' }],
+      { ...cfg, topics: [...cfg.topics, { id: 'h2', name: 'Wasserstoff', category: 'wissen', priority: 3, active: true, search: ['Elektrolyse'], feeds: [] }] });
+    expect(items.map(i => i.topic)).toEqual(['wissen', 'h2']);
+  });
+});

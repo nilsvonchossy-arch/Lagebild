@@ -86,6 +86,32 @@ export async function fetchFeeds(cfg: ThemenConfig, q: Quellen): Promise<{ items
   return { items: results.flat(), report };
 }
 
+/**
+ * Suchbegriff als Muster, Groß-/Kleinschreibung egal. Kurze Begriffe nur als ganzes Wort
+ * („KI“ trifft nicht „Kiel“), ab fünf Zeichen auch mit Endung („Israel“ trifft „israelische“).
+ */
+export function termPattern(term: string): RegExp {
+  const t = term.trim();
+  const esc = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  const end = t.length >= 5 ? '' : '(?![\\p{L}\\p{N}])';
+  return new RegExp(`(?<![\\p{L}\\p{N}])${esc}${end}`, 'iu');
+}
+
+/**
+ * Suchbegriffe aller aktiven Themen auf sämtliche Feed-Artikel anwenden: Ein Artikel aus einem
+ * allgemeinen Feed, der zu einem Thema passt, wird diesem Thema zusätzlich zugeordnet.
+ * So wirken eigene Themen auch ohne eigene Feeds und ohne GDELT.
+ */
+export function matchTopics(items: Raw[], cfg: ThemenConfig): Raw[] {
+  const rules = cfg.topics.filter(t => t.active && t.search.length).map(t => ({ id: t.id, res: t.search.map(termPattern) }));
+  const extra: Raw[] = [];
+  for (const it of items) {
+    const hay = `${it.title} ${it.teaser}`;
+    for (const r of rules) if (r.id !== it.topic && r.res.some(re => re.test(hay))) extra.push({ ...it, topic: r.id });
+  }
+  return [...items, ...extra];
+}
+
 /** GDELT-Suche mit den Suchbegriffen eines Themas, nur Artikel der letzten 24 Stunden von seriösen Domains. */
 export function gdeltQuery(t: Topic): string | null {
   const terms = t.search.map(s => s.replace(/["()]/g, '').trim()).filter(s => s.length >= 3);
@@ -94,19 +120,31 @@ export function gdeltQuery(t: Topic): string | null {
   return parts.length === 1 ? parts[0]! : `(${parts.join(' OR ')})`;
 }
 
-export async function searchGdelt(cfg: ThemenConfig, q: Quellen): Promise<{ items: Raw[]; report: Record<string, string> }> {
+/**
+ * GDELT nur dort, wo die Feeds nicht reichen: Themen ohne eigene Feeds (z. B. selbst angelegte)
+ * und Themen mit weniger als `thin` Feed-Artikeln. GDELT drosselt geteilte Server schnell,
+ * deshalb mit Abstand und einer Wiederholung.
+ */
+export async function searchGdelt(cfg: ThemenConfig, q: Quellen, feedCount: Map<string, number>, thin = 6): Promise<{ items: Raw[]; report: Record<string, string> }> {
   const trusted = q.trustedDomains;
   const isTrusted = (d: string): boolean => trusted.some(t => d === t || d.endsWith(`.${t}`));
   const items: Raw[] = [];
   const report: Record<string, string> = {};
-  const topics = cfg.topics.filter(t => t.active && t.search.length);
+  const topics = cfg.topics.filter(t => t.active && t.search.length && (!t.feeds.length || (feedCount.get(t.id) ?? 0) < thin));
   for (const [i, t] of topics.entries()) {
     const query = gdeltQuery(t);
     if (!query) continue;
-    if (i > 0) await sleep(5500); // GDELT erlaubt etwa eine Anfrage pro 5 Sekunden
+    if (i > 0) await sleep(8000); // GDELT erlaubt höchstens eine Anfrage pro 5 Sekunden
     const url = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(query)}&mode=artlist&format=json&maxrecords=75&timespan=1d&sort=hybridrel`;
     try {
-      const { text: body } = await fetchText(url, { timeoutMs: 20000, accept: 'application/json' });
+      let body: string;
+      try {
+        body = (await fetchText(url, { timeoutMs: 20000, accept: 'application/json' })).text;
+      } catch (e) {
+        if (!/429/.test((e as Error).message)) throw e;
+        await sleep(20000);
+        body = (await fetchText(url, { timeoutMs: 20000, accept: 'application/json' })).text;
+      }
       const data = JSON.parse(body) as { articles?: { url: string; title: string; seendate?: string; domain?: string; language?: string }[] };
       let n = 0;
       for (const a of data.articles ?? []) {

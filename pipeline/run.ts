@@ -19,7 +19,8 @@ import { Claude, RefusalError } from './claude.ts';
 import { selectStories, verifyStory, writeStory, type Selection } from './editorial.ts';
 import { fetchArticle, type Article } from './extract.ts';
 import { resolvePlace } from './geo.ts';
-import { fetchFeeds, mergeCandidates, searchGdelt, type Candidate, type Quellen } from './sources.ts';
+import { fetchMarkets } from './markets.ts';
+import { fetchFeeds, matchTopics, mergeCandidates, parseFeed, searchGdelt, type Candidate, type Quellen } from './sources.ts';
 import { dayPath, previousHeadlines, pruneAudio, writeIndex, writeJSON } from './store.ts';
 import { synthesize } from './tts.ts';
 import { berlinISO, berlinNow, log, pool } from './util.ts';
@@ -33,7 +34,8 @@ const { values: args } = parseArgs({
     force: { type: 'boolean', default: false },
     'check-feeds': { type: 'boolean', default: false },
     compare: { type: 'string' },
-    'no-tts': { type: 'boolean', default: false }
+    'no-tts': { type: 'boolean', default: false },
+    probe: { type: 'string' }
   }
 });
 
@@ -49,9 +51,31 @@ function output(key: string, value: string): void {
 
 async function research(): Promise<{ candidates: Candidate[]; report: Record<string, unknown> }> {
   const since = new Date(Date.now() - pipelineCfg.candidates.hours * 3600 * 1000);
-  const [feeds, gdelt] = await Promise.all([fetchFeeds(cfg, quellen), searchGdelt(cfg, quellen)]);
-  const candidates = mergeCandidates([...feeds.items, ...gdelt.items], { since, perTopic: pipelineCfg.candidates.perTopic, total: pipelineCfg.candidates.total });
-  return { candidates, report: { feeds: feeds.report, gdelt: gdelt.report } };
+  const feeds = await fetchFeeds(cfg, quellen);
+  const fresh = feeds.items.filter(it => !it.published || new Date(it.published) >= since);
+  const matched = matchTopics(fresh, cfg);
+  const perTopic = new Map<string, number>();
+  for (const it of matched) perTopic.set(it.topic, (perTopic.get(it.topic) ?? 0) + 1);
+  const gdelt = await searchGdelt(cfg, quellen, perTopic);
+  const candidates = mergeCandidates([...matched, ...gdelt.items], { since, perTopic: pipelineCfg.candidates.perTopic, total: pipelineCfg.candidates.total });
+  return { candidates, report: { feeds: feeds.report, perTopic: Object.fromEntries(perTopic), gdelt: gdelt.report } };
+}
+
+/** Beliebige Feed-Adressen testen (Status, Anzahl, erster Titel), mit Lagebild- und mit Browser-Kennung. */
+async function probe(urls: string[]): Promise<void> {
+  const BROWSER = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15';
+  for (const url of urls) {
+    for (const ua of ['lagebild', 'browser'] as const) {
+      try {
+        const res = await fetch(url, { headers: ua === 'browser' ? { 'User-Agent': BROWSER, Accept: '*/*' } : { 'User-Agent': 'Lagebild/1.0 (+https://github.com/nilsvonchossy-arch/Lagebild)' }, signal: AbortSignal.timeout(15000) });
+        const body = await res.text();
+        const items = res.ok ? parseFeed(body, { id: 'p', name: 'p', url, lang: 'de' }, 'p') : [];
+        console.log(`${res.status} ${ua.padEnd(8)} ${String(items.length).padStart(4)} Artikel  ${url}${items[0] ? `  → ${items[0].title.slice(0, 70)}` : ''}`);
+      } catch (e) {
+        console.log(`ERR ${ua.padEnd(8)}      ${url}  ${(e as Error).message}`);
+      }
+    }
+  }
 }
 
 /* ---------- Meldungen bauen ---------- */
@@ -186,6 +210,8 @@ async function main(): Promise<void> {
     if (existsSync(dayPath(OUT, date))) { log(`Update für ${date} existiert schon.`); return; }
   }
 
+  if (args.probe) { await probe(args.probe.split(/[\s,]+/).filter(Boolean)); return; }
+
   if (!args['check-feeds'] && !process.env.ANTHROPIC_API_KEY) {
     // Noch nicht eingerichtet: kein Fehler, damit nicht jeden Morgen eine Fehlermail kommt
     console.log('::warning::Kein ANTHROPIC_API_KEY gesetzt – Tages-Update übersprungen. Anleitung: docs/einrichtung.md');
@@ -193,9 +219,11 @@ async function main(): Promise<void> {
   }
 
   log(`Recherche für ${date} …`);
-  const { candidates, report } = await research();
+  const [{ candidates, report }, markets] = await Promise.all([research(), fetchMarkets()]);
   if (args['check-feeds']) {
     console.log(JSON.stringify(report, null, 2));
+    console.log('Märkte:', markets ? JSON.stringify(markets.items.map(i => `${i.name} ${i.value} (${i.changePct} %, ${i.date})`)) : 'nicht verfügbar');
+    if (markets) console.log('Satz:', markets.lines[0]?.text);
     console.log(`${candidates.length} Kandidaten, z. B.:`);
     for (const c of candidates.slice(0, 15)) console.log(`  [${c.topics.join(',')}] ${c.source}: ${c.title}`);
     return;
@@ -217,6 +245,7 @@ async function main(): Promise<void> {
   if (built.length < cfg.stories.min) log(`Achtung: nur ${built.length} Meldungen.`);
 
   const briefing: Briefing = buildBriefing(date, berlinISO(), cfg, built, { model, costUsd: 0 });
+  if (markets) briefing.markets = markets;
   let tts: Record<string, unknown> = { skipped: true };
   if (!args['no-tts'] && process.env.AZURE_SPEECH_KEY && process.env.AZURE_SPEECH_REGION) {
     tts = await synthesize(briefing, OUT, { key: process.env.AZURE_SPEECH_KEY, region: process.env.AZURE_SPEECH_REGION, voices: pipelineCfg.voices });

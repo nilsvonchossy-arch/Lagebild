@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'update = neues Tages-Update, check-feeds = nur Quellen prüfen, compare = Modelle vergleichen, voices = Hörproben'
+        description: 'update = neues Tages-Update, check-feeds = nur Quellen prüfen, compare = Modelle vergleichen, voices = Hörproben, probe = Feed-Adressen testen'
         type: choice
-        options: [update, check-feeds, compare, voices]
+        options: [update, check-feeds, compare, voices, probe]
         default: update
       force:
         description: 'Neu erstellen, auch wenn es heute schon ein Update gibt'
@@ -23,6 +23,10 @@ on:
         description: 'Nur für compare: Modelle mit Komma getrennt'
         type: string
         default: 'claude-opus-5-5,claude-sonnet-5-5,claude-haiku-5-5'
+      probe:
+        description: 'Nur für probe: Feed-Adressen mit Leerzeichen getrennt'
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -63,12 +67,14 @@ jobs:
           MODE: ${{ inputs.mode || 'update' }}
           FORCE: ${{ inputs.force }}
           MODELS: ${{ inputs.models }}
+          PROBE: ${{ inputs.probe }}
           EVENT: ${{ github.event_name }}
         run: |
           case "$MODE" in
             check-feeds) node pipeline/run.ts --check-feeds ;;
             compare) node pipeline/run.ts --out daten --compare "$MODELS" ;;
             voices) node pipeline/voices.ts --out daten ;;
+            probe) node pipeline/run.ts --probe "$PROBE" ;;
             *)
               ARGS="--out daten"
               if [ "$EVENT" = schedule ]; then ARGS="$ARGS --gate"; fi
