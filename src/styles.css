@@ -110,6 +110,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .ctl.main { width: 58px; height: 58px; background: var(--ink); color: #07090c; border-color: var(--ink); }
 .ctl.main svg { width: 22px; height: 22px; }
 .ctl:disabled { opacity: .35; cursor: default; }
+#app[data-mode="menu"] .controls { visibility: hidden; }
 
 /* Overlays */
 .overlay { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; justify-content: flex-end; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 20px; padding-bottom: max(18px, env(safe-area-inset-bottom, 0px)); background: linear-gradient(180deg, transparent 0%, transparent 34%, rgba(5,7,10,.88) 52%, rgba(5,7,10,.97) 100%); overflow-y: auto; }

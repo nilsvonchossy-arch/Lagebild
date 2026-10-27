@@ -80,6 +80,7 @@ function updateControls(): void {
   b.setAttribute('aria-label', on ? 'Pausieren' : 'Abspielen');
   $<HTMLButtonElement>('#prevBtn').disabled = !player.playing;
   $<HTMLButtonElement>('#nextBtn').disabled = !player.playing;
+  $('#app').dataset.mode = player.playing ? 'brief' : 'menu';
   if (player.playing) { $('#start').hidden = true; $('#end').hidden = true; }
 }
 
@@ -242,7 +243,12 @@ function bind(): void {
     if (e.key === 'ArrowLeft') player.jump(player.curIdx - 1);
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && player.playing && !player.paused) player.togglePause();
+    if (document.hidden) {
+      if (player.playing && !player.paused) player.togglePause();
+    } else if (!player.playing && Date.now() - lastCheck > 20 * 60 * 1000) {
+      // Die App bleibt auf dem iPad oft tagelang im Speicher: beim Zurückkehren nach neuem Update schauen
+      void refresh();
+    }
   });
 
   new ResizeObserver(measure).observe($('#app'));
@@ -256,6 +262,25 @@ function bind(): void {
   renderVoices();
 }
 
+let lastCheck = 0;
+
+/** Neuestes Update laden; ohne Daten (vor dem ersten Pipeline-Lauf) die Demo zeigen. */
+async function refresh(): Promise<void> {
+  lastCheck = Date.now();
+  const shownDate = player.briefing?.date;
+  index = await loadIndex();
+  const latest = index?.days[0]?.date;
+  if (latest && latest === shownDate && !isDemo) return;
+  let b = latest ? await loadDay(latest) : null;
+  isDemo = !b;
+  b ??= await loadDemo();
+  if (b && !player.playing) show(b);
+  else if (!b && !player.briefing) {
+    $('#sTitle').textContent = 'Keine Daten';
+    $('#sSub').textContent = 'Das Update konnte nicht geladen werden. Bitte später erneut versuchen.';
+  }
+}
+
 async function boot(): Promise<void> {
   bind();
   void loadWorld110()
@@ -266,19 +291,7 @@ async function boot(): Promise<void> {
     })
     .catch(e => { console.error(e); $('#sFine').textContent = 'Die Weltkarte konnte nicht geladen werden.'; });
 
-  index = await loadIndex();
-  const latest = index?.days[0]?.date;
-  let b = latest ? await loadDay(latest) : null;
-  if (!b) {
-    b = await loadDemo();
-    isDemo = true;
-  }
-  if (!b) {
-    $('#sTitle').textContent = 'Keine Daten';
-    $('#sSub').textContent = 'Das Update konnte nicht geladen werden. Bitte später erneut versuchen.';
-    return;
-  }
-  show(b);
+  await refresh();
 }
 
 void boot();
