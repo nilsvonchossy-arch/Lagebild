@@ -1,0 +1,55 @@
+# Baut die App und veröffentlicht sie auf GitHub Pages.
+# Die Tagesdaten (JSON + Audio) liegen im Branch "daten" und werden beim Bauen nach dist/data kopiert.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Tagesdaten aus Branch "daten" übernehmen
+        run: |
+          if git ls-remote --exit-code --heads origin daten > /dev/null; then
+            git fetch --depth=1 origin daten
+            mkdir -p dist/data
+            git archive FETCH_HEAD | tar -x -C dist/data
+            echo "Daten übernommen: $(ls dist/data | head -20 | tr '\n' ' ')"
+          else
+            echo "Noch kein Branch \"daten\" – die App zeigt die Demo."
+          fi
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
