@@ -4,6 +4,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   // Relative Pfade, damit die App unter https://<name>.github.io/Lagebild/ und lokal gleich funktioniert.
   base: './',
+  define: {
+    // Repo für den Themen-Editor (in GitHub Actions automatisch gesetzt)
+    __REPO__: JSON.stringify(process.env.GITHUB_REPOSITORY ?? 'nilsvonchossy-arch/Lagebild')
+  },
   build: {
     target: 'es2022',
     // Kartendaten nicht als Base64 ins JS einbetten, sondern als eigene Dateien (cachebar, offline-fähig).

@@ -12,6 +12,7 @@ import { Caption } from './fx';
 import { loadWorld110, loadWorld50 } from './geo/world';
 import { Globe } from './globe';
 import { Player } from './player';
+import { bindTopics, openTopics } from './topics';
 import type { Briefing, DayIndex } from './shared/types';
 import { $, dateParts, esc, pad2, shortDate } from './util';
 
@@ -190,6 +191,7 @@ function bind(): void {
   $('#archiveClose').innerHTML = ICON.close;
   setVoiceBtn();
   updateControls();
+  bindTopics();
 
   $('#playBtn').addEventListener('click', () => player.start());
   $('#againBtn').addEventListener('click', () => player.start());
@@ -198,7 +200,7 @@ function bind(): void {
   $('#nextBtn').addEventListener('click', () => player.jump(player.curIdx + 1));
   $('#prevBtn').addEventListener('click', () => player.jump(player.lineK > 0 ? player.curIdx : player.curIdx - 1));
 
-  $('#setBtn').addEventListener('click', () => openSheet('#sheet'));
+  for (const id of ['#setBtn', '#topicsBtn']) $(id).addEventListener('click', () => { openSheet('#sheet'); void openTopics(); });
   $('#sheetClose').addEventListener('click', () => closeSheet('#sheet'));
   $('#archiveBtn').addEventListener('click', () => { renderArchive(); openSheet('#archive'); });
   $('#archiveClose').addEventListener('click', () => closeSheet('#archive'));
