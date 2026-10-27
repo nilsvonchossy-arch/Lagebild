@@ -1,0 +1,98 @@
+# Tages-Update: recherchiert, schreibt, prüft und vertont die Meldungen und veröffentlicht sie.
+# Läuft morgens gegen 6:45 Uhr (Berlin) mit Wiederholungen bis 8:45 Uhr, falls ein Lauf ausfällt.
+# Die Zeitpläne sind in UTC; die Pipeline prüft selbst die Berliner Uhrzeit (--gate),
+# deshalb passt es im Sommer wie im Winter.
+name: Tages-Update
+
+on:
+  schedule:
+    - cron: '45 4,5,6 * * *'
+    - cron: '17 5,6 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'update = neues Tages-Update, check-feeds = nur Quellen prüfen, compare = Modelle vergleichen'
+        type: choice
+        options: [update, check-feeds, compare]
+        default: update
+      force:
+        description: 'Neu erstellen, auch wenn es heute schon ein Update gibt'
+        type: boolean
+        default: true
+      models:
+        description: 'Nur für compare: Modelle mit Komma getrennt'
+        type: string
+        default: 'claude-opus-5-5,claude-sonnet-5-5,claude-haiku-5-5'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: tages-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      changed: ${{ steps.run.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Bisherige Daten aus Branch "daten" holen
+        run: |
+          mkdir -p daten
+          if git ls-remote --exit-code --heads origin daten > /dev/null; then
+            git fetch --depth=1 origin daten
+            git archive FETCH_HEAD | tar -x -C daten
+          fi
+      - name: Pipeline
+        id: run
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+          MODE: ${{ inputs.mode || 'update' }}
+          FORCE: ${{ inputs.force }}
+          MODELS: ${{ inputs.models }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          case "$MODE" in
+            check-feeds) node pipeline/run.ts --check-feeds ;;
+            compare) node pipeline/run.ts --out daten --compare "$MODELS" ;;
+            *)
+              ARGS="--out daten"
+              if [ "$EVENT" = schedule ]; then ARGS="$ARGS --gate"; fi
+              if [ "$FORCE" = true ]; then ARGS="$ARGS --force"; fi
+              node pipeline/run.ts $ARGS ;;
+          esac
+      - name: Daten-Branch schreiben (ein einziger Commit, damit das Repo nicht wächst)
+        if: steps.run.outputs.changed == 'true'
+        run: |
+          cd daten
+          git init -q -b daten
+          git add -A
+          git -c user.name="Lagebild" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Tages-Update $(TZ=Europe/Berlin date +%F)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" daten
+      - name: Zeitplan aktiv halten
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/update.yml/enable" || true
+
+  deploy:
+    needs: update
+    if: needs.update.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
