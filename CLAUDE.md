@@ -9,13 +9,15 @@ Ich will TikTok deinstallieren und trotzdem jeden Tag auf dem neuesten Stand ble
 - Nur den Stil der Vorbilder übernehmen, nicht ihre Inhalte und nicht ihr Militär-Drama. Keine Videoclips aus unklarer Quelle.
 
 ## Stand
-Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) wird eine richtige App. Den Fortschritt halte ich hier fest.
-- **App:** Vite + TypeScript ohne Framework, Module in `src/`: `globe.ts` (Canvas, Kamerafahrt, Pin), `player.ts` (Ablauf Intro → Meldungen → Outro), `card.ts`, `fx.ts` (Entschlüsseln, Hochzählen, Untertitel), `audio.ts` (Bass-Teppich, Stimme), `main.ts` (Oberfläche).
+Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine richtige App geworden. Den Fortschritt halte ich hier fest.
+- **App:** Vite + TypeScript ohne Framework, Module in `src/`: `globe.ts` (Canvas, Kamerafahrt, Pin), `player.ts` (Ablauf Intro → Meldungen → Outro), `card.ts`, `fx.ts` (Entschlüsseln, Hochzählen, Untertitel), `audio.ts` (Bass-Teppich, Stimme), `topics.ts` (Themen-Editor), `github.ts` (Speichern ins Repo), `main.ts` (Oberfläche).
+- **PWA:** Manifest, Icon, Service Worker; offline nutzbar. Deploy über `.github/workflows/deploy.yml` auf GitHub Pages.
 - **Weltkarte:** lokal aus `world-atlas` (110m für den Globus, 50m wird nachgeladen und bei engem Ausschnitt gezeichnet). `src/geo/countries.json` übersetzt ISO-3 in die Zahlencodes von world-atlas (erzeugt mit `npm run gen:countries`).
 - **Flüssigkeit:** Der Globus wird in einen Zwischenspeicher gezeichnet und nur bei Kamerabewegung neu berechnet; unsichtbare Flächen werden übersprungen.
-- **Stimme:** vorproduzierte MP3s pro Zeile (kommt mit der Pipeline), Systemstimme als Rückfallebene, sonst Timer-Modus. Untertitel laufen synchron zur Audioposition.
-- **Daten:** `data/JJJJ-MM-TT.json` und `data/index.json` kommen beim Deploy aus dem Branch `daten`. Bis dahin zeigt die App `public/demo/2026-10-27.json` (die fünf Prototyp-Meldungen).
-- **Befehle:** `npm run dev`, `npm run build`, `npm test`, `npm run typecheck`.
+- **Themen:** `config/themen.json`, bearbeitbar in der App (Einstellungen). Gespeichert wird per GitHub-API mit einem Fine-grained Token, der nur auf dem iPad liegt.
+- **Pipeline:** `pipeline/run.ts`, gestartet von `.github/workflows/update.yml` (ab 6:45 Uhr Berlin, Wiederholungen bis 8:45). Schritte: `sources.ts` (RSS + GDELT) → `editorial.ts` (Auswahl, Schreiben, Faktencheck mit Claude) → `extract.ts` (Volltext) → `geo.ts` (Ort, Zoom) → `assemble.ts` → `tts.ts` (Azure) → `store.ts`. Einstellungen in `config/pipeline.json`.
+- **Daten:** Branch `daten` mit `JJJJ-MM-TT.json`, `index.json`, `audio/` (14 Tage) und `logs/` (Kosten, verworfene Meldungen und Prüfprotokoll). Der Branch wird bei jedem Lauf als einzelner Commit neu geschrieben, damit das Repo nicht wächst. Ohne Daten zeigt die App `public/demo/2026-10-27.json`.
+- **Befehle:** `npm run dev`, `npm run build`, `npm test`, `npm run typecheck`, `npm run update`, `npm run check-feeds`.
 
 ## Entscheidungen (27.10.2026)
 - **Hosting:** Repo öffentlich, GitHub Pages, Deploy per GitHub Actions. Als PWA auf dem iPad-Homescreen.
@@ -27,11 +29,10 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) wird ein
 - **Weiter offen:** Budget-Grenze für die API, sobald der Modellvergleich vorliegt.
 
 ## Nächste Schritte
-1. PWA und Deploy auf GitHub Pages.
-2. Themen-Konfiguration (`config/themen.json`) und Themen-Editor im Interface.
-3. Pipeline (GitHub Actions): Recherche aus RSS und GDELT → Auswahl mit Relevanz → Volltext → Schreiben nur aus dem Quelltext → Faktencheck → JSON.
-4. Azure-Stimmen mit Wort-Zeitmarken.
-5. Täglicher Lauf um 8:00, Archiv, Marktdaten.
+1. Konten einrichten (`docs/einrichtung.md`), erster echter Lauf, Modellvergleich auswerten.
+2. Stimmen-Auswahl anhand von Hörproben.
+3. Marktdaten-Kachel (DAX, S&P 500, Nasdaq, EUR/USD, Gold, Öl, Bitcoin).
+4. Feinschliff: Querformat am iPad, flüssigere Übergänge, Steuerung über den Sperrbildschirm.
 
 ## Bekannte Probleme
 - Die Systemstimme klingt je nach Gerät blechern (wird durch Azure ersetzt).
