@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+<title>Lagebild Tagesupdate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Michroma&display=swap">
+<style>
+/* Layout: Globus als Vollbild-Bühne; HUD-Spalte (max 520px) mit Fortschritt, Untertitel oben, Meldungskarte unten, Steuerung. Bewusst nur dunkel. */
+:root{
+  --void:#05070a;
+  --land:#161d27;
+  --ink:#eef1f5;
+  --mute:#8f99a8;
+  --soft:#c7ced8;
+  --sig-red:#ff4b3a;
+  --sig-green:#4cf08e;
+  --acc:#ff7a3d;
+  --panel:rgba(7,9,12,.92);
+  --f-hud:"Michroma","Eurostile","Microgramma","Arial Black",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+html{height:100%;box-sizing:border-box;background:var(--void)}
+*,*::before,*::after{box-sizing:border-box}
+body{height:100%;margin:0;overflow:hidden;background:var(--void);color:var(--ink);font-family:var(--f-mono);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+
+#app{position:relative;height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 12px;overflow:hidden}
+#globe{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
+.fx{position:absolute;inset:0;pointer-events:none;z-index:1}
+.scan{background:repeating-linear-gradient(to bottom,rgba(255,255,255,.028) 0 1px,transparent 1px 3px)}
+.vignette{background:radial-gradient(120% 85% at 50% 42%,transparent 52%,rgba(0,0,0,.78) 100%)}
+.hud{position:relative;z-index:2;width:100%;max-width:520px;margin-inline:auto;min-width:0}
+
+/* Kopf */
+.progress{display:flex;gap:4px;height:3px}
+.seg{flex:1;background:rgba(255,255,255,.16);border-radius:2px;overflow:hidden}
+.seg i{display:block;height:100%;width:0;background:var(--ink);transition:width .6s ease}
+.meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+.stamp-date{display:flex;align-items:center;gap:8px;font:500 11px/1 var(--f-mono);letter-spacing:.06em;color:#ff7a3d}
+.pix{display:grid;grid-template-columns:repeat(3,4px);grid-template-rows:repeat(3,4px);gap:1px}
+.pix i{background:currentColor}
+.pix i:nth-child(2),.pix i:nth-child(4),.pix i:nth-child(9){opacity:.25}
+.brand{font:400 9px/1 var(--f-hud);letter-spacing:.34em;color:var(--mute);margin-left:4px}
+.tools{display:flex;gap:8px}
+.iconbtn{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(8,10,14,.55);color:var(--ink);padding:0}
+.iconbtn svg{width:17px;height:17px}
+.iconbtn[aria-pressed="false"]{color:var(--mute)}
+
+/* Untertitel */
+#caption{margin-top:16px;text-align:center;min-height:6.4em;transition:opacity .25s}
+#caption.off{opacity:0}
+.role{font:400 10px/1 var(--f-hud);letter-spacing:.3em;color:var(--sig-green);margin-bottom:9px}
+.role[data-role="BRIEFING"]{color:var(--sig-red)}
+.ctext{font:400 12.5px/1.65 var(--f-hud);letter-spacing:.12em;text-transform:uppercase;max-width:31ch;margin:0 auto;text-wrap:balance;text-shadow:0 1px 10px #000,0 0 2px #000}
+.ctext .ghost{color:transparent;text-shadow:none}
+
+/* Bühne mit Titelkarte */
+#stage{position:relative;min-height:0}
+#title{position:absolute;inset:0;display:grid;place-content:center;gap:12px;text-align:center;pointer-events:none;opacity:0;transition:opacity .4s}
+#title.on{opacity:1}
+.t-date{font:400 clamp(22px,6.5vw,32px)/1 var(--f-hud);letter-spacing:.16em;text-shadow:0 0 18px rgba(0,0,0,.9)}
+.t-sub{font:400 clamp(14px,4.4vw,19px)/1.4 var(--f-hud);letter-spacing:.2em;color:var(--sig-green);text-shadow:0 0 14px rgba(76,240,142,.35)}
+
+/* Pin-Beschriftung am Globus */
+#pin{position:absolute;left:0;top:0;z-index:2;display:flex;align-items:center;gap:7px;padding:5px 9px 5px 5px;font:400 9.5px/1 var(--f-hud);letter-spacing:.18em;white-space:nowrap;background:rgba(6,8,11,.78);border:1px solid var(--acc);border:1px solid color-mix(in srgb,var(--acc) 55%,transparent);pointer-events:none;opacity:0;transition:opacity .35s}
+#pin.on{opacity:1}
+.flag{width:17px;height:17px;border-radius:50%;overflow:hidden;display:grid;place-items:center;font-size:22px;line-height:1;background:#222}
+
+/* Meldungskarte */
+.card{position:relative;margin-bottom:12px;padding:15px 16px 14px;background:rgba(14,11,11,.92);background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 17%,rgba(9,10,13,.92)),rgba(8,9,12,.95) 62%);clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 40%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);visibility:hidden;transform-origin:50% 0}
+.card[data-state="in"]{visibility:visible;animation:cardIn .6s cubic-bezier(.2,.8,.2,1) both}
+.card[data-state="out"]{visibility:visible;animation:cardOut .5s ease-in both}
+.card[data-state="out"]>*{opacity:0;transition:opacity .12s}
+.card[data-state="in"] .rv{animation:fadeUp .5s ease both;animation-delay:var(--d,0s)}
+@keyframes cardIn{0%{transform:scaleY(.025);opacity:0}30%{transform:scaleY(.025);opacity:1}100%{transform:scaleY(1);opacity:1}}
+@keyframes cardOut{0%,55%{transform:scaleY(1);opacity:1}100%{transform:scaleY(.025);opacity:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tag{position:relative;overflow:hidden;display:inline-flex;align-items:center;padding:5px 8px;background:var(--acc);color:#110906;font:800 10.5px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.tag::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.75) 50%,transparent 70%);transform:translateX(-120%);animation:shimmer 2.8s ease-in-out infinite 1s}
+@keyframes shimmer{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
+.count{font:500 11px/1 var(--f-mono);letter-spacing:.12em;color:var(--mute);font-variant-numeric:tabular-nums}
+.headline{display:flex;gap:8px;margin:11px 0 0;font:700 clamp(18px,5.3vw,23px)/1.16 var(--f-mono);letter-spacing:-.01em;text-transform:uppercase;text-wrap:balance}
+.headline::before{content:"";flex:none;margin-top:.32em;border-left:6px solid var(--acc);border-top:4px solid transparent;border-bottom:4px solid transparent;height:0}
+.headline .w{display:inline-block;opacity:0}
+.card[data-state="in"] .headline .w{animation:fadeUp .45s ease both;animation-delay:var(--d,0s)}
+.hl{color:var(--acc)}
+.brief{margin:12px 0 0;padding-top:10px;border-top:1px solid rgba(255,255,255,.12);border-top-color:color-mix(in srgb,var(--acc) 35%,transparent);font:400 12.5px/1.5 var(--f-mono);color:var(--soft)}
+.brief b{color:var(--acc);font-weight:700}
+.figure{display:flex;align-items:baseline;gap:12px;margin-top:12px}
+.fig-num{font:800 32px/1 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.fig-label{font:400 9.5px/1.4 var(--f-hud);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;flex-wrap:wrap}
+.src{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--acc);border-radius:999px;font:500 11px/1.2 var(--f-mono);color:var(--ink);text-decoration:none}
+.src b{font-weight:800}
+.src .sep{width:1px;height:10px;background:var(--mute)}
+.foot-mark{font:400 8.5px/1 var(--f-hud);letter-spacing:.22em;color:var(--mute)}
+
+/* Steuerung */
+.controls{display:flex;align-items:center;justify-content:center;gap:22px}
+.ctl{width:46px;height:46px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(8,10,14,.6);color:var(--ink);padding:0}
+.ctl svg{width:18px;height:18px}
+.ctl.main{width:58px;height:58px;background:var(--ink);color:#07090c;border-color:var(--ink)}
+.ctl.main svg{width:22px;height:22px}
+.ctl:disabled{opacity:.35;cursor:default}
+
+/* Overlays */
+.overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:flex-end;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 18px;background:linear-gradient(180deg,transparent 0%,transparent 34%,rgba(5,7,10,.88) 52%,rgba(5,7,10,.97) 100%);overflow-y:auto}
+.panel{width:100%;max-width:520px;margin-inline:auto;display:flex;flex-direction:column;gap:14px;min-width:0}
+.kicker{font:400 9.5px/1 var(--f-hud);letter-spacing:.34em;color:var(--sig-green)}
+.p-title{margin:0;font:400 clamp(19px,5.6vw,26px)/1.25 var(--f-hud);letter-spacing:.08em;text-transform:uppercase;text-wrap:balance}
+.p-sub{margin:-4px 0 0;font:400 12px/1.5 var(--f-mono);color:var(--mute)}
+.p-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid rgba(255,255,255,.1)}
+.p-list li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.p-num{grid-row:span 2;font:500 11px/1.5 var(--f-mono);color:var(--mute);font-variant-numeric:tabular-nums}
+.p-res{display:flex;align-items:center;gap:7px;font:400 8.5px/1 var(--f-hud);letter-spacing:.2em;text-transform:uppercase;color:var(--c)}
+.p-res::before{content:"";width:6px;height:6px;background:var(--c)}
+.p-head{font:700 13.5px/1.35 var(--f-mono);min-width:0}
+.p-head a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
+.p-src{font:400 11px/1.4 var(--f-mono);color:var(--mute)}
+.p-actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 20px;border:1px solid rgba(255,255,255,.22);background:rgba(10,12,16,.7);color:var(--ink);font:700 13px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase}
+.btn.primary{flex:1;background:var(--ink);color:#07090c;border-color:var(--ink)}
+.btn svg{width:16px;height:16px}
+.fine{margin:0;font:400 10.5px/1.5 var(--f-mono);color:var(--mute)}
+.empty{font:400 13px/1.5 var(--f-mono);color:var(--soft);padding:12px 0}
+
+/* Einstellungen */
+#sheet{position:absolute;inset:0;z-index:7;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+.sheet-in{width:100%;max-width:560px;max-height:88%;overflow-y:auto;background:#0b0e13;border-top:1px solid rgba(255,255,255,.14);padding:18px max(16px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between}
+.sheet-head h2{margin:0;font:400 13px/1 var(--f-hud);letter-spacing:.24em;text-transform:uppercase}
+.grp{display:flex;flex-direction:column;gap:10px}
+.grp>label,.grp>.lbl{font:400 9.5px/1 var(--f-hud);letter-spacing:.24em;color:var(--mute);text-transform:uppercase}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.chip{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:2px 9px;padding:10px 11px;text-align:left;border:1px solid rgba(255,255,255,.14);background:transparent;color:var(--mute)}
+.chip .cdot{grid-row:span 2;width:10px;height:10px;border:1.5px solid var(--c)}
+.chip span:nth-child(2){font:700 12px/1.25 var(--f-mono)}
+.chip small{font:400 10px/1.2 var(--f-mono);color:var(--mute)}
+.chip[aria-pressed="true"]{color:var(--ink);border-color:var(--c);background:rgba(255,255,255,.03)}
+.chip[aria-pressed="true"] .cdot{background:var(--c)}
+select,input[type="range"]{width:100%;accent-color:var(--ink)}
+select{min-height:44px;padding:0 10px;background:#11151b;color:var(--ink);border:1px solid rgba(255,255,255,.18);font:500 13px var(--f-mono)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;font:500 13px/1.4 var(--f-mono)}
+.switch{position:relative;width:46px;height:26px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:#11151b;padding:0;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--mute);transition:transform .2s,background .2s}
+.switch[aria-checked="true"]{background:#1d2a22;border-color:var(--sig-green)}
+.switch[aria-checked="true"]::after{transform:translateX(20px);background:var(--sig-green)}
+.note{margin:0;font:400 11px/1.5 var(--f-mono);color:var(--mute)}
+
+.glitch #globe{animation:jit .09s steps(2) 8}
+@keyframes jit{0%{transform:translate(2px,-1px);filter:saturate(1.6) hue-rotate(-12deg)}100%{transform:translate(-3px,1px);filter:contrast(1.3)}}
+
+@media (max-height:700px){
+  #caption{min-height:5.6em;margin-top:10px}
+  .ctext{font-size:11.5px}
+  .brief{font-size:11.5px}
+  .fig-num{font-size:26px}
+  .headline{font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+
+<div id="app">
+  <canvas id="globe" aria-hidden="true"></canvas>
+  <div class="fx scan"></div>
+  <div class="fx vignette"></div>
+  <div id="pin" aria-hidden="true"><span class="flag" id="pinFlag"></span><span id="pinName"></span></div>
+
+  <header class="hud">
+    <div class="progress" id="progress"></div>
+    <div class="meta">
+      <div class="stamp-date"><span class="pix" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="metaDate">27//OKT//2026</span><span class="brand">LAGEBILD</span></div>
+      <div class="tools">
+        <button class="iconbtn" id="voiceBtn" type="button" aria-pressed="true" aria-label="Stimme an oder aus"></button>
+        <button class="iconbtn" id="setBtn" type="button" aria-label="Themen und Stimme einstellen"></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="hud" id="caption" aria-live="polite">
+    <div class="role" id="capRole"></div>
+    <p class="ctext" id="capText"></p>
+  </div>
+
+  <div class="hud" id="stage">
+    <div id="title"><div class="t-date" id="tDate"></div><div class="t-sub" id="tSub"></div></div>
+  </div>
+
+  <div class="hud">
+    <article class="card" id="card" data-state="hidden" aria-live="polite">
+      <div class="card-top rv" style="--d:.25s"><span class="tag" id="cTag"></span><span class="count" id="cCount"></span></div>
+      <h2 class="headline" id="cHead"></h2>
+      <p class="brief rv" style="--d:.7s"><b>Kurz gesagt:</b> <span id="cBrief"></span></p>
+      <div class="figure rv" style="--d:.85s"><span class="fig-num" id="cFig"></span><span class="fig-label" id="cFigLabel"></span></div>
+      <div class="card-foot rv" style="--d:1s"><a class="src" id="cSrc" target="_blank" rel="noopener">Quelle <span class="sep"></span> <b id="cSrcName"></b> ↗</a><span class="foot-mark" id="cMark"></span></div>
+    </article>
+  </div>
+
+  <nav class="hud controls" aria-label="Wiedergabe">
+    <button class="ctl" id="prevBtn" type="button" aria-label="Vorherige Meldung"></button>
+    <button class="ctl main" id="playPause" type="button" aria-label="Abspielen"></button>
+    <button class="ctl" id="nextBtn" type="button" aria-label="Nächste Meldung"></button>
+  </nav>
+
+  <section class="overlay" id="start">
+    <div class="panel">
+      <div class="kicker">LAGEBILD · TAGESUPDATE</div>
+      <h1 class="p-title" id="sTitle"></h1>
+      <p class="p-sub" id="sSub"></p>
+      <ol class="p-list" id="sList"></ol>
+      <div class="p-actions">
+        <button class="btn primary" id="playBtn" type="button"></button>
+        <button class="btn" id="topicsBtn" type="button">Themen</button>
+      </div>
+      <p class="fine" id="sFine"></p>
+    </div>
+  </section>
+
+  <section class="overlay" id="end" hidden>
+    <div class="panel">
+      <div class="kicker">UPDATE BEENDET</div>
+      <h1 class="p-title">Das war dein Lagebild</h1>
+      <ol class="p-list" id="eList"></ol>
+      <div class="p-actions">
+        <button class="btn primary" id="againBtn" type="button"></button>
+        <button class="btn" id="topicsBtn2" type="button">Themen</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="sheet" hidden>
+    <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-head"><h2 id="sheetTitle">Einstellungen</h2><button class="iconbtn" id="sheetClose" type="button" aria-label="Schließen"></button></div>
+      <div class="grp">
+        <span class="lbl">Themen</span>
+        <div class="chips" id="topics"></div>
+        <p class="note">Wird auf diesem Gerät gespeichert. Im nächsten Schritt bestimmen diese Themen schon die Recherche, nicht nur den Filter.</p>
+      </div>
+      <div class="grp">
+        <label for="voiceSel">Stimme</label>
+        <select id="voiceSel"></select>
+        <p class="note" id="voiceNote"></p>
+      </div>
+      <div class="grp">
+        <label for="rate">Sprechtempo <span id="rateVal"></span></label>
+        <input type="range" id="rate" min="0.8" max="1.3" step="0.05">
+      </div>
+      <div class="grp">
+        <div class="row"><span>Atmo-Sound (Bass-Teppich)</span><button class="switch" id="atmoSw" type="button" role="switch" aria-checked="true" aria-label="Atmo-Sound"></button></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(() => {
+'use strict';
+
+/* ---------- Inhalte (Prototyp: am 27.10.2026 aus den verlinkten Quellen zusammengefasst) ---------- */
+const RESSORTS = {
+  welt:        { name: 'Weltpolitik',        c: '#ff7a3d' },
+  boerse:      { name: 'Wirtschaft & Börse', c: '#f2bf45' },
+  tech:        { name: 'Tech & KI',          c: '#4cc9ff' },
+  oesterreich: { name: 'Österreich',         c: '#ff4d5e' },
+  europa:      { name: 'Europa',             c: '#8f9cff' },
+  sport:       { name: 'Sport',              c: '#5be38f' },
+  klima:       { name: 'Klima & Umwelt',     c: '#38d9b5' },
+  wissen:      { name: 'Wissenschaft',       c: '#c792ff' }
+};
+
+const DATA = {
+  date: { day: 27, month: 10, year: 2026, weekday: 'Dienstag', monthName: 'Oktober', short: 'OKT' },
+  compiled: '27.10.2026, 17:40 Uhr',
+  stories: [
+    {
+      id: 'israel', ressort: 'welt', country: 'ISR', label: 'ISRAEL', flag: '🇮🇱',
+      lon: 35.21, lat: 31.77, zoom: 10,
+      headline: '[Israel] wählt mit [Rekord]beteiligung',
+      brief: 'Bis 16 Uhr Ortszeit gaben 55,7 % ihre Stimme ab, so viele wie nie zuvor zu dieser Uhrzeit (2022: 47,5 %). Netanjahus Likud tritt gegen Gadi Eisenkots Partei Yashar an. Die Wahllokale schließen um 22 Uhr.',
+      figure: { value: 55.7, dec: 1, suffix: ' %', label: 'Wahlbeteiligung um 16 Uhr' },
+      source: { name: 'Times of Israel', url: 'https://timesofisrael.com/liveblog-october-27-2026' },
+      short: 'Rekordbeteiligung in Israel',
+      open: { first: 'Wir starten in Israel.', mid: 'Blick nach Israel.', last: 'Zum Schluss nach Israel.' },
+      lines: [
+        ['LAGE', 'Israel wählt heute ein neues Parlament, die Knesset.'],
+        ['LAGE', 'Bis 16 Uhr Ortszeit lag die Wahlbeteiligung bei 55,7 Prozent.'],
+        ['EINORDNUNG', 'Laut Wahlkomitee ist das der höchste Wert zu dieser Uhrzeit seit Beginn der Messungen 1973. 2022 waren es 47,5 Prozent.'],
+        ['EINORDNUNG', 'Hauptherausforderer von Premier Netanjahu ist Gadi Eisenkot. Die Wahllokale schließen um 22 Uhr.']
+      ]
+    },
+    {
+      id: 'wallstreet', ressort: 'boerse', country: 'USA', label: 'NEW YORK', flag: '🇺🇸',
+      lon: -74.01, lat: 40.71, zoom: 2.6,
+      headline: '[KI]-Meldungen treiben die [Wall Street]',
+      brief: 'Am Montag stieg der Nasdaq um 0,8 % auf 26.169 Punkte, der S&P 500 um 0,7 %. Technologiewerte legten 1,7 % zu. Auslöser waren KI-Nachrichten: Meta will 95 Mrd. Dollar für KI-Infrastruktur aufnehmen, Anthropic hat den Börsengang beantragt.',
+      figure: { value: 0.8, dec: 1, prefix: '+', suffix: ' %', label: 'Nasdaq am Montag' },
+      source: { name: 'Zacks via Yahoo Finance', url: 'https://finance.yahoo.com/markets/stocks/articles/stock-market-news-oct-27-072700640.html' },
+      short: 'Kursgewinne an der Wall Street',
+      open: { first: 'Wir starten an der Wall Street.', mid: 'Und an den Märkten?', last: 'Zum Schluss die Märkte.' },
+      lines: [
+        ['LAGE', 'Die Wall Street hat am Montag zugelegt. Der Nasdaq stieg um 0,8 Prozent, der S&P 500 um 0,7 Prozent.', 'Die Wall Street hat am Montag zugelegt. Der Nasdaq stieg um 0,8 Prozent, der S und P 500 um 0,7 Prozent.'],
+        ['EINORDNUNG', 'Getragen wurde das von KI-Meldungen. Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen, Anthropic hat den Börsengang beantragt.'],
+        ['LAGE', 'Der Technologiesektor im S&P 500 legte um 1,7 Prozent zu.', 'Der Technologiesektor im S und P 500 legte um 1,7 Prozent zu.']
+      ]
+    },
+    {
+      id: 'apple', ressort: 'tech', country: 'USA', label: 'CUPERTINO', flag: '🇺🇸',
+      lon: -122.03, lat: 37.32, zoom: 2.6,
+      headline: '[Apple] bringt Macs mit [M6]-Chip',
+      brief: 'Der neue iMac kostet ab 1.499 Dollar, das 14-Zoll-MacBook-Pro ab 1.999 Dollar. Ausgeliefert wird ab 6. November. Die Neural Engine soll laut Apple 1,9-mal so schnell sein wie beim M5.',
+      figure: { value: 1.9, dec: 1, suffix: '×', label: 'Neural Engine vs. M5, Apple-Angabe' },
+      source: { name: 'Apple via AI Weekly', url: 'https://aiweekly.co/ai-news-today' },
+      short: 'neue Macs von Apple',
+      open: { first: 'Wir starten mit Tech.', mid: 'Zu Tech.', last: 'Zum Schluss Tech.' },
+      lines: [
+        ['LAGE', 'Apple bringt neue Macs mit dem M6-Chip: einen iMac ab 1.499 Dollar und ein 14-Zoll-MacBook-Pro ab 1.999 Dollar.', 'Apple bringt neue Macs mit dem M6-Chip: einen iMac ab 1499 Dollar und ein 14-Zoll MacBook Pro ab 1999 Dollar.'],
+        ['LAGE', 'Ausgeliefert wird ab 6. November.', 'Ausgeliefert wird ab dem 6. November.'],
+        ['EINORDNUNG', 'Die Neural Engine für KI-Aufgaben soll laut Apple 1,9-mal so schnell sein wie beim Vorgänger M5.']
+      ]
+    },
+    {
+      id: 'kundl', ressort: 'oesterreich', country: 'AUT', label: 'KUNDL · TIROL', flag: '🇦🇹',
+      lon: 11.99, lat: 47.47, zoom: 10,
+      headline: 'Europas letztes [Penicillin]-Werk unter [Druck]',
+      brief: 'Sandoz nennt die Produktion in Kundl „wirtschaftlich nicht tragfähig“, wenn Regierungen nicht mehr für Penicillin zahlen. Grund ist günstigere Konkurrenz aus China; Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht. Am Standort arbeiten mehr als 2.000 Menschen.',
+      figure: { value: 2000, dec: 0, suffix: '+', label: 'Beschäftigte in Kundl' },
+      source: { name: 'APA/Reuters, 21.10.', url: 'https://www.vienna.at/europas-letztes-penicillin-werk-unter-druck/10571465' },
+      short: 'Druck auf das Penicillin-Werk in Kundl',
+      open: { first: 'Wir starten in Österreich.', mid: 'Jetzt nach Österreich.', last: 'Zum Schluss nach Österreich.' },
+      lines: [
+        ['LAGE', 'In Kundl in Tirol steht Europas letztes großes Penicillin-Werk unter Druck.'],
+        ['LAGE', 'Betreiber Sandoz nennt die Produktion wirtschaftlich nicht tragfähig, wenn Regierungen nicht mehr für Penicillin zahlen.'],
+        ['EINORDNUNG', 'Der Grund ist günstigere Konkurrenz aus China. Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht.'],
+        ['EINORDNUNG', 'Am Standort arbeiten mehr als 2.000 Menschen.', 'Am Standort arbeiten mehr als 2000 Menschen.']
+      ]
+    },
+    {
+      id: 'frankreich', ressort: 'europa', country: 'FRA', label: 'FRANKREICH', flag: '🇫🇷',
+      lon: 2.35, lat: 48.86, zoom: 6,
+      headline: '[Frankreich] deckelt Klassen bei [28] Schülern',
+      brief: 'Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an. Eingangsklassen an öffentlichen Gymnasien sollen höchstens 28 Schüler haben. Die Vergabeplattform Parcoursup soll bis 2028 abgeschafft werden.',
+      figure: { value: 28, dec: 0, label: 'Schüler pro Eingangsklasse, maximal' },
+      source: { name: 'WSJ/AP via Just Security', url: 'https://www.justsecurity.org/162113/early-edition-october-27-2026/' },
+      short: 'kleinere Klassen in Frankreich',
+      open: { first: 'Wir starten in Frankreich.', mid: 'Weiter nach Frankreich.', last: 'Zum Schluss Frankreich.' },
+      lines: [
+        ['LAGE', 'Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an.'],
+        ['LAGE', 'Eingangsklassen an öffentlichen Gymnasien sollen höchstens 28 Schüler haben.'],
+        ['EINORDNUNG', 'Die Vergabeplattform für Studienplätze, Parcoursup, soll bis 2028 abgeschafft werden.']
+      ]
+    }
+  ]
+};
+
+/* ---------- Helfer ---------- */
+const $ = s => document.querySelector(s);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPEED = () => (window.__lagebildSpeed || 1);
+const sleep = ms => new Promise(r => setTimeout(r, ms / SPEED()));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
+const NUMW = ['keine', 'eine', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht'];
+const fmtNum = (v, f) => (f.prefix || '') + v.toLocaleString('de-DE', { minimumFractionDigits: f.dec, maximumFractionDigits: f.dec }) + (f.suffix || '');
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>',
+  prev: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h2.5v16H5zM20 4.5v15L8.5 12z"/></svg>',
+  next: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 4H19v16h-2.5zM4 4.5v15L15.5 12z"/></svg>',
+  voice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  mute: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
+  sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+
+/* ---------- Einstellungen ---------- */
+const DEFAULTS = { topics: Object.keys(RESSORTS), voice: '', rate: 1, atmo: true, speak: true };
+let S = (() => { try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('lagebild.v1') || 'null') || {}); } catch (e) { return Object.assign({}, DEFAULTS); } })();
+const save = () => { try { localStorage.setItem('lagebild.v1', JSON.stringify(S)); } catch (e) {} };
+
+/* ---------- Globus ---------- */
+const app = $('#app'), cvs = $('#globe'), ctx = cvs.getContext('2d');
+let W = 0, H = 0, DPR = 1, mode = 'menu';
+const G = { rot: [-14, -28], zoom: 1, idle: true, world: null, byId: {}, hl: null, hlA: 0, hlT: 0, pin: null, pinA: 0, pinT: 0, acc: '#ff7a3d', glitchUntil: 0, cy: null, R: null };
+let proj, path, grat;
+const stars = Array.from({ length: 200 }, (_, i) => { const r = Math.sin(i * 12.9898) * 43758.5453; const r2 = Math.sin(i * 78.233) * 12345.678; return { x: r - Math.floor(r), y: r2 - Math.floor(r2), s: .4 + ((i * 7) % 10) / 10, p: i * 1.7 }; });
+
+function resize() {
+  const r = app.getBoundingClientRect();
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = r.width; H = r.height;
+  cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+function targetLayout() {
+  if (mode === 'brief') {
+    const st = $('#stage').getBoundingClientRect(), ar = app.getBoundingClientRect();
+    const sh = Math.max(120, st.height);
+    return { cy: st.top - ar.top + sh * 0.5, R: Math.min(W * 0.43, sh * 0.47) };
+  }
+  return { cy: H * 0.29, R: Math.min(W * 0.40, H * 0.22) };
+}
+
+function topoFeatures(topo) {
+  const tf = topo.transform;
+  const arcs = topo.arcs.map(arc => {
+    if (!tf) return arc.map(p => [p[0], p[1]]);
+    let x = 0, y = 0;
+    return arc.map(p => { x += p[0]; y += p[1]; return [x * tf.scale[0] + tf.translate[0], y * tf.scale[1] + tf.translate[1]]; });
+  });
+  const ring = idx => { const pts = []; idx.forEach((i, k) => { const a = i < 0 ? arcs[~i].slice().reverse() : arcs[i]; for (let j = k ? 1 : 0; j < a.length; j++) pts.push(a[j]); }); return pts; };
+  const geom = g => g.type === 'Polygon' ? { type: 'Polygon', coordinates: g.arcs.map(ring) } : g.type === 'MultiPolygon' ? { type: 'MultiPolygon', coordinates: g.arcs.map(p => p.map(ring)) } : null;
+  const obj = Object.values(topo.objects)[0];
+  return obj.geometries.map(g => ({ type: 'Feature', id: g.id, properties: g.properties || {}, geometry: geom(g) })).filter(f => f.geometry).map(f => {
+    if (d3.geoArea(f) > 2 * Math.PI) {
+      const rev = r => r.slice().reverse();
+      f.geometry.coordinates = f.geometry.type === 'Polygon' ? f.geometry.coordinates.map(rev) : f.geometry.coordinates.map(p => p.map(rev));
+    }
+    return f;
+  });
+}
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+async function loadWorld() {
+  const urls = [
+    'https://cdnjs.cloudflare.com/ajax/libs/datamaps/0.5.9/datamaps.world.min.js',
+    'https://cdn.jsdelivr.net/npm/datamaps@0.5.9/dist/datamaps.world.min.js',
+    'https://unpkg.com/datamaps@0.5.9/dist/datamaps.world.min.js'
+  ];
+  for (const u of urls) {
+    try {
+      await loadScript(u);
+      const topo = window.Datamap && window.Datamap.prototype && window.Datamap.prototype.worldTopo;
+      if (topo && topo.objects) {
+        const feats = topoFeatures(topo);
+        G.world = { type: 'FeatureCollection', features: feats };
+        feats.forEach(f => { G.byId[f.id] = f; });
+        return;
+      }
+    } catch (e) { /* nächste Quelle */ }
+  }
+}
+
+let lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(50, t - (lastT || t)); lastT = t;
+  const tl = targetLayout();
+  if (G.cy == null) { G.cy = tl.cy; G.R = tl.R; }
+  G.cy += (tl.cy - G.cy) * 0.07; G.R += (tl.R - G.R) * 0.07;
+  if (G.idle && !reduce) G.rot[0] += dt * 0.003;
+  G.hlA += (G.hlT - G.hlA) * 0.07;
+  G.pinA += (G.pinT - G.pinA) * 0.1;
+
+  const R = G.R * G.zoom, cx = W / 2, cy = G.cy;
+  proj.translate([cx, cy]).scale(R).rotate([G.rot[0], G.rot[1], 0]);
+  ctx.clearRect(0, 0, W, H);
+
+  for (const s of stars) {
+    ctx.globalAlpha = .18 + .32 * (0.5 + 0.5 * Math.sin(t * 0.0012 * s.s + s.p));
+    ctx.fillStyle = '#dfe8ff';
+    ctx.fillRect(s.x * W, s.y * H, s.s * 1.3, s.s * 1.3);
+  }
+  ctx.globalAlpha = 1;
+
+  if (R < Math.max(W, H) * 2) {
+    let g = ctx.createRadialGradient(cx, cy, R * 0.94, cx, cy, R * 1.24);
+    g.addColorStop(0, 'rgba(70,140,255,.42)'); g.addColorStop(1, 'rgba(70,140,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.24, 0, 7); ctx.fill();
+    g = ctx.createRadialGradient(cx + R * .22, cy + R * .2, R * .8, cx + R * .22, cy + R * .2, R * 1.16);
+    g.addColorStop(0, 'rgba(255,60,60,.22)'); g.addColorStop(1, 'rgba(255,60,60,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx + R * .22, cy + R * .2, R * 1.16, 0, 7); ctx.fill();
+  }
+
+  const sg = ctx.createRadialGradient(cx - R * .35, cy - R * .4, R * .05, cx, cy, R * 1.05);
+  sg.addColorStop(0, '#13233a'); sg.addColorStop(.6, '#0a1220'); sg.addColorStop(1, '#04070c');
+  ctx.beginPath(); path({ type: 'Sphere' }); ctx.fillStyle = sg; ctx.fill();
+
+  ctx.beginPath(); path(grat); ctx.lineWidth = .5; ctx.strokeStyle = 'rgba(140,170,215,.07)'; ctx.stroke();
+
+  if (G.world) {
+    ctx.beginPath(); path(G.world);
+    ctx.fillStyle = '#18212d'; ctx.fill();
+    ctx.lineWidth = .6; ctx.strokeStyle = 'rgba(155,180,215,.32)'; ctx.stroke();
+  }
+  if (G.hl && G.hlA > .01) {
+    ctx.save();
+    ctx.globalAlpha = G.hlA;
+    ctx.beginPath(); path(G.hl);
+    ctx.fillStyle = hexA(G.acc, .3); ctx.fill();
+    ctx.shadowColor = G.acc; ctx.shadowBlur = 14;
+    ctx.lineWidth = 1.6; ctx.strokeStyle = G.acc; ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.save();
+  const rg = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+  rg.addColorStop(0, 'rgba(120,175,255,.9)'); rg.addColorStop(.55, 'rgba(120,175,255,.15)'); rg.addColorStop(1, 'rgba(255,80,80,.75)');
+  ctx.beginPath(); path({ type: 'Sphere' }); ctx.lineWidth = 1.4; ctx.strokeStyle = rg; ctx.shadowColor = 'rgba(110,160,255,.8)'; ctx.shadowBlur = 16; ctx.stroke();
+  ctx.restore();
+
+  const pinEl = $('#pin');
+  if (G.pin && G.pinA > .01) {
+    const center = [-G.rot[0], -G.rot[1]];
+    const visible = d3.geoDistance(G.pin, center) < Math.PI / 2 - .03;
+    const p = proj(G.pin);
+    if (visible && p) {
+      const [px, py] = p;
+      ctx.save(); ctx.globalAlpha = G.pinA;
+      const ph = (t % 1700) / 1700;
+      ctx.beginPath(); ctx.arc(px, py, 5 + ph * 16, 0, 7); ctx.strokeStyle = hexA(G.acc, (1 - ph) * .9); ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 7); ctx.fillStyle = '#fff'; ctx.shadowColor = G.acc; ctx.shadowBlur = 10; ctx.fill();
+      const card = $('#card');
+      if (card.dataset.state === 'in') {
+        const cr = card.getBoundingClientRect(), ar = app.getBoundingClientRect();
+        const top = cr.top - ar.top, l = cr.left - ar.left;
+        if (top > py + 14) {
+          const x2 = Math.max(l + 26, Math.min(l + cr.width - 26, px));
+          ctx.shadowBlur = 0; ctx.strokeStyle = hexA(G.acc, .85); ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(px, py + 5); ctx.lineTo(px, (py + top) / 2); ctx.lineTo(x2, (py + top) / 2); ctx.lineTo(x2, top); ctx.stroke();
+          ctx.fillStyle = G.acc; ctx.fillRect(x2 - 2.5, top - 2.5, 5, 5);
+        }
+      }
+      ctx.restore();
+      pinEl.style.transform = `translate(${px}px,${py}px) translate(-50%,calc(-100% - 14px))`;
+      pinEl.classList.add('on');
+    } else pinEl.classList.remove('on');
+  } else pinEl.classList.remove('on');
+
+  if (t < G.glitchUntil && !reduce) {
+    for (let i = 0; i < 7; i++) {
+      const y = Math.random() * H, h = 4 + Math.random() * 26, dx = (Math.random() - .5) * 46;
+      try { ctx.drawImage(cvs, 0, y * DPR, W * DPR, h * DPR, dx, y, W, h); } catch (e) {}
+      ctx.fillStyle = i % 2 ? 'rgba(255,40,70,.07)' : 'rgba(60,200,255,.06)';
+      ctx.fillRect(0, y, W, h);
+    }
+  }
+}
+
+function fly(lonlat, zoomTo, dur) {
+  return new Promise(res => {
+    const from = [-G.rot[0], -G.rot[1]];
+    const ip = d3.geoInterpolate(from, lonlat);
+    const z0 = G.zoom, dist = d3.geoDistance(from, lonlat);
+    const zMid = Math.max(1, Math.min(z0, zoomTo) / (1 + dist * 3));
+    const T = reduce ? 0 : dur / SPEED(), t0 = performance.now();
+    G.idle = false;
+    const step = now => {
+      const k = T ? Math.min(1, (now - t0) / T) : 1;
+      const c = ip(ease(k));
+      G.rot = [-c[0], -c[1]];
+      G.zoom = k < .45
+        ? Math.exp(lerp(Math.log(z0), Math.log(zMid), ease(k / .45)))
+        : Math.exp(lerp(Math.log(zMid), Math.log(zoomTo), ease((k - .45) / .55)));
+      if (k < 1) requestAnimationFrame(step); else res();
+    };
+    requestAnimationFrame(step);
+  });
+}
+
+/* ---------- Text-Effekte ---------- */
+const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&@0123456789';
+function scramble(el, final, dur = 700) {
+  if (reduce) { el.textContent = final; return; }
+  const t0 = performance.now(), D = dur / SPEED();
+  const tick = now => {
+    const k = Math.min(1, (now - t0) / D), n = Math.floor(final.length * k);
+    let out = final.slice(0, n);
+    for (let i = n; i < final.length; i++) out += /\s|\/|·/.test(final[i]) ? final[i] : GLYPHS[Math.random() * GLYPHS.length | 0];
+    el.textContent = out;
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  tick(t0);
+}
+function countUp(el, f) {
+  if (reduce) { el.textContent = fmtNum(f.value, f); return; }
+  const t0 = performance.now(), D = 1300 / SPEED();
+  const tick = now => { const k = Math.min(1, (now - t0) / D); el.textContent = fmtNum(f.value * (1 - Math.pow(1 - k, 3)), f); if (k < 1) requestAnimationFrame(tick); };
+  tick(t0);
+}
+let capTimer = null;
+function showCaption(role, text) {
+  const cap = $('#caption'); cap.classList.remove('off');
+  const r = $('#capRole'), el = $('#capText');
+  r.dataset.role = role; r.textContent = role;
+  clearInterval(capTimer);
+  if (reduce) { el.textContent = text; return; }
+  let n = 0; const step = Math.max(1, Math.round(text.length / 45));
+  const paint = () => { el.innerHTML = esc(text.slice(0, n)) + '<span class="ghost">' + esc(text.slice(n)) + '</span>'; };
+  paint();
+  capTimer = setInterval(() => { n += step; if (n >= text.length) { n = text.length; clearInterval(capTimer); } paint(); }, 22);
+}
+const hideCaption = () => { $('#caption').classList.add('off'); };
+
+/* ---------- Karte ---------- */
+function headlineHTML(h, base) {
+  const marked = h.replace(/\[([^\]]+)\]/g, (m, inner) => inner.split(/\s+/).map(w => '[' + w + ']').join(' '));
+  return marked.split(/\s+/).map((word, i) =>
+    `<span class="w" style="--d:${(base + i * .06).toFixed(2)}s">${esc(word).replace(/\[([^\]]+)\]/g, '<span class="hl">$1</span>')}</span>`
+  ).join(' ');
+}
+function fillCard(s, i) {
+  const c = $('#card'), r = RESSORTS[s.ressort];
+  c.style.setProperty('--acc', r.c);
+  $('#cCount').textContent = String(i + 1).padStart(2, '0') + '/' + String(list.length).padStart(2, '0');
+  $('#cHead').innerHTML = '<span>' + headlineHTML(s.headline, .35) + '</span>';
+  $('#cBrief').textContent = s.brief;
+  $('#cFigLabel').textContent = s.figure.label;
+  $('#cFig').textContent = fmtNum(0, s.figure);
+  $('#cSrcName').textContent = s.source.name;
+  $('#cSrc').href = s.source.url;
+  $('#cMark').textContent = 'LAGEBILD // ' + String(DATA.date.day).padStart(2, '0') + '.' + String(DATA.date.month).padStart(2, '0') + '.';
+}
+async function showCard(s, i) {
+  const c = $('#card');
+  fillCard(s, i);
+  c.dataset.state = 'hidden'; void c.offsetWidth; c.dataset.state = 'in';
+  blip();
+  scramble($('#cTag'), RESSORTS[s.ressort].name.toUpperCase(), 600);
+  setTimeout(() => countUp($('#cFig'), s.figure), 850 / SPEED());
+  await sleep(1000);
+}
+async function hideCard() {
+  const c = $('#card');
+  if (c.dataset.state !== 'in') return;
+  c.dataset.state = 'out';
+  await sleep(500);
+  c.dataset.state = 'hidden';
+}
+function showPin(s) {
+  $('#pinFlag').textContent = s.flag;
+  $('#pin').style.setProperty('--acc', RESSORTS[s.ressort].c);
+  scramble($('#pinName'), s.label, 650);
+  G.pin = [s.lon, s.lat]; G.pinT = 1;
+}
+
+/* ---------- Ton ---------- */
+let AC = null, drone = null;
+function audioInit() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } }
+function droneOn() {
+  if (!AC || drone || !S.atmo) return;
+  try {
+    const g = AC.createGain(); g.gain.value = 0;
+    const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 150;
+    const o1 = AC.createOscillator(), o2 = AC.createOscillator(), lfo = AC.createOscillator(), lg = AC.createGain();
+    o1.type = o2.type = 'sawtooth'; o1.frequency.value = 55; o2.frequency.value = 55.5;
+    lfo.frequency.value = .07; lg.gain.value = 55;
+    lfo.connect(lg); lg.connect(f.frequency); o1.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination);
+    [o1, o2, lfo].forEach(o => o.start());
+    g.gain.linearRampToValueAtTime(.05, AC.currentTime + 2.5);
+    drone = { g, nodes: [o1, o2, lfo] };
+  } catch (e) {}
+}
+function droneOff() {
+  if (!drone || !AC) return;
+  const d = drone; drone = null;
+  d.g.gain.cancelScheduledValues(AC.currentTime); d.g.gain.setValueAtTime(d.g.gain.value, AC.currentTime);
+  d.g.gain.linearRampToValueAtTime(0, AC.currentTime + .8);
+  setTimeout(() => d.nodes.forEach(o => { try { o.stop(); } catch (e) {} }), 1000);
+}
+function blip() {
+  if (!AC || !S.atmo) return;
+  try {
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = 'sine'; o.frequency.setValueAtTime(880, t); o.frequency.exponentialRampToValueAtTime(1480, t + .08);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.035, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + .2);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .22);
+  } catch (e) {}
+}
+
+const TTS = { ok: typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined', voices: [], pending: null };
+function voiceScore(v) {
+  const n = v.name.toLowerCase(); let s = 0;
+  if (/premium|enhanced|neural|natural|online/.test(n)) s += 5;
+  if (/google|microsoft/.test(n)) s += 2;
+  if (/de-at/i.test(v.lang)) s += 1;
+  return s;
+}
+function loadVoices() {
+  if (!TTS.ok) return;
+  TTS.voices = speechSynthesis.getVoices().filter(v => /^de([-_]|$)/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+  renderVoices();
+}
+function mainVoice() { return TTS.voices.find(v => v.voiceURI === S.voice) || TTS.voices[0] || null; }
+function briefVoice() {
+  const m = mainVoice(); if (!m) return null;
+  const alt = TTS.voices.find(v => v !== m && voiceScore(v) >= voiceScore(m) - 1);
+  return alt || m;
+}
+const estimate = text => (text.split(/\s+/).length * 360 + 700) / S.rate;
+function speakLine(text, role) {
+  return new Promise(res => {
+    let tmo = null, fin = false;
+    const done = r => { if (fin) return; fin = true; clearTimeout(tmo); TTS.pending = null; res(r); };
+    TTS.pending = done;
+    if (S.speak && TTS.ok) {
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        const v = role === 'BRIEFING' ? briefVoice() : mainVoice();
+        if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'de-DE';
+        u.rate = S.rate; u.pitch = role === 'BRIEFING' ? .85 : 1;
+        u.onend = () => done('done');
+        u.onerror = e => { if (e && (e.error === 'interrupted' || e.error === 'canceled')) return; done('done'); };
+        speechSynthesis.speak(u);
+      } catch (e) {}
+      tmo = setTimeout(() => done('done'), estimate(text) * 2.2 + 3000);
+    } else {
+      tmo = setTimeout(() => done('done'), estimate(text) / SPEED());
+    }
+  });
+}
+function stopSpeech(reason) { if (TTS.ok) { try { speechSynthesis.cancel(); } catch (e) {} } if (TTS.pending) TTS.pending(reason); }
+
+/* ---------- Ablauf ---------- */
+let list = [], gen = 0, paused = false, playing = false, curIdx = -1, lineK = 0, introDone = false;
+const CANCEL = { cancel: true };
+const check = my => { if (my !== gen) throw CANCEL; };
+async function hold(my) { while (paused) { await new Promise(r => setTimeout(r, 120)); check(my); } check(my); }
+async function say(my, role, text, spoken) {
+  for (;;) {
+    await hold(my);
+    showCaption(role, text);
+    const r = await speakLine(spoken || text, role);
+    check(my);
+    if (r === 'done') { await sleep(240); check(my); return; }
+  }
+}
+function greeting() {
+  const h = new Date().getHours();
+  const hello = h < 11 ? 'Guten Morgen' : h < 18 ? 'Guten Tag' : 'Guten Abend';
+  const n = list.length;
+  return `${hello}. Hier ist dein Lagebild für ${DATA.date.weekday}, den ${DATA.date.day}. ${DATA.date.monthName}. Heute: ${NUMW[n] || n} ${n === 1 ? 'Meldung' : 'Meldungen'}.`;
+}
+function summary() {
+  const s = list.map(x => x.short);
+  const joined = s.length > 1 ? s.slice(0, -1).join(', ') + ' und ' + s[s.length - 1] : s[0];
+  return `Das war dein Update: ${joined}.`;
+}
+async function intro(my) {
+  G.glitchUntil = performance.now() + 950 / SPEED();
+  app.classList.add('glitch'); setTimeout(() => app.classList.remove('glitch'), 800);
+  const tt = $('#title'); tt.classList.add('on');
+  scramble($('#tDate'), `${String(DATA.date.day).padStart(2, '0')}/${String(DATA.date.month).padStart(2, '0')}/${DATA.date.year}`, 900);
+  $('#tSub').textContent = '';
+  await sleep(700); check(my);
+  scramble($('#tSub'), 'TAGES-UPDATE', 700);
+  await say(my, 'BRIEFING', greeting());
+  tt.classList.remove('on');
+  introDone = true;
+}
+async function story(my, i) {
+  const s = list[i];
+  curIdx = i; lineK = 0; setProgress(i, 0); updateNav();
+  await hideCard(); check(my);
+  G.hlT = 0; G.pinT = 0;
+  await sleep(250); check(my);
+  G.acc = RESSORTS[s.ressort].c;
+  const opener = i === 0 ? s.open.first : i === list.length - 1 ? s.open.last : s.open.mid;
+  await Promise.all([fly([s.lon, s.lat], s.zoom, 2600), say(my, 'BRIEFING', opener)]);
+  check(my);
+  G.hl = G.byId[s.country] || null; G.hlT = 1;
+  showPin(s);
+  await sleep(420); check(my);
+  await showCard(s, i); check(my);
+  for (let k = 0; k < s.lines.length; k++) {
+    lineK = k;
+    const [role, text, spoken] = s.lines[k];
+    await say(my, role, text, spoken);
+    setProgress(i, (k + 1) / s.lines.length);
+  }
+  await sleep(500); check(my);
+}
+async function outro(my) {
+  curIdx = list.length; updateNav();
+  await hideCard(); check(my);
+  G.hlT = 0; G.pinT = 0;
+  const last = list[list.length - 1] || { lon: 10, lat: 30 };
+  await Promise.all([fly([last.lon + 25, 22], 1, 2600), say(my, 'BRIEFING', summary())]);
+  check(my);
+  G.idle = true;
+  await say(my, 'BRIEFING', 'Bis morgen.');
+  hideCaption();
+  finish();
+}
+async function run(from) {
+  const my = ++gen;
+  paused = false; playing = true; mode = 'brief'; setPlayIcon();
+  $('#start').hidden = true; $('#end').hidden = true;
+  droneOn(); wakeLock();
+  try {
+    if (from === 0 && !introDone) await intro(my);
+    for (let i = from; i < list.length; i++) await story(my, i);
+    await outro(my);
+  } catch (e) { if (e !== CANCEL) console.error(e); }
+}
+function finish() {
+  playing = false; mode = 'menu'; setPlayIcon(); droneOff(); releaseLock();
+  G.hl = null; G.pin = null; G.zoom = 1; introDone = false;
+  setProgress(list.length, 0);
+  renderEnd(); $('#end').hidden = false;
+}
+function jump(i) {
+  gen++; stopSpeech('cancel');
+  $('#title').classList.remove('on');
+  introDone = true;
+  if (i < 0) i = 0;
+  setTimeout(() => run(Math.min(i, list.length)), 80);
+}
+function togglePause() {
+  if (!playing) { start(); return; }
+  paused = !paused;
+  if (paused) { stopSpeech('interrupted'); droneOff(); } else { droneOn(); }
+  setPlayIcon();
+}
+function start() {
+  if (!list.length) { openSheet(); return; }
+  audioInit();
+  if (TTS.ok && S.speak) { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} }
+  introDone = false;
+  run(0);
+}
+
+/* ---------- UI ---------- */
+function setPlayIcon() {
+  const b = $('#playPause'), on = playing && !paused;
+  b.innerHTML = on ? ICON.pause : ICON.play;
+  b.setAttribute('aria-label', on ? 'Pausieren' : 'Abspielen');
+}
+function updateNav() {
+  $('#prevBtn').disabled = !playing;
+  $('#nextBtn').disabled = !playing;
+}
+function setProgress(i, frac) {
+  const segs = document.querySelectorAll('#progress .seg i');
+  segs.forEach((el, k) => { el.style.width = (k < i ? 100 : k === i ? Math.round(frac * 100) : 0) + '%'; });
+}
+function rebuild() {
+  list = DATA.stories.filter(s => S.topics.includes(s.ressort));
+  $('#progress').innerHTML = list.map(() => '<span class="seg"><i></i></span>').join('');
+  const d = DATA.date;
+  $('#metaDate').textContent = `${String(d.day).padStart(2, '0')}//${d.short}//${d.year}`;
+  $('#sTitle').textContent = `${d.weekday}, ${d.day}. ${d.monthName}`;
+  const mins = Math.max(1, Math.round(list.reduce((a, s) => a + 3.5 + s.lines.reduce((b, l) => b + estimate(l[1]) / 1000, 0), 12) / 60));
+  $('#sSub').textContent = list.length ? `${list.length} ${list.length === 1 ? 'Meldung' : 'Meldungen'} · ca. ${mins} Min. · Stimme und Untertitel` : 'Keine Meldungen zu deinen Themen.';
+  $('#sList').innerHTML = list.length ? list.map((s, i) => {
+    const r = RESSORTS[s.ressort];
+    return `<li style="--c:${r.c}"><span class="p-num">${String(i + 1).padStart(2, '0')}</span><span class="p-res">${esc(r.name)}</span><span class="p-head">${esc(s.headline.replace(/[\[\]]/g, ''))}</span></li>`;
+  }).join('') : '<li class="empty">Für deine gewählten Themen gibt es heute keine Meldung. Wähle unter „Themen“ weitere Ressorts aus.</li>';
+  $('#playBtn').innerHTML = ICON.play + ' Update abspielen';
+  $('#playBtn').disabled = !list.length;
+  $('#sFine').textContent = `Prototyp. Meldungen am ${DATA.compiled} aus den verlinkten Quellen zusammengefasst und fest hinterlegt.`;
+}
+function renderEnd() {
+  $('#eList').innerHTML = list.map((s, i) => {
+    const r = RESSORTS[s.ressort];
+    return `<li style="--c:${r.c}"><span class="p-num">${String(i + 1).padStart(2, '0')}</span><span class="p-res">${esc(r.name)}</span><span class="p-head"><a href="${esc(s.source.url)}" target="_blank" rel="noopener">${esc(s.headline.replace(/[\[\]]/g, ''))}</a> <span class="p-src">· ${esc(s.source.name)}</span></span></li>`;
+  }).join('');
+  $('#againBtn').innerHTML = ICON.play + ' Nochmal abspielen';
+}
+function renderTopics() {
+  const box = $('#topics'); box.innerHTML = '';
+  Object.entries(RESSORTS).forEach(([k, r]) => {
+    const n = DATA.stories.filter(s => s.ressort === k).length;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.id = 'topic-' + k;
+    b.style.setProperty('--c', r.c);
+    b.setAttribute('aria-pressed', String(S.topics.includes(k)));
+    b.innerHTML = `<span class="cdot"></span><span>${esc(r.name)}</span><small>${n ? n + ' heute' : 'heute keine'}</small>`;
+    b.addEventListener('click', () => {
+      S.topics = S.topics.includes(k) ? S.topics.filter(x => x !== k) : S.topics.concat(k);
+      save(); renderTopics(); if (!playing) rebuild();
+    });
+    box.appendChild(b);
+  });
+}
+function renderVoices() {
+  const sel = $('#voiceSel'), note = $('#voiceNote');
+  if (!TTS.ok) { sel.innerHTML = '<option>Nicht verfügbar</option>'; sel.disabled = true; note.textContent = 'Dieser Browser bietet keine Sprachausgabe. Das Update läuft mit Untertiteln.'; return; }
+  sel.disabled = false;
+  sel.innerHTML = '<option value="">Automatisch (beste deutsche Stimme)</option>' + TTS.voices.map(v => `<option value="${esc(v.voiceURI)}">${esc(v.name)} · ${esc(v.lang)}</option>`).join('');
+  sel.value = TTS.voices.some(v => v.voiceURI === S.voice) ? S.voice : '';
+  note.textContent = TTS.voices.length ? 'Systemstimme des Geräts. Bessere Stimmen findest du am iPad unter Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.' : 'Keine deutsche Stimme gefunden, es wird die Standardstimme verwendet.';
+}
+function setVoiceBtn() {
+  const b = $('#voiceBtn');
+  b.innerHTML = S.speak ? ICON.voice : ICON.mute;
+  b.setAttribute('aria-pressed', String(S.speak));
+  b.setAttribute('aria-label', S.speak ? 'Stimme ausschalten' : 'Stimme einschalten');
+}
+let lastFocus = null;
+function openSheet() { lastFocus = document.activeElement; renderTopics(); $('#sheet').hidden = false; $('#sheetClose').focus(); }
+function closeSheet() { $('#sheet').hidden = true; if (!playing) rebuild(); if (lastFocus) lastFocus.focus(); }
+
+let lock = null;
+async function wakeLock() { try { if (navigator.wakeLock && !lock) lock = await navigator.wakeLock.request('screen'); } catch (e) { lock = null; } }
+function releaseLock() { try { if (lock) lock.release(); } catch (e) {} lock = null; }
+
+function bind() {
+  $('#prevBtn').innerHTML = ICON.prev; $('#nextBtn').innerHTML = ICON.next;
+  $('#setBtn').innerHTML = ICON.sliders; $('#sheetClose').innerHTML = ICON.close;
+  setPlayIcon(); setVoiceBtn(); updateNav();
+  $('#playBtn').addEventListener('click', start);
+  $('#againBtn').addEventListener('click', start);
+  $('#playPause').addEventListener('click', togglePause);
+  $('#nextBtn').addEventListener('click', () => { if (playing) jump(curIdx + 1); });
+  $('#prevBtn').addEventListener('click', () => { if (playing) jump(lineK > 0 ? curIdx : curIdx - 1); });
+  $('#setBtn').addEventListener('click', openSheet);
+  $('#topicsBtn').addEventListener('click', openSheet);
+  $('#topicsBtn2').addEventListener('click', openSheet);
+  $('#sheetClose').addEventListener('click', closeSheet);
+  $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+  $('#voiceBtn').addEventListener('click', () => {
+    S.speak = !S.speak; save(); setVoiceBtn();
+    if (playing && !paused) stopSpeech('interrupted');
+  });
+  $('#voiceSel').addEventListener('change', e => { S.voice = e.target.value; save(); });
+  const rate = $('#rate');
+  const showRate = () => { $('#rateVal').textContent = S.rate.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + '×'; };
+  rate.value = S.rate; showRate();
+  rate.addEventListener('input', () => { S.rate = parseFloat(rate.value); showRate(); save(); });
+  const sw = $('#atmoSw');
+  sw.setAttribute('aria-checked', String(S.atmo));
+  sw.addEventListener('click', () => {
+    S.atmo = !S.atmo; save(); sw.setAttribute('aria-checked', String(S.atmo));
+    if (S.atmo && playing && !paused) { audioInit(); droneOn(); } else droneOff();
+  });
+  document.addEventListener('keydown', e => {
+    if (!$('#sheet').hidden) { if (e.key === 'Escape') closeSheet(); return; }
+    if (e.target.closest && e.target.closest('button,select,input,a')) return;
+    if (e.key === ' ') { e.preventDefault(); togglePause(); }
+    if (e.key === 'ArrowRight' && playing) jump(curIdx + 1);
+    if (e.key === 'ArrowLeft' && playing) jump(curIdx - 1);
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && playing && !paused) togglePause(); });
+  window.addEventListener('resize', resize);
+  if (TTS.ok) { loadVoices(); try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch (e) { speechSynthesis.onvoiceschanged = loadVoices; } }
+  else renderVoices();
+}
+
+async function init() {
+  if (!window.d3) { try { await loadScript('https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js'); } catch (e) {} }
+  if (!window.d3) { $('#sFine').textContent = 'Die Globus-Bibliothek konnte nicht geladen werden. Bitte Seite neu laden.'; return; }
+  proj = d3.geoOrthographic().clipAngle(90).precision(.5);
+  path = d3.geoPath(proj, ctx);
+  grat = d3.geoGraticule10();
+  resize();
+  requestAnimationFrame(frame);
+  loadWorld();
+}
+rebuild(); bind(); init();
+})();
+</script>
+
+</body>
+</html>
