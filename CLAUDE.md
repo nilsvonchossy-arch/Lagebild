@@ -1,10 +1,10 @@
 # Lagebild – tägliches News-Update als TikTok-Ersatz
 
 ## Ziel
-Ich will TikTok deinstallieren und trotzdem jeden Tag auf dem neuesten Stand bleiben. Lagebild ist mein persönliches tägliches News-Update mit animiertem Globus, Sprecherstimme, Untertiteln und frei wählbaren Themen. Es läuft vor allem auf meinem iPad. Vorbild für den Stil sind zwei TikTok-Accounts (Conflictly und Netwatch Global), siehe `docs/stilanalyse.md`.
+Ein persönliches tägliches News-Update als Ersatz für Nachrichtenclips auf TikTok: animierter Globus, Sprecherstimmen, Untertitel und frei wählbare Themen. Läuft vor allem auf dem iPad. Vorbild für den Stil sind zwei TikTok-Accounts (Conflictly und Netwatch Global), siehe `docs/stilanalyse.md`.
 
 ## Arbeitsweise
-- Mit mir auf Deutsch kommunizieren, knapp und direkt. Fehler offen benennen.
+- Auf Deutsch kommunizieren, knapp und direkt. Fehler offen benennen.
 - Meldungen dürfen nur Fakten aus der verlinkten Quelle enthalten. Nichts dazuerfinden und keine eigene Interpretation als Fakt ausgeben. Jede Meldung braucht Quelle, URL und Datum.
 - Nur den Stil der Vorbilder übernehmen, nicht ihre Inhalte und nicht ihr Militär-Drama. Keine Videoclips aus unklarer Quelle.
 
@@ -37,25 +37,25 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine
 
 ## Entscheidungen (27.10.2026)
 - **Hosting:** Repo öffentlich, GitHub Pages, Deploy per GitHub Actions. Als PWA auf dem iPad-Homescreen.
-- **Claude-Modell:** Erst Opus 5.5, Sonnet 5.5 und Haiku 5.5 auf denselben Artikeln vergleichen, dann entscheide ich.
+- **Claude-Modell:** Erst Opus 5.5, Sonnet 5.5 und Haiku 5.5 auf denselben Artikeln vergleichen, dann fällt die Entscheidung.
 - **Uhrzeit:** Update um 8:00 Uhr fertig (Europe/Berlin).
-- **Themen:** 5 Kategorien: Geopolitik & Sicherheit (USA-Politik, Nahost, Russland/Ukraine & NATO, China & Taiwan), Deutschland, Wirtschaft & Märkte (Wirtschaft, Marktanalyse), KI & Technologie (KI-Neuentwicklungen, KI & Arbeit, KI-Risiken & Regulierung, Cybersicherheit), Wissenschaft & Klima. Jede Meldung bekommt eine Relevanz 1–5. Eigene Themen kann ich im Interface hinzufügen; sie steuern die Recherche.
+- **Themen:** 5 Kategorien: Geopolitik & Sicherheit (USA-Politik, Nahost, Russland/Ukraine & NATO, China & Taiwan), Deutschland, Wirtschaft & Märkte (Wirtschaft, Marktanalyse), KI & Technologie (KI-Neuentwicklungen, KI & Arbeit, KI-Risiken & Regulierung, Cybersicherheit), Wissenschaft & Klima. Jede Meldung bekommt eine Relevanz 1–5. Eigene Themen lassen sich im Interface hinzufügen; sie steuern die Recherche.
 - **Quellen:** deutsche und internationale Medien gemischt, nur frei lesbare Artikel (der Faktencheck braucht den Volltext).
 
 ## Entscheidungen (28.10.2026)
 - **Gesprächsform:** drei Stimmen und Drehbuch nach `docs/video-analyse-conflictly.md`, ohne „Sir“, ohne Militärjargon, ohne Clips.
-- **Stimme:** vorerst die Gratis-Stimmen von Azure (F0): LEITUNG Conrad, LAGE Seraphina (multilingual), EINORDNUNG Florian (multilingual), Feinheiten in `config/pipeline.json`. Wenn es gut klappt, investiere ich später in eine bessere Stimme (ElevenLabs etwa 8–20 $/Monat, Azure HD etwa 2–6 $, Gemini TTS etwa 1–3 $). Offene Modelle aus VoiceStudio werden kostenlos getestet.
+- **Stimme:** vorerst die Gratis-Stimmen von Azure (F0): LEITUNG Conrad, LAGE Seraphina (multilingual), EINORDNUNG Florian (multilingual), Feinheiten in `config/pipeline.json`. Später eventuell eine bessere bezahlte Stimme (ElevenLabs etwa 8–20 $/Monat, Azure HD etwa 2–6 $, Gemini TTS etwa 1–3 $). Offene Modelle aus VoiceStudio werden kostenlos getestet.
 - **Ton:** Lagezentrum als Voreinstellung, Podcast umschaltbar. (Später am 28.10. geändert: Ton „Assistent“ mit Begrüßung als Voreinstellung, siehe oben.)
 - **Gesamtlänge:** Voreinstellung 3 Minuten.
 - **Daumen hoch/runter:** nur Vorschlag, noch nicht gebaut (Knöpfe auf dem Endbildschirm, Hinweis für die Auswahl, nie Filter für Fakten).
 - **Einblendungen:** Grafiken aus geprüften Fakten (Vergleich, Termin, Kursverlauf, Symbol) und Archivbilder aus Wikimedia Commons (a + b). Keine Aufnahmen vom Ereignis selbst (Rechte bei Agenturen und Verlagen).
 - **Stimme (Nachtrag):** Nach dem Hörvergleich ist VoxCPM2 „ruhig“ die Stimme (vorher Azure, dann OmniVoice erwogen). Azure bleibt im Themen-Editor wählbar.
-- **Hosting (Nachtrag):** Öffentliches Repo ist in Ordnung (kostenlose Server mit 4 Kernen und 16 GB für die Stimme); Umstellung und Pages-Einrichtung macht der Nutzer (`docs/einrichtung.md`, Schritt 1).
+- **Hosting (Nachtrag):** Repo seit 28.10. öffentlich (kostenlose Server mit 4 Kernen und 16 GB für die Stimme), GitHub Pages mit Source „GitHub Actions“ eingeschaltet. Persönliche Formulierungen in der Doku sind neutral gehalten; eine Anrede im Themen-Editor wäre öffentlich sichtbar.
 - **Weiter offen:** Budget-Grenze für die API, sobald der Modellvergleich vorliegt.
 
 ## Nächste Schritte
-1. Konten einrichten (`docs/einrichtung.md`), erster echter Lauf mit Drehbuch und Azure-Stimmen, Modellvergleich auswerten.
-2. Repo öffentlich machen, Pages einschalten; Messlauf „Demo vertonen“ auf dem öffentlichen Server wiederholen und die Rechenzeit prüfen.
+1. Claude-Schlüssel als Secret eintragen (`docs/einrichtung.md`, Schritte 2 und 4), erster echter Lauf mit Drehbuch und VoxCPM2, Modellvergleich auswerten.
+2. Rechenzeit der Stimme im echten Tageslauf beobachten (Messlauf „Demo vertonen“ auf dem öffentlichen Server als Richtwert).
 3. Feinschliff nach dem ersten echten Lauf (Pausen, Lautstärke des Musikbetts, Globus-Look).
 
 ## Bekannte Probleme

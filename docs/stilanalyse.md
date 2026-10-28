@@ -1,6 +1,6 @@
 # Stilanalyse der Vorbild-Videos (27.10.2026)
 
-Grundlage sind Bildschirmaufnahmen vom iPad, die ich in einem Claude-Chat ausgewertet habe: Einzelbilder, Ton als Spektrogramm, Untertitel aus den Bildern gelesen. Eine Transkription war nicht möglich, deshalb habe ich die Inhalte aus den eingeblendeten Untertiteln übernommen.
+Grundlage sind Bildschirmaufnahmen vom iPad, ausgewertet in einem Claude-Chat: Einzelbilder, Ton als Spektrogramm, Untertitel aus den Bildern gelesen. Eine Transkription war nicht möglich, deshalb habe ich die Inhalte aus den eingeblendeten Untertiteln übernommen.
 
 ## 1. Conflictly – „Operations Room (ep. 219)“, 20.10.2026, ca. 95 s
 Link: https://vm.tiktok.com/ZGdCwtPcq/ (@conflictly)

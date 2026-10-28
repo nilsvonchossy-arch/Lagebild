@@ -5,8 +5,8 @@ Diese Datei ist die Vorlage dafür, wie Lagebild klingen und wirken soll: drei S
 **Grundlage:** eine Bildschirmaufnahme vom iPad, 96 s lang (TikTok, @conflictly, Link: <https://vm.tiktok.com/ZGdCwtPcq/>).
 **Methode:**
 
-- Die Untertitel habe ich alle 0,2 s automatisch ausgelesen (OCR) und von Hand korrigiert. Daraus stammen das Skript und die Zeitstempel.
-- Den Ton habe ich gemessen: Tonhöhe pro Zeile, Klangfarbe im Vergleich der Rollen, Sprechtempo, Pausen und Lautheit.
+- Die Untertitel wurden alle 0,2 s automatisch ausgelesen (OCR) und von Hand korrigiert. Daraus stammen das Skript und die Zeitstempel.
+- Gemessen wurden beim Ton: Tonhöhe pro Zeile, Klangfarbe im Vergleich der Rollen, Sprechtempo, Pausen und Lautheit.
 
 **Einschränkungen:**
 
@@ -105,7 +105,7 @@ Zum Ablauf der Rollen:
 
 Dazu kommt die Werbung: ebenfalls eine tiefe Männerstimme. Ihre Klangfarbe liegt am nächsten am Commander, bildet aber eine eigene Gruppe.
 
-**Drei getrennte Stimmen sind belegt:** Ich habe die Klangfarbe jeder Zeile mit allen anderen verglichen. Für **jede** der 28 Inhaltszeilen war die ähnlichste andere Zeile eine Zeile derselben Rolle. Die Rollen sind also nicht eine Stimme mit verstellter Tonlage, sondern drei verschiedene Stimmen. Am weitesten auseinander liegen OPERATOR und ANALYST.
+**Drei getrennte Stimmen sind belegt:** Die Klangfarbe jeder Zeile wurde mit allen anderen verglichen. Für **jede** der 28 Inhaltszeilen war die ähnlichste andere Zeile eine Zeile derselben Rolle. Die Rollen sind also nicht eine Stimme mit verstellter Tonlage, sondern drei verschiedene Stimmen. Am weitesten auseinander liegen OPERATOR und ANALYST.
 
 ### 4.2 Wie die Stimmen zusammenwirken
 
