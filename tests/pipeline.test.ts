@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import themen from '../config/themen.json';
 import { buildBriefing, checkComparison, checkDeadline, cleanHeadline, summaryLine, toScriptStory, toStory, type Built } from '../pipeline/assemble';
-import { freeLicense, matchWord, plain, resolveImages } from '../pipeline/bilder';
+import { freeLicense, matchWord, nameKey, plain, resolveImages } from '../pipeline/bilder';
 import { applyLineVerdicts, cleanDraft, fillGaps, normalizeLineVerdict, simpleLines, tidy, type ScriptStory } from '../pipeline/drehbuch';
 import { applyVerdicts, type Draft } from '../pipeline/editorial';
 import { extractArticle } from '../pipeline/extract';
@@ -177,7 +177,7 @@ describe('Archivbilder', () => {
     const calls: string[] = [];
     const fake = async (url: string): Promise<Response> => {
       calls.push(url);
-      if (url.includes('wbsearchentities')) return res({ search: [{ id: 'Q1' }, { id: 'Q2' }] });
+      if (url.includes('wbsearchentities')) return res({ search: [{ id: 'Q1', label: 'Gadi Eisenkot', match: { type: 'label', text: 'Gadi Eisenkot' } }, { id: 'Q2', label: 'Gadi Eizenkot', match: { type: 'alias', text: 'Gadi Eisenkot' } }, { id: 'Q3', label: 'Israelische Armee', match: { type: 'description', text: 'Gadi Eisenkot' } }] });
       if (url.includes('wbgetentities')) return res({ entities: {
         // Q1: gleichnamiges Schiff, Q2: der Mensch
         Q1: { labels: { de: { value: 'Eisenkot (Schiff)' } }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q11446' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Schiff.jpg' } } }] } },
@@ -199,9 +199,22 @@ describe('Archivbilder', () => {
     expect(calls.every(u => !/vonchossy\.eu/.test(u))).toBe(true);
   });
 
+  it('nimmt kein Bild eines anderen Eintrags, wenn der Name nicht genau passt', async () => {
+    // „Sandoz“ liefert bei der Suche auch „Novartis“ (mit Bild); das darf nicht als Sandoz erscheinen
+    const fake = async (url: string): Promise<Response> => new Response(JSON.stringify(
+      url.includes('wbsearchentities') ? { search: [{ id: 'Q7', label: 'Novartis', match: { type: 'alias', text: 'Sandoz AG' } }] }
+        : { entities: { Q7: { claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q4830453' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Novartis.jpg' } } }] } } } }
+    ));
+    const issues: string[] = [];
+    expect(await resolveImages([{ name: 'Sandoz', art: 'organisation', suche: 'Sandoz' }], '/tmp', 'bilder/x', issues, fake)).toEqual([]);
+    expect(issues[0]).toContain('kein Wikidata-Eintrag');
+    expect(nameKey('Gadí  Eisenkot')).toBe(nameKey('gadi eisenkot'));
+    expect(plain('\u202bיהב טרודלר\u202c')).toBe('יהב טרודלר');
+  });
+
   it('lässt Bilder ohne freie Lizenz weg und protokolliert den Grund', async () => {
     const fake = async (url: string): Promise<Response> => new Response(JSON.stringify(
-      url.includes('wbsearchentities') ? { search: [{ id: 'Q9' }] }
+      url.includes('wbsearchentities') ? { search: [{ id: 'Q9', label: 'Sandoz' }] }
         : url.includes('wbgetentities') ? { entities: { Q9: { labels: { de: { value: 'Sandoz' } }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q4830453' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Logo.png' } } }] } } } }
           : { query: { pages: { '1': { imageinfo: [{ thumburl: 'https://u/x.png', descriptionurl: 'https://c/File:Logo.png', extmetadata: { LicenseShortName: { value: 'Fair use' } } }] } } } }
     ));

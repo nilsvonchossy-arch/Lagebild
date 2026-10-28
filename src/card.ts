@@ -28,15 +28,40 @@ export const formatLabel = (s: Story): string => FORMAT_LABEL[s.format] ?? '';
 
 const pct = (v: number): string => `${v > 0 ? '+' : ''}${v.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
 
+/** Kursverlauf als Linie; Endpunkt betont. Maßstab je Wert von Tief bis Hoch (nur die Form zählt). */
+export function sparkSVG(series: number[] | undefined): string {
+  if (!series || series.length < 3) return '<span class="spark"></span>';
+  const w = 64, h = 18, lo = Math.min(...series), hi = Math.max(...series), span = hi - lo || 1;
+  const pts = series.map((v, i) => [(i / (series.length - 1)) * (w - 3) + 1.5, h - 2 - ((v - lo) / span) * (h - 4)] as const);
+  const d = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('');
+  const [ex, ey] = pts[pts.length - 1]!;
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d}"/><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="1.8"/></svg>`;
+}
+
 export function marketsHTML(m: Markets): string {
   return m.items.map(it => {
     const dir = Math.abs(it.changePct) < 0.05 ? 'flat' : it.changePct > 0 ? 'up' : 'down';
     const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '■';
-    return `<div class="mrow"><span class="mname">${esc(it.name)}</span><span class="mval">${it.value.toLocaleString('de-DE', { minimumFractionDigits: it.dec, maximumFractionDigits: it.dec })}<small> ${esc(it.unit)}</small></span><span class="mch ${dir}">${arrow} ${dir === 'flat' ? '0,0 %' : pct(it.changePct)}</span></div>`;
+    return `<div class="mrow ${dir}"><span class="mname">${esc(it.name)}</span>${sparkSVG(it.series)}<span class="mval">${it.value.toLocaleString('de-DE', { minimumFractionDigits: it.dec, maximumFractionDigits: it.dec })}<small> ${esc(it.unit)}</small></span><span class="mch ${dir}">${arrow} ${dir === 'flat' ? '0,0 %' : pct(it.changePct)}</span></div>`;
   }).join('');
 }
 
-/** Details einer Meldung: Kurz gesagt, Zahl, Quelle mit Link und Datum. */
+const de = (v: number, dec: number): string => v.toLocaleString('de-DE', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+/** Vergleich und Termin als Zeile, Archivbilder mit Urheber, Lizenz und Link zu Commons */
+function extrasHTML(s: Story): string {
+  const out: string[] = [];
+  const c = s.comparison;
+  if (c) out.push(`<p class="det-x"><b>${esc(c.label)}:</b> ${c.items.map(i => `${esc(i.label)} ${esc(de(i.value, c.dec) + c.unit)}`).join(' · ')}</p>`);
+  const d = s.deadline;
+  if (d) out.push(`<p class="det-x"><b>${esc(d.label)}:</b> ${[d.date ? shortDate(d.date) : '', d.time ? `${d.time} Uhr` : ''].filter(Boolean).join(' ')}</p>`);
+  for (const img of s.images ?? []) {
+    out.push(`<p class="det-credit">Archivbild ${esc(img.motif)}: Foto ${esc(img.author)}, <a href="${esc(img.licenseUrl ?? img.page)}" target="_blank" rel="noopener">${esc(img.license)}</a>, <a href="${esc(img.page)}" target="_blank" rel="noopener">Wikimedia Commons</a></p>`);
+  }
+  return out.join('');
+}
+
+/** Details einer Meldung: Kurz gesagt, Zahl, Vergleich, Termin, Quelle mit Link und Datum, Bildnachweise. */
 export function detailsHTML(s: Story, cats: Category[]): string {
   const c = categoryColor(cats, s.category);
   return `<article class="det" style="--acc:${c}">
@@ -44,6 +69,7 @@ export function detailsHTML(s: Story, cats: Category[]): string {
     <h3 class="det-head"><span class="flag">${s.flag}</span><span>${headlineHTML(s.headline, 0)}</span></h3>
     <p class="det-brief"><b>Kurz gesagt:</b> ${esc(s.brief)}</p>
     ${s.figure ? `<div class="det-fig"><span class="fig-num">${esc(fmtNum(s.figure.value, s.figure))}</span><span class="fig-label">${esc(s.figure.label)}</span></div>` : ''}
+    ${extrasHTML(s)}
     <a class="src" href="${esc(s.source.url)}" target="_blank" rel="noopener">Quelle <span class="sep"></span> <b>${esc(s.source.name)}</b> <span class="src-date">${shortDate(s.source.date)}</span> ↗</a>
   </article>`;
 }

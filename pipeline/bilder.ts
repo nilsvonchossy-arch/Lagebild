@@ -35,7 +35,7 @@ export function freeLicense(name: string): boolean {
 
 /** HTML aus den Commons-Metadaten zu schlichtem Text */
 export function plain(html: string | undefined): string {
-  return (html ?? '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  return (html ?? '').replace(/<[^>]+>/g, ' ').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 /** Wort, bei dem das Bild im Dialog erscheint: bei Personen der Nachname, sonst der Name. */
@@ -44,7 +44,10 @@ export function matchWord(m: Motive): string {
   return /person/i.test(m.art) ? name.split(/\s+/).pop()! : name;
 }
 
-interface SearchResult { search?: { id: string; label?: string; description?: string }[] }
+interface SearchResult { search?: { id: string; label?: string; description?: string; match?: { type?: string; text?: string } }[] }
+
+/** Für den Namensvergleich: klein, ohne Akzente, Satzzeichen und Leerzeichen */
+export const nameKey = (s: string): string => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 interface Claim { mainsnak: { datavalue?: { value: unknown } } }
 interface Entities { entities?: Record<string, { labels?: Record<string, { value: string }>; claims?: Record<string, Claim[]> }> }
 interface ImageInfo {
@@ -58,7 +61,14 @@ const ids = (claims: Claim[] | undefined): string[] =>
 async function findEntity(m: Motive, f: Fetcher): Promise<{ label: string; file: string } | null> {
   const q = encodeURIComponent(m.suche.trim() || m.name.trim());
   const found = await json<SearchResult>(f, `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${q}&language=de&uselang=de&type=item&limit=6&format=json`);
-  const cand = (found.search ?? []).map(x => x.id);
+  // Nur Treffer, deren Name oder Alias genau dem Suchnamen entspricht – sonst lieber kein Bild als ein falsches
+  const want = nameKey(m.suche.trim() || m.name.trim());
+  const named = new Map<string, string>();
+  for (const x of found.search ?? []) {
+    const hit = [x.match?.text, x.label].find(t => t && nameKey(t) === want);
+    if (hit) named.set(x.id, hit);
+  }
+  const cand = [...named.keys()];
   if (!cand.length) return null;
   const ent = await json<Entities>(f, `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${cand.join('|')}&props=claims|labels&languages=de|en&format=json`);
   for (const id of cand) {
@@ -70,7 +80,7 @@ async function findEntity(m: Motive, f: Fetcher): Promise<{ label: string; file:
     if (/ort|bauwerk/i.test(m.art) && !e.claims?.P625?.length) continue;
     const file = e.claims?.P18?.[0]?.mainsnak.datavalue?.value;
     if (typeof file !== 'string') continue;
-    return { label: e.labels?.de?.value ?? e.labels?.en?.value ?? m.name, file };
+    return { label: named.get(id)!, file };
   }
   return null;
 }

@@ -14,6 +14,9 @@ const SYMBOLS: (Omit<MarketItem, 'value' | 'changePct' | 'date'> & { symbol: str
   { id: 'btc', name: 'Bitcoin', symbol: 'BTC-USD', dec: 0, unit: '$' }
 ];
 
+/** Handelstage im Kursverlauf (etwa ein Monat) */
+const SERIES = 22;
+
 interface Chart {
   chart: { result?: { meta?: { regularMarketPrice?: number; regularMarketTime?: number }; timestamp?: number[]; indicators: { quote: { close: (number | null)[] }[] } }[] };
 }
@@ -21,7 +24,7 @@ interface Chart {
 const berlinDate = (ts: number): string => new Date(ts * 1000).toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' });
 
 async function quote(s: (typeof SYMBOLS)[number]): Promise<MarketItem | null> {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.symbol)}?range=7d&interval=1d`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.symbol)}?range=1mo&interval=1d`;
   try {
     const data = JSON.parse((await fetchText(url, { accept: 'application/json' })).text) as Chart;
     const r = data.chart.result?.[0];
@@ -38,7 +41,9 @@ async function quote(s: (typeof SYMBOLS)[number]): Promise<MarketItem | null> {
     const prev = valid[valid.length - 2];
     if (!last || !prev) return null;
     const { symbol: _s, ...rest } = s;
-    return { ...rest, value: +last.c.toFixed(s.dec), changePct: +(((last.c - prev.c) / prev.c) * 100).toFixed(2), date: berlinDate(last.t) };
+    // Kursverlauf: die letzten Schlusskurse für die Linie in der Kachel
+    const series = valid.slice(-SERIES).map(x => +x.c.toFixed(Math.max(s.dec, 2)));
+    return { ...rest, value: +last.c.toFixed(s.dec), changePct: +(((last.c - prev.c) / prev.c) * 100).toFixed(2), date: berlinDate(last.t), ...(series.length >= 3 ? { series } : {}) };
   } catch (e) {
     log(`Kurs ${s.name}: ${(e as Error).message}`);
     return null;

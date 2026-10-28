@@ -138,7 +138,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .hl { color: var(--acc); }
 .c-more { position: absolute; right: 12px; bottom: 7px; font: 400 7.5px/1 var(--f-hud); letter-spacing: .2em; text-transform: uppercase; color: var(--mute); }
 .mkt { display: grid; gap: 6px; margin-top: 10px; }
-.mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: baseline; font: 500 13px/1.3 var(--f-text); font-variant-numeric: tabular-nums; }
+.mrow { display: grid; grid-template-columns: minmax(0, 1fr) 64px auto auto; gap: 12px; align-items: center; font: 500 13px/1.3 var(--f-text); font-variant-numeric: tabular-nums; }
+.spark { display: block; width: 64px; height: 18px; fill: none; stroke: var(--mute); stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.spark circle { stroke: none; fill: var(--mute); }
+.mrow.up .spark { stroke: var(--sig-green); } .mrow.up .spark circle { fill: var(--sig-green); }
+.mrow.down .spark { stroke: #ff6b5e; } .mrow.down .spark circle { fill: #ff6b5e; }
+.card[data-state="in"] .spark path { stroke-dasharray: 200; animation: draw 1.1s ease-out .3s both; }
+@keyframes draw { from { stroke-dashoffset: 200; } to { stroke-dashoffset: 0; } }
 .mname { color: var(--soft); }
 .mval { font-weight: 700; text-align: right; }
 .mval small { font-weight: 400; color: var(--mute); }
@@ -159,6 +165,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .det-head .w { opacity: 1; }
 .det-brief { margin: 0; font: 400 14px/1.5 var(--f-text); color: var(--soft); }
 .det-brief b { color: var(--acc); }
+.det-x { margin: 0; font: 400 13px/1.45 var(--f-text); color: var(--soft); }
+.det-x b { color: var(--ink); font-weight: 600; }
+.det-credit { margin: 0; font: 400 11.5px/1.45 var(--f-text); color: var(--mute); }
+.det-credit a { color: var(--soft); }
 .det-fig { display: flex; align-items: baseline; gap: 12px; }
 .fig-num { font: 800 26px/1 var(--f-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .fig-label { font: 400 9px/1.4 var(--f-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
