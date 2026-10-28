@@ -1,4 +1,4 @@
-// Hörproben der deutschen Azure-Stimmen, um die zwei Lagebild-Stimmen auszuwählen.
+// Hörproben der deutschen Azure-Stimmen, um die drei Lagebild-Stimmen auszuwählen.
 //   node pipeline/voices.ts --out daten   → daten/stimmproben/<stimme>.mp3
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -20,7 +20,7 @@ export const VOICES = [
   'de-DE-Seraphina:DragonHDLatestNeural'
 ];
 
-const SAMPLE = 'Guten Morgen. Hier ist dein Lagebild für Mittwoch, den 28. Oktober. Israel wählt heute ein neues Parlament. Bis 16 Uhr Ortszeit lag die Wahlbeteiligung bei 55,7 Prozent.';
+const SAMPLE = 'Israel wählt – und bis 16 Uhr haben schon 55,7 Prozent abgestimmt. Ist das viel? So viele wie noch nie um diese Uhrzeit, sagt das Wahlkomitee.';
 
 const { values } = parseArgs({ options: { out: { type: 'string', default: 'daten' } } });
 const key = process.env.AZURE_SPEECH_KEY;

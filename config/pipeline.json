@@ -2,11 +2,11 @@
   "model": "claude-opus-5-5",
   "effort": "medium",
   "voices": {
-    "briefing": "de-DE-ConradNeural",
-    "main": "de-DE-SeraphinaMultilingualNeural"
+    "LEITUNG": { "name": "de-DE-ConradNeural", "rate": "-3%" },
+    "LAGE": { "name": "de-DE-SeraphinaMultilingualNeural", "rate": "+4%" },
+    "EINORDNUNG": { "name": "de-DE-FlorianMultilingualNeural", "rate": "-2%", "pitch": "-4%" }
   },
   "audioDays": 14,
-  "targetSeconds": 170,
   "candidates": {
     "perTopic": 18,
     "total": 260,
