@@ -1,8 +1,8 @@
 {
-  "version": 1,
-  "stories": {
-    "min": 5,
-    "max": 7
+  "version": 2,
+  "episode": {
+    "minutes": 3,
+    "tone": "lagezentrum"
   },
   "categories": [
     {
@@ -36,8 +36,7 @@
       "id": "usa",
       "name": "USA-Politik",
       "category": "geopolitik",
-      "priority": 3,
-      "active": true,
+      "weight": "ausfuehrlich",
       "description": "US-Regierung, Präsident, Kongress, Gerichte, Wahlen und Außenpolitik der USA",
       "search": [
         "US-Regierung",
@@ -59,8 +58,7 @@
       "id": "nahost",
       "name": "Nahost-Konflikt",
       "category": "geopolitik",
-      "priority": 3,
-      "active": true,
+      "weight": "ausfuehrlich",
       "description": "Israel, Gaza, Westjordanland, Libanon, Iran und die Diplomatie in der Region",
       "search": [
         "Israel",
@@ -82,8 +80,7 @@
       "id": "russland-nato",
       "name": "Russland, Ukraine & NATO",
       "category": "geopolitik",
-      "priority": 3,
-      "active": true,
+      "weight": "ausfuehrlich",
       "description": "Krieg in der Ukraine, Spannungen zwischen Russland und der NATO, Sicherheit an Europas Ostgrenze",
       "search": [
         "Ukraine",
@@ -106,8 +103,7 @@
       "id": "china",
       "name": "China & Taiwan",
       "category": "geopolitik",
-      "priority": 2,
-      "active": true,
+      "weight": "normal",
       "description": "Politik und Wirtschaft Chinas, Taiwan, Südchinesisches Meer, Beziehungen zu USA und EU",
       "search": [
         "China",
@@ -130,8 +126,7 @@
       "id": "deutschland",
       "name": "Deutschland",
       "category": "deutschland",
-      "priority": 3,
-      "active": true,
+      "weight": "ausfuehrlich",
       "description": "Bundesregierung, Bundestag, Parteien, Gesetze und große Ereignisse in Deutschland",
       "search": [
         "Bundesregierung",
@@ -153,8 +148,7 @@
       "id": "wirtschaft",
       "name": "Wirtschaft & Konjunktur",
       "category": "wirtschaft",
-      "priority": 2,
-      "active": true,
+      "weight": "normal",
       "description": "Konjunktur, Inflation, Zinsen, Handel und Zölle, Arbeitsmarkt, große Unternehmen",
       "search": [
         "Konjunktur",
@@ -176,8 +170,7 @@
       "id": "maerkte",
       "name": "Märkte & Marktanalyse",
       "category": "wirtschaft",
-      "priority": 2,
-      "active": true,
+      "weight": "normal",
       "description": "Börsentag, Aktienindizes, Anleihen, Rohstoffe, Währungen und Einschätzungen von Analysten",
       "search": [
         "DAX",
@@ -198,8 +191,7 @@
       "id": "ki-neu",
       "name": "KI-Neuentwicklungen",
       "category": "ki",
-      "priority": 3,
-      "active": true,
+      "weight": "ausfuehrlich",
       "minPerDay": 1,
       "description": "Neue KI-Modelle, Produkte und Forschungsergebnisse, wichtige Ankündigungen der KI-Firmen",
       "search": [
@@ -227,8 +219,7 @@
       "id": "ki-arbeit",
       "name": "KI & Arbeit",
       "category": "ki",
-      "priority": 3,
-      "active": true,
+      "weight": "ausfuehrlich",
       "description": "Wie KI Jobs, Berufe, Stellenabbau, Weiterbildung und den Arbeitsmarkt verändert",
       "search": [
         "KI Arbeitsplätze",
@@ -249,8 +240,7 @@
       "id": "ki-risiken",
       "name": "KI-Risiken & Regulierung",
       "category": "ki",
-      "priority": 3,
-      "active": true,
+      "weight": "ausfuehrlich",
       "description": "Gefahren durch KI, KI-Sicherheit, Deepfakes, Missbrauch, Gesetze wie der AI Act",
       "search": [
         "KI-Regulierung",
@@ -271,8 +261,7 @@
       "id": "cyber",
       "name": "Cybersicherheit",
       "category": "ki",
-      "priority": 2,
-      "active": true,
+      "weight": "normal",
       "description": "Cyberangriffe, Datenlecks, Sicherheitslücken und Ransomware mit großer Tragweite",
       "search": [
         "Cyberangriff",
@@ -292,8 +281,7 @@
       "id": "wissen",
       "name": "Wissenschaft & Klima",
       "category": "wissen",
-      "priority": 1,
-      "active": true,
+      "weight": "kurz",
       "description": "Nur große Meldungen: wichtige Studien, Klima und Energie, Raumfahrt, Medizin",
       "search": [
         "Studie",

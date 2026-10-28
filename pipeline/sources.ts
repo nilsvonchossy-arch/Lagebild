@@ -1,6 +1,6 @@
 // Recherche: RSS/Atom-Feeds der Themen und Stichwortsuche über GDELT (frei, ohne Schlüssel).
 import { XMLParser } from 'fast-xml-parser';
-import type { ThemenConfig, Topic } from '../src/shared/config.ts';
+import { isActive, type ThemenConfig, type Topic } from '../src/shared/config.ts';
 import { clip, domainOf, fetchText, log, normalizeUrl, plainText, pool, sleep } from './util.ts';
 
 export interface Feed { id: string; name: string; url: string; lang: string }
@@ -68,7 +68,7 @@ export function parseFeed(xml: string, feed: Feed, topic: string): Raw[] {
 export async function fetchFeeds(cfg: ThemenConfig, q: Quellen): Promise<{ items: Raw[]; report: Record<string, string> }> {
   const byId = new Map(q.feeds.map(f => [f.id, f]));
   const jobs: { feed: Feed; topic: string }[] = [];
-  for (const t of cfg.topics.filter(x => x.active)) for (const id of t.feeds) { const f = byId.get(id); if (f) jobs.push({ feed: f, topic: t.id }); }
+  for (const t of cfg.topics.filter(isActive)) for (const id of t.feeds) { const f = byId.get(id); if (f) jobs.push({ feed: f, topic: t.id }); }
   // Jeden Feed nur einmal laden, auch wenn er zu mehreren Themen gehört
   const cache = new Map<string, Promise<string>>();
   const report: Record<string, string> = {};
@@ -103,7 +103,7 @@ export function termPattern(term: string): RegExp {
  * So wirken eigene Themen auch ohne eigene Feeds und ohne GDELT.
  */
 export function matchTopics(items: Raw[], cfg: ThemenConfig): Raw[] {
-  const rules = cfg.topics.filter(t => t.active && t.search.length).map(t => ({ id: t.id, res: t.search.map(termPattern) }));
+  const rules = cfg.topics.filter(t => isActive(t) && t.search.length).map(t => ({ id: t.id, res: t.search.map(termPattern) }));
   const extra: Raw[] = [];
   for (const it of items) {
     const hay = `${it.title} ${it.teaser}`;
@@ -130,7 +130,7 @@ export async function searchGdelt(cfg: ThemenConfig, q: Quellen, feedCount: Map<
   const isTrusted = (d: string): boolean => trusted.some(t => d === t || d.endsWith(`.${t}`));
   const items: Raw[] = [];
   const report: Record<string, string> = {};
-  const topics = cfg.topics.filter(t => t.active && t.search.length && (!t.feeds.length || (feedCount.get(t.id) ?? 0) < thin));
+  const topics = cfg.topics.filter(t => isActive(t) && t.search.length && (!t.feeds.length || (feedCount.get(t.id) ?? 0) < thin));
   for (const [i, t] of topics.entries()) {
     const query = gdeltQuery(t);
     if (!query) continue;

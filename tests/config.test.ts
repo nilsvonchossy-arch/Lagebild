@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import quellen from '../config/quellen.json';
 import themen from '../config/themen.json';
-import { slugify, validateConfig, type ThemenConfig } from '../src/shared/config';
+import { migrateConfig, slugify, validateConfig, type ThemenConfig } from '../src/shared/config';
 
-const cfg = themen as unknown as ThemenConfig;
+const cfg = migrateConfig(themen);
 
 describe('config/themen.json', () => {
   it('ist gültig', () => {
@@ -27,23 +27,37 @@ describe('validateConfig', () => {
 
   it('meldet unbekannte Kategorien und fehlende Suchbegriffe', () => {
     const c = clone();
-    c.topics.push({ id: 'x', name: 'X', category: 'gibtsnicht', priority: 2, active: true, search: [], feeds: [] });
+    c.topics.push({ id: 'x', name: 'X', category: 'gibtsnicht', weight: 'normal', search: [], feeds: [] });
     const errs = validateConfig(c);
     expect(errs.some(e => e.includes('unbekannte Kategorie'))).toBe(true);
     expect(errs.some(e => e.includes('Suchbegriffe oder Feeds'))).toBe(true);
   });
 
-  it('meldet doppelte IDs und ungültige Prioritäten', () => {
+  it('meldet doppelte IDs und ungültige Gewichtungen', () => {
     const c = clone();
-    c.topics.push({ ...c.topics[0]!, priority: 5 as never });
+    c.topics.push({ ...c.topics[0]!, weight: 'hoch' as never });
     const errs = validateConfig(c);
     expect(errs.some(e => e.includes('ID doppelt'))).toBe(true);
-    expect(errs.some(e => e.includes('Priorität'))).toBe(true);
+    expect(errs.some(e => e.includes('Gewichtung'))).toBe(true);
+  });
+
+  it('prüft Länge und Ton der Folge', () => {
+    const c = clone();
+    c.episode = { minutes: 30, tone: 'radio' as never };
+    const errs = validateConfig(c);
+    expect(errs.some(e => e.includes('minutes'))).toBe(true);
+    expect(errs.some(e => e.includes('tone'))).toBe(true);
+  });
+
+  it('verlangt mindestens ein eingeschaltetes Thema', () => {
+    const c = clone();
+    for (const t of c.topics) t.weight = 'aus';
+    expect(validateConfig(c)).toContain('Mindestens ein Thema muss eingeschaltet sein');
   });
 
   it('lehnt Unsinn ab', () => {
     expect(validateConfig(null)).toEqual(['Konfiguration fehlt']);
-    expect(validateConfig({ version: 2 }).length).toBeGreaterThan(0);
+    expect(validateConfig({ version: 3 }).length).toBeGreaterThan(0);
   });
 });
 
@@ -54,5 +68,30 @@ describe('slugify', () => {
     expect(slugify('Straße')).toBe('strasse');
     expect(slugify('KI & Arbeit', ['ki-arbeit'])).toBe('ki-arbeit-2');
     expect(slugify('!!!')).toBe('thema');
+  });
+});
+
+describe('migrateConfig', () => {
+  it('übersetzt Priorität und aktiv aus Version 1 in vier Stufen', () => {
+    const v1 = {
+      version: 1, stories: { min: 5, max: 7 },
+      categories: [{ id: 'k', name: 'K', color: '#123456' }],
+      topics: [
+        { id: 'a', name: 'A', category: 'k', priority: 3, active: true, search: ['x'], feeds: [] },
+        { id: 'b', name: 'B', category: 'k', priority: 2, active: true, search: ['x'], feeds: [] },
+        { id: 'c', name: 'C', category: 'k', priority: 1, active: true, search: ['x'], feeds: [] },
+        { id: 'd', name: 'D', category: 'k', priority: 3, active: false, search: ['x'], feeds: [] }
+      ]
+    };
+    const c = migrateConfig(v1);
+    expect(c.version).toBe(2);
+    expect(c.episode).toEqual({ minutes: 3, tone: 'lagezentrum' });
+    expect(c.topics.map(t => t.weight)).toEqual(['ausfuehrlich', 'normal', 'kurz', 'aus']);
+    expect(c.topics[0]).not.toHaveProperty('priority');
+    expect(validateConfig(c)).toEqual([]);
+  });
+
+  it('lässt Version 2 unverändert', () => {
+    expect(migrateConfig(cfg)).toBe(cfg);
   });
 });

@@ -1,8 +1,17 @@
 // Themen-Konfiguration (config/themen.json). Die App bearbeitet sie, die Pipeline recherchiert danach.
+//
+// Version 2: Jedes Thema hat eine Gewichtung in vier Stufen statt Priorität und Ein/Aus-Schalter.
+// Dazu kommen Länge und Ton der Folge. Version 1 wird beim Laden übersetzt (migrateConfig).
+import type { Tone } from './types.ts';
 
-export type Priority = 1 | 2 | 3;
+export type Weight = 'aus' | 'kurz' | 'normal' | 'ausfuehrlich';
 
-export const PRIORITY_LABEL: Record<Priority, string> = { 3: 'Hoch', 2: 'Mittel', 1: 'Niedrig' };
+export const WEIGHTS: Weight[] = ['aus', 'kurz', 'normal', 'ausfuehrlich'];
+export const WEIGHT_LABEL: Record<Weight, string> = { aus: 'Aus', kurz: 'Nur kurz', normal: 'Normal', ausfuehrlich: 'Ausführlich' };
+
+export const MINUTES = [3, 5, 8] as const;
+export const TONES: Tone[] = ['lagezentrum', 'podcast'];
+export const TONE_LABEL: Record<Tone, string> = { lagezentrum: 'Lagezentrum', podcast: 'Podcast' };
 
 export interface ConfigCategory {
   id: string;
@@ -14,12 +23,11 @@ export interface Topic {
   id: string;
   name: string;
   category: string;
-  /** 3 = hoch, 2 = mittel, 1 = niedrig */
-  priority: Priority;
-  active: boolean;
+  /** aus = wird nicht recherchiert, kurz = höchstens „Kurz notiert“, ausfuehrlich = darf vertieft werden */
+  weight: Weight;
   /** Worum es geht; hilft Claude bei der Auswahl */
   description?: string;
-  /** Suchbegriffe für die Stichwortsuche (GDELT) */
+  /** Suchbegriffe für die Stichwortsuche */
   search: string[];
   /** Feed-IDs aus config/quellen.json */
   feeds: string[];
@@ -30,22 +38,44 @@ export interface Topic {
 }
 
 export interface ThemenConfig {
-  version: 1;
-  stories: { min: number; max: number };
+  version: 2;
+  /** Länge in Minuten und Ton der Folge */
+  episode: { minutes: number; tone: Tone };
   categories: ConfigCategory[];
   topics: Topic[];
 }
 
 export const LIMITS = { topics: 40, search: 12, term: 60, name: 40, description: 200 };
 
+export const isActive = (t: Topic): boolean => t.weight !== 'aus';
+
+interface TopicV1 extends Omit<Topic, 'weight'> { priority?: number; active?: boolean }
+
+/** Version 1 (Priorität 1–3 und aktiv) in Version 2 übersetzen; Version 2 bleibt unverändert. */
+export function migrateConfig(raw: unknown): ThemenConfig {
+  const c = raw as { version?: number; stories?: { max?: number }; episode?: ThemenConfig['episode']; categories?: ConfigCategory[]; topics?: (Topic | TopicV1)[] } | null;
+  if (!c || typeof c !== 'object' || c.version !== 1) return raw as ThemenConfig;
+  const toWeight = (t: TopicV1): Weight => (t.active === false ? 'aus' : t.priority === 3 ? 'ausfuehrlich' : t.priority === 1 ? 'kurz' : 'normal');
+  return {
+    version: 2,
+    episode: { minutes: 3, tone: 'lagezentrum' },
+    categories: c.categories ?? [],
+    topics: (c.topics ?? []).map(t => {
+      const { priority: _p, active: _a, ...rest } = t as TopicV1;
+      return { ...rest, weight: toWeight(t as TopicV1) } as Topic;
+    })
+  };
+}
+
 /** Prüft eine Konfiguration und liefert verständliche Fehlermeldungen (leer = in Ordnung). */
 export function validateConfig(c: unknown): string[] {
   const errs: string[] = [];
   const cfg = c as Partial<ThemenConfig> | null;
   if (!cfg || typeof cfg !== 'object') return ['Konfiguration fehlt'];
-  if (cfg.version !== 1) errs.push('version muss 1 sein');
-  const st = cfg.stories;
-  if (!st || !(st.min >= 1) || !(st.max >= st.min) || st.max > 10) errs.push('stories: min/max ungültig');
+  if (cfg.version !== 2) errs.push('version muss 2 sein');
+  const ep = cfg.episode;
+  if (!ep || !Number.isInteger(ep.minutes) || ep.minutes < 2 || ep.minutes > 12) errs.push('episode.minutes muss 2–12 sein');
+  if (!ep || !TONES.includes(ep.tone)) errs.push('episode.tone ungültig');
   const cats = Array.isArray(cfg.categories) ? cfg.categories : [];
   if (!cats.length) errs.push('Keine Kategorien');
   const catIds = new Set(cats.map(k => k.id));
@@ -63,13 +93,13 @@ export function validateConfig(c: unknown): string[] {
     ids.add(t.id);
     if (!t.name?.trim() || t.name.length > LIMITS.name) errs.push(`${where}: Name fehlt oder ist zu lang`);
     if (!catIds.has(t.category)) errs.push(`${where}: unbekannte Kategorie ${t.category}`);
-    if (![1, 2, 3].includes(t.priority)) errs.push(`${where}: Priorität muss 1, 2 oder 3 sein`);
-    if (typeof t.active !== 'boolean') errs.push(`${where}: active fehlt`);
+    if (!WEIGHTS.includes(t.weight)) errs.push(`${where}: Gewichtung muss aus, kurz, normal oder ausfuehrlich sein`);
     if (!Array.isArray(t.search) || t.search.length > LIMITS.search || t.search.some(s => typeof s !== 'string' || !s.trim() || s.length > LIMITS.term)) errs.push(`${where}: Suchbegriffe ungültig`);
     if (!Array.isArray(t.feeds)) errs.push(`${where}: feeds fehlt`);
     if (t.description && t.description.length > LIMITS.description) errs.push(`${where}: Beschreibung zu lang`);
     if (!t.search?.length && !t.feeds?.length) errs.push(`${where}: braucht Suchbegriffe oder Feeds`);
   }
+  if (topics.length && !topics.some(t => t.weight !== 'aus')) errs.push('Mindestens ein Thema muss eingeschaltet sein');
   return errs;
 }
 
