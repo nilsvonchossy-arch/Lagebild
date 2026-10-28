@@ -2,8 +2,8 @@
 // weil die tägliche Recherche auf GitHub läuft und nicht auf dem iPad.
 import bundled from '../config/themen.json';
 import { checkAccess, dispatch, getFile, getToken, lastRun, putFile, REPO, setToken } from './github';
-import { LIMITS, PRIORITY_LABEL, slugify, validateConfig } from './shared/config';
-import type { Priority, ThemenConfig, Topic } from './shared/config';
+import { LIMITS, migrateConfig, MINUTES, slugify, TONE_LABEL, TONES, validateConfig, WEIGHT_LABEL, WEIGHTS } from './shared/config';
+import type { ThemenConfig, Topic, Weight } from './shared/config';
 import { $, esc } from './util';
 
 declare const __PREVIEW__: boolean;
@@ -11,7 +11,7 @@ declare const __PREVIEW__: boolean;
 const PATH = 'config/themen.json';
 const WORKFLOW = 'update.yml';
 
-let cfg: ThemenConfig = structuredClone(bundled as unknown as ThemenConfig);
+let cfg: ThemenConfig = migrateConfig(structuredClone(bundled));
 let sha: string | null = null;
 let dirty = false;
 /** ID des Themas im Formular, 'neu' für ein neues */
@@ -27,27 +27,36 @@ function status(msg: string, kind: 'ok' | 'err' | '' = ''): void {
   el.dataset.kind = kind;
 }
 
-function priorityOptions(p: Priority): string {
-  return ([3, 2, 1] as Priority[]).map(v => `<option value="${v}"${v === p ? ' selected' : ''}>${PRIORITY_LABEL[v]}</option>`).join('');
+/** Vier Stufen als Knopfleiste */
+function weightButtons(t: Topic): string {
+  return `<div class="seg-ctl" role="radiogroup" aria-label="Gewichtung ${esc(t.name)}">${WEIGHTS.map(w =>
+    `<button type="button" role="radio" data-act="weight" data-w="${w}" aria-checked="${t.weight === w}">${WEIGHT_LABEL[w]}</button>`).join('')}</div>`;
 }
 
 function topicRow(t: Topic, color: string): string {
   const terms = t.search.length ? t.search.join(' · ') : 'nur feste Quellen';
-  return `<li class="trow${t.active ? '' : ' off'}" style="--c:${color}" data-id="${esc(t.id)}">
+  return `<li class="trow${t.weight === 'aus' ? ' off' : ''}" style="--c:${color}" data-id="${esc(t.id)}">
     <button class="tname" type="button" data-act="edit" aria-label="${esc(t.name)} bearbeiten"><b>${esc(t.name)}</b><small>${esc(terms)}</small></button>
-    <select class="tprio" data-act="prio" aria-label="Priorität ${esc(t.name)}">${priorityOptions(t.priority)}</select>
-    <button class="switch" type="button" role="switch" data-act="toggle" aria-checked="${t.active}" aria-label="${esc(t.name)} aktiv"></button>
+    ${weightButtons(t)}
   </li>${editing === t.id ? formHTML(t) : ''}`;
+}
+
+function episodeControls(): string {
+  const ep = cfg.episode;
+  const mins = MINUTES.map(m => `<button type="button" role="radio" data-act="minutes" data-v="${m}" aria-checked="${ep.minutes === m}">${m} Min.</button>`).join('');
+  const tones = TONES.map(t => `<button type="button" role="radio" data-act="tone" data-v="${t}" aria-checked="${ep.tone === t}">${TONE_LABEL[t]}</button>`).join('');
+  return `<div class="tep">
+    <div class="row"><span>Länge der Folge</span><div class="seg-ctl" role="radiogroup" aria-label="Länge der Folge">${mins}</div></div>
+    <div class="row"><span>Ton</span><div class="seg-ctl" role="radiogroup" aria-label="Ton">${tones}</div></div>
+    <p class="note">Längere Folgen haben mehr Meldungen und kosten bei Claude entsprechend mehr. Lagezentrum: knappe Rückfragen. Podcast: lockerer, mit kurzen Reaktionen.</p>
+  </div>`;
 }
 
 function formHTML(t: Topic | null): string {
   const cats = cfg.categories.map(c => `<option value="${esc(c.id)}"${t?.category === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
   return `<li class="tform-li"><form class="tform" id="topicForm" autocomplete="off">
     <label>Name<input name="name" maxlength="${LIMITS.name}" required value="${esc(t?.name ?? '')}" placeholder="z. B. Wasserstoff"></label>
-    <div class="tform-row">
-      <label>Kategorie<select name="category">${cats}</select></label>
-      <label>Priorität<select name="priority">${priorityOptions(t?.priority ?? 2)}</select></label>
-    </div>
+    <label>Kategorie<select name="category">${cats}</select></label>
     <label>Suchbegriffe, mit Komma getrennt<input name="search" value="${esc(t?.search.join(', ') ?? '')}" placeholder="z. B. Wasserstoff, Elektrolyse, H2-Netz"></label>
     <label>Worum geht es? (optional)<input name="description" maxlength="${LIMITS.description}" value="${esc(t?.description ?? '')}" placeholder="Hilft bei der Auswahl der Meldungen"></label>
     <label class="tcheck"><input type="checkbox" name="minPerDay"${t?.minPerDay ? ' checked' : ''}> Mindestens eine Meldung pro Tag, wenn es eine gibt</label>
@@ -65,8 +74,10 @@ function render(): void {
     const rows = cfg.topics.filter(t => t.category === c.id).map(t => topicRow(t, c.color)).join('');
     return `<div class="tcat"><span class="p-res" style="--c:${c.color}">${esc(c.name)}</span><ul class="tlist">${rows || '<li class="note">Noch keine Themen.</li>'}</ul></div>`;
   }).join('');
-  box().innerHTML = `<span class="lbl">Themen für die Recherche</span>
-    <p class="note">Aktive Themen bestimmen, wonach jeden Morgen gesucht wird. Priorität „Hoch“ wird bei der Auswahl bevorzugt.</p>
+  box().innerHTML = `<span class="lbl">Folge</span>
+    ${episodeControls()}
+    <span class="lbl">Themen für die Recherche</span>
+    <p class="note">Die Gewichtung steuert Recherche und Länge: Aus = wird nicht gesucht, Nur kurz = höchstens „Kurz notiert“, Normal = Meldung, Ausführlich = darf vertieft werden, wenn die Quelle genug hergibt.</p>
     ${groups}
     ${editing === 'neu' ? `<ul class="tlist">${formHTML(null)}</ul>` : '<button class="btn" type="button" data-act="add">+ Eigenes Thema</button>'}
     <div class="p-actions">
@@ -118,7 +129,7 @@ export async function openTopics(): Promise<void> {
     if (getToken()) {
       try {
         const f = await getFile(PATH);
-        cfg = JSON.parse(f.text) as ThemenConfig;
+        cfg = migrateConfig(JSON.parse(f.text));
         sha = f.sha;
       } catch (e) {
         render();
@@ -146,8 +157,7 @@ function readForm(form: HTMLFormElement, old: Topic | null): Topic | string {
     id: old?.id ?? slugify(name, cfg.topics.map(x => x.id)),
     name,
     category: String(d.get('category')),
-    priority: Number(d.get('priority')) as Priority,
-    active: old?.active ?? true,
+    weight: old?.weight ?? 'normal',
     search,
     feeds: old?.feeds ?? [],
     custom: old ? old.custom : true
@@ -209,8 +219,14 @@ export function bindTopics(): void {
     const t = cfg.topics.find(x => x.id === id);
     switch (el.dataset.act) {
       case 'edit': editing = editing === id ? null : (id ?? null); render(); break;
-      case 'toggle':
-        if (t) { t.active = !t.active; dirty = true; render(); }
+      case 'weight':
+        if (t && el.dataset.w) { t.weight = el.dataset.w as Weight; dirty = true; render(); }
+        break;
+      case 'minutes':
+        cfg.episode.minutes = Number(el.dataset.v); dirty = true; render();
+        break;
+      case 'tone':
+        cfg.episode.tone = el.dataset.v as ThemenConfig['episode']['tone']; dirty = true; render();
         break;
       case 'add': editing = 'neu'; render(); break;
       case 'cancel': editing = null; render(); break;
@@ -233,12 +249,6 @@ export function bindTopics(): void {
       case 'save': void save(); break;
       case 'run': void runNow(); break;
     }
-  });
-  box().addEventListener('change', e => {
-    const el = e.target as HTMLElement;
-    if (el.dataset.act !== 'prio') return;
-    const t = cfg.topics.find(x => x.id === el.closest<HTMLElement>('[data-id]')?.dataset.id);
-    if (t) { t.priority = Number((el as HTMLSelectElement).value) as Priority; dirty = true; render(); }
   });
   box().addEventListener('submit', e => {
     e.preventDefault();
