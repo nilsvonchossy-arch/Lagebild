@@ -1,0 +1,10 @@
+{
+ "omnivoice": {
+  "laden_s": 20.5,
+  "rechenzeit_s": 3118.0,
+  "audio_s": 118.5,
+  "rtf": 26.32,
+  "schritte": 16,
+  "stimmen": "OmniVoice-Entwurf"
+ }
+}
