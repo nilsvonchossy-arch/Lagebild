@@ -5,7 +5,7 @@ import topo50 from 'world-atlas/countries-50m.json';
 import demo from '../public/demo/2026-10-27.json';
 import { detailsHTML, headlineHTML, plainHeadline, relevanceHTML } from '../src/card';
 import { scenesOf } from '../src/player';
-import { comparisonAtFigure, cuesFor, deadlinePattern, estimateScript, findNumber, fracToSec, numberVariants, pauseBefore, secToFrac, subtitleBlocks, summaryText } from '../src/shared/script';
+import { cleanName, closingLines, comparisonAtFigure, cuesFor, deadlinePattern, introLines, estimateScript, findNumber, fracToSec, numberVariants, pauseBefore, secToFrac, subtitleBlocks, summaryText } from '../src/shared/script';
 import { buildLayer, countryInfo, findCountry, flagEmoji } from '../src/geo/world';
 import type { Briefing, Line } from '../src/shared/types';
 import { jahreswort, ordnungswort, sprechtext, zahlwort } from '../src/shared/sprechtext';
@@ -96,10 +96,14 @@ describe('Demo-Folge', () => {
 
   it('hält die Drehbuch-Regeln ein', () => {
     const facts = new Map(b.stories.flatMap(s => s.facts.map(f => [f.id, s.id] as const)));
-    // Einstieg mit der Kernaussage des Aufmachers, keine Begrüßung
-    expect(b.script[0]!.role).toBe('LAGE');
-    expect(b.script[0]!.story).toBe(b.stories[0]!.id);
-    expect(b.script[0]!.text).not.toMatch(/guten (morgen|tag|abend)|willkommen/i);
+    // Ton Assistent: Begrüßung ohne Meldung, danach Einstieg mit der Kernaussage des Aufmachers
+    expect(b.tone).toBe('assistent');
+    const first = b.script.findIndex(l => l.kind !== 'begruessung');
+    expect(first).toBe(2);
+    expect(b.script.slice(0, first).every(l => l.role === 'LEITUNG' && !l.story && !l.facts)).toBe(true);
+    expect(b.script[first]!.role).toBe('LAGE');
+    expect(b.script[first]!.story).toBe(b.stories[0]!.id);
+    expect(b.script[first]!.text).not.toMatch(/guten (morgen|tag|abend)|willkommen/i);
     for (const l of b.script) {
       if (l.kind === 'fakt') {
         expect(l.facts?.length, l.text).toBeGreaterThan(0);
@@ -112,8 +116,8 @@ describe('Demo-Folge', () => {
 
   it('teilt die Folge in Abschnitte', () => {
     const sc = scenesOf(b);
-    expect(sc.map(s => s.key)).toEqual(['israel', 'kundl', 'wallstreet', 'apple', 'frankreich', '_ende']);
-    expect(sc[1]!.firstFact).toBe(sc[1]!.first + 1);
+    expect(sc.map(s => s.key)).toEqual(['_start', 'israel', 'kundl', 'wallstreet', 'apple', 'frankreich', '_ende']);
+    expect(sc[2]!.firstFact).toBe(sc[2]!.first + 1);
     expect(estimateScript(b.script)).toBeGreaterThan(60);
   });
 
@@ -256,5 +260,34 @@ describe('Sprechtext für offene Stimmen', () => {
     expect(sprechtext('KI in der EU', { spell: false })).toBe('KI in der EU');
     // Wörter, die wie Abkürzungen beginnen, bleiben
     expect(sprechtext('Kiel und Europa')).toBe('Kiel und Europa');
+  });
+});
+
+describe('Ton Assistent', () => {
+  it('begrüßt mit Datum und Vorschau, nur im Ton Assistent', () => {
+    expect(introLines('lagezentrum', '2026-10-28', ['a'], 'Alex')).toEqual([]);
+    const l = introLines('assistent', '2026-11-01', ['Rekordbeteiligung in Israel', 'Druck auf Kundl.'], 'Alex');
+    expect(l.map(x => x.text)).toEqual(['Guten Morgen, Alex, und ein schönes Wochenende! Heute ist Sonntag, der 1. November.', "Ich hab dir das Wichtigste rausgesucht: Rekordbeteiligung in Israel und Druck auf Kundl. Los geht's."]);
+    expect(l.every(x => x.kind === 'begruessung' && x.role === 'LEITUNG' && !x.facts)).toBe(true);
+    expect(introLines('assistent', '2026-10-28', [])[0]!.text).toBe('Guten Morgen! Heute ist Mittwoch, der 28. Oktober.');
+    expect(sprechtext('Guten Morgen! Heute ist Mittwoch, der 28. Oktober.')).toBe('Guten Morgen! Heute ist Mittwoch, der achtundzwanzigste Oktober.');
+  });
+
+  it('nimmt nur saubere Namen für die Anrede', () => {
+    expect(cleanName('  Alex  ')).toBe('Alex');
+    expect(cleanName('Anne-Marie')).toBe('Anne-Marie');
+    expect(cleanName('<script>')).toBe('');
+    expect(cleanName('x'.repeat(31))).toBe('');
+    expect(closingLines('assistent', 'Alex').map(l => l.text)).toEqual(["Das war's für heute, Alex. Ich halt dich auf dem Laufenden.", 'Bis morgen!']);
+    expect(closingLines('lagezentrum', 'Alex').map(l => l.text)).toEqual(['Das ist die Lage.', 'Wir bleiben dran.']);
+  });
+
+  it('gibt der Begrüßung einen eigenen Abschnitt ohne Fortschrittsbalken', () => {
+    const b = structuredClone(demo) as unknown as Briefing;
+    const sc = scenesOf(b);
+    expect(sc[0]!.key).toBe('_start');
+    expect(sc[0]!.last).toBe(1);
+    expect(sc[1]!.key).toBe(b.stories[0]!.id);
+    expect(pauseBefore(b.script[1], b.script[2]!)).toBe(0.9);
   });
 });

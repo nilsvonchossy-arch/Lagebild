@@ -239,17 +239,62 @@ export const TONE_TEXT: Record<Tone, ToneText> = {
     markets: 'Und was machen die Märkte?',
     next: ['Okay, was noch?', 'Und dann?', 'Was gibt es noch?'],
     more: 'Und sonst?'
+  },
+  // Persönlich wie ein Freund: Vorschau in der Begrüßung statt Zusammenfassung am Ende
+  assistent: {
+    summary: '',
+    closing: [['LEITUNG', 'Das war\'s für heute{name}. Ich halt dich auf dem Laufenden.'], ['LAGE', 'Bis morgen!']],
+    markets: 'Und an den Börsen?',
+    next: ['Was gibt\'s noch?', 'Weiter geht\'s.', 'Und sonst?'],
+    more: 'Und sonst so?'
   }
 };
 
-/** Zusammenfassung als ein Satz mit höchstens drei Schlagworten aus den wichtigsten Meldungen. */
-export function summaryText(shorts: string[], tone: Tone): string {
+/** Schlagworte zu „A, B und C“ */
+const listOf = (shorts: string[]): string => {
   const s = shorts.map(x => x.trim().replace(/[.!?]+$/, '')).filter(Boolean).slice(0, 3);
-  if (!s.length) return '';
-  const list = s.length === 1 ? s[0]! : `${s.slice(0, -1).join(', ')} und ${s[s.length - 1]}`;
+  return s.length <= 1 ? (s[0] ?? '') : `${s.slice(0, -1).join(', ')} und ${s[s.length - 1]}`;
+};
+
+/** Zusammenfassung als ein Satz mit höchstens drei Schlagworten aus den wichtigsten Meldungen (nicht im Ton „Assistent“). */
+export function summaryText(shorts: string[], tone: Tone): string {
+  const list = listOf(shorts);
+  if (!list || !TONE_TEXT[tone].summary) return '';
   return `${TONE_TEXT[tone].summary} ${list}.`;
 }
 
-export function closingLines(tone: Tone): Line[] {
-  return TONE_TEXT[tone].closing.map(([role, text]) => ({ role, text, kind: 'abschluss' as const }));
+/** Name für die Anrede: nur Buchstaben, höchstens 30 Zeichen, sonst keiner */
+export const cleanName = (name: string | undefined): string => {
+  const n = (name ?? '').trim().replace(/\s+/g, ' ');
+  return n && n.length <= 30 && /^[\p{L}' .-]+$/u.test(n) ? n : '';
+};
+
+export function closingLines(tone: Tone, name?: string): Line[] {
+  const n = cleanName(name);
+  return TONE_TEXT[tone].closing.map(([role, text]) => ({ role, text: text.replace('{name}', n ? `, ${n}` : ''), kind: 'abschluss' as const }));
+}
+
+const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+const MONTH_NAMES = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
+/**
+ * Begrüßung im Ton „Assistent“: Gruß mit Name und Datum, dann eine Vorschau aus den geprüften
+ * Schlagworten. Enthält keine Nachricht, die nicht in den Meldungen steht; andere Töne beginnen ohne Gruß.
+ */
+export function introLines(tone: Tone, date: string, shorts: string[], name?: string): Line[] {
+  if (tone !== 'assistent') return [];
+  const n = cleanName(name);
+  const d = new Date(`${date}T12:00:00Z`);
+  const wd = d.getUTCDay();
+  const when = `${WEEKDAYS[wd]}, der ${d.getUTCDate()}. ${MONTH_NAMES[d.getUTCMonth()]}`;
+  const hi = `Guten Morgen${n ? `, ${n}` : ''}`;
+  const and = n ? ', und' : ' und';
+  const first = wd === 1 ? `${hi}${and} einen guten Start in die Woche! Heute ist ${when}.`
+    : wd === 6 || wd === 0 ? `${hi}${and} ein schönes Wochenende! Heute ist ${when}.`
+      : `${hi}! Heute ist ${when}.`;
+  const list = listOf(shorts);
+  return [
+    { role: 'LEITUNG', text: first, kind: 'begruessung' },
+    ...(list ? [{ role: 'LEITUNG' as const, text: `Ich hab dir das Wichtigste rausgesucht: ${list}. Los geht's.`, kind: 'begruessung' as const }] : [])
+  ];
 }

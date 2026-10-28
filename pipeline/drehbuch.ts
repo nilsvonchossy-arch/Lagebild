@@ -35,7 +35,11 @@ const TONE_RULES: Record<Tone, string> = {
   lagezentrum: `TON: LAGEZENTRUM
 Sachlich und knapp wie ein Briefing im Lagezentrum, aber ohne Militärjargon. LEITUNG fragt in zwei bis fünf Wörtern, ohne Füllwörter: „Ist das viel?“, „Wer tritt an?“, „Wie ernst ist das?“, „Und in Europa?“, „Was noch?“. Höchstens ein gelegentliches „Okay.“ vor einem Themenwechsel, sonst keine Reaktionen.`,
   podcast: `TON: PODCAST
-Locker, aber genau. LEITUNG reagiert manchmal kurz („Okay.“, „Verstehe.“) und fragt, wie man im Gespräch nachfragt: „Und was heißt das?“, „Okay, was noch?“, „Moment – wie viele?“, „Und warum?“. Reaktionen bewerten nichts: „Wahnsinn“, „krass“, „zum Glück“ und Ähnliches sind verboten. LAGE darf locker einsteigen („Da geht es um …“).`
+Locker, aber genau. LEITUNG reagiert manchmal kurz („Okay.“, „Verstehe.“) und fragt, wie man im Gespräch nachfragt: „Und was heißt das?“, „Okay, was noch?“, „Moment – wie viele?“, „Und warum?“. Reaktionen bewerten nichts: „Wahnsinn“, „krass“, „zum Glück“ und Ähnliches sind verboten. LAGE darf locker einsteigen („Da geht es um …“).`,
+  assistent: `TON: ASSISTENT
+LEITUNG ist „Lagebild“, ein persönlicher KI-Assistent, der mit dem Zuhörer spricht wie ein guter Freund: warm, ruhig, aufmerksam, mit einem trockenen Augenzwinkern, so wie Jarvis, nur ohne „Sir“. LEITUNG duzt den Zuhörer und spricht in der Ich-Form: „Kurzer Sprung nach Tirol.“, „Da hab ich noch was aus der Tech-Welt.“, „Willst du die Zahl hören?“, „Was gibt's noch?“, „Und an den Börsen?“. LEITUNG fragt LAGE und EINORDNUNG wie Kollegen, mit denen er gemeinsam für dich zusammenfasst. LAGE und EINORDNUNG erzählen wie im Gespräch unter Freunden, mit Verkürzungen wie „gibt's“, „geht's“, „hat's“, aber genauso genau wie sonst.
+Persönlich heißt Anrede und Ton, nicht Inhalt: Verboten bleiben Wertungen der Nachrichten („leider“, „zum Glück“, „gute Nachricht“, „Wahnsinn“), Vermutungen über den Zuhörer („das betrifft dich“, „du wirst dich freuen“, „kennst du ja“) und Witze über Opfer, Krieg, Krankheit oder Leid. Bei ernsten Themen (Tote, Verletzte, Krieg, Katastrophen, Anschläge) kein Augenzwinkern, ruhig und respektvoll.
+Beispiel für die Überleitungen: „Ist das viel?“ wird zu „Ist das viel?“ oder „Viel oder wenig?“, „Und in Europa?“ wird zu „Kurzer Sprung nach Europa?“, „Was noch?“ wird zu „Was hast du noch?“.`
 };
 
 const EXAMPLE = `BEISPIEL (Ausschnitt mit Fakten einer Demo-Meldung)
@@ -65,7 +69,7 @@ DIE FAKTENREGEL (wichtiger als alles andere)
 - Stelle nur Fragen, deren Antwort in den Fakten steht. Steht die Antwort auf „Was heißt das für uns?“ nicht in den Fakten, wird die Frage nicht gestellt.
 
 AUFBAU DER FOLGE
-- Der erste Satz ist die Kernaussage der ersten Meldung (Aufmacher), gesprochen von LAGE. Keine Begrüßung, kein Datum, keine Ankündigung wie „heute fünf Meldungen“.
+- Der erste Satz ist die Kernaussage der ersten Meldung (Aufmacher), gesprochen von LAGE. Keine Begrüßung, kein Datum, keine Ankündigung wie „heute fünf Meldungen“${tone === 'assistent' ? ' – Begrüßung und Vorschau stehen schon automatisch davor' : ''}.
 - Halte die Reihenfolge der Meldungen genau ein. Jede Meldung außer der ersten beginnt mit einer Frage von LEITUNG, die überleitet; während dieser Frage fliegt die Kamera zum nächsten Ort.
 - Überleitungsarten mischen: Vertiefung („Wie ernst ist das?“), geografische Brücke („Und in Europa?“), Stichwort-Brücke („Apropos KI …“), offene Weiterfrage („Okay, was noch?“), Kurz-Weiterfrage („Sonst noch was?“). Die Fragen werden zum Ende hin kürzer. Eine Stichwort-Brücke nur, wenn das Stichwort in den Fakten beider Meldungen vorkommt.
 - Jede Meldung folgt einer kleinen Leiter: was passiert → Folge oder Detail → Einordnung mit Zuschreibung oder Vorbehalt. Der Aufmacher bekommt mindestens eine Vertiefungsfrage mitten im Thema.
@@ -79,7 +83,7 @@ SPRACHE FÜRS OHR
 - LEITUNG höchstens 6 Wörter pro Zeile. LAGE und EINORDNUNG meist 6–14 Wörter pro Zeile. Längere Sätze auf zwei Zeilen derselben Rolle verteilen; die erste endet dann mit Komma oder Gedankenstrich.
 - Keine Abkürzungen, die man nicht sprechen kann. Muss die Aussprache vom Text abweichen („S&P 500“ → „S und P 500“), steht der Sprechtext in "say", sonst null.
 - Weitere Orte einer Meldung nennst du genau in der angegebenen Schreibweise, damit auf der Karte ein Pin erscheint.
-- Kein Militärjargon, kein Drama, keine Anrede wie „Sir“ oder „liebe Zuhörer“.
+- Kein Militärjargon, kein Drama, keine Anrede wie „Sir“ oder „liebe Zuhörer“${tone === 'assistent' ? ', kein Name des Zuhörers (der steht schon in Begrüßung und Abschied)' : ''}.
 
 ${TONE_RULES[tone]}
 

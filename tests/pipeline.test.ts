@@ -366,10 +366,22 @@ describe('Montage', () => {
     const b = buildBriefing({ date: '2026-10-28', generated: 'jetzt', cfg, episode: 7, stories, script, markets, meta: { model: 'test', costUsd: 0, script: 'claude' } });
     expect(b.schema).toBe(2);
     expect(b.episode).toBe(7);
-    expect(b.script.map(l => l.kind)).toEqual(['fakt', 'frage', 'fakt', 'zusammenfassung', 'abschluss', 'abschluss']);
-    expect(b.script[3]!.text).toBe('Also: a-meldung, b-meldung und c-meldung.');
+    // Ton „Assistent“ (Voreinstellung): Begrüßung mit Datum und Vorschau, keine Zusammenfassung am Ende
+    expect(b.script.map(l => l.kind)).toEqual(['begruessung', 'begruessung', 'fakt', 'frage', 'fakt', 'abschluss', 'abschluss']);
+    expect(b.script.slice(0, 2).map(l => l.text)).toEqual(['Guten Morgen! Heute ist Mittwoch, der 28. Oktober.', "Ich hab dir das Wichtigste rausgesucht: a-meldung, b-meldung und c-meldung. Los geht's."]);
+    expect(b.script.slice(0, 2).every(l => l.role === 'LEITUNG' && !l.story)).toBe(true);
+    expect(b.script.at(-2)!.text).toBe("Das war's für heute. Ich halt dich auf dem Laufenden.");
     expect(b.categories.map(c => c.id).sort()).toEqual(['deutschland', 'wirtschaft']);
+    // mit Namen
+    const named = buildBriefing({ date: '2026-11-02', generated: 'jetzt', cfg: { ...cfg, episode: { ...cfg.episode, name: 'Alex' } }, episode: 8, stories, script, markets: null, meta: { model: 'test', costUsd: 0 } });
+    expect(named.script[0]!.text).toBe('Guten Morgen, Alex, und einen guten Start in die Woche! Heute ist Montag, der 2. November.');
+    expect(named.script.at(-2)!.text).toBe("Das war's für heute, Alex. Ich halt dich auf dem Laufenden.");
+    // Lagezentrum: ohne Gruß, mit Zusammenfassung
+    const lz = buildBriefing({ date: '2026-10-28', generated: 'jetzt', cfg: { ...cfg, episode: { ...cfg.episode, tone: 'lagezentrum' } }, episode: 7, stories, script, markets, meta: { model: 'test', costUsd: 0 } });
+    expect(lz.script.map(l => l.kind)).toEqual(['fakt', 'frage', 'fakt', 'zusammenfassung', 'abschluss', 'abschluss']);
+    expect(lz.script[3]!.text).toBe('Also: a-meldung, b-meldung und c-meldung.');
     expect(summaryLine([], 'lagezentrum')).toBeNull();
+    expect(summaryLine(stories, 'assistent')).toBeNull();
   });
 
   it('prüft weitere Orte wie den Hauptort', () => {

@@ -1,7 +1,7 @@
 // Aus geprüften Fakten, Plan und Drehbuch wird das Tages-Update im Datenschema der App.
 import { slugify } from '../src/shared/config.ts';
 import type { ThemenConfig, Topic } from '../src/shared/config.ts';
-import { closingLines, deadlinePattern, findNumber, summaryText, TONE_TEXT } from '../src/shared/script.ts';
+import { closingLines, deadlinePattern, findNumber, introLines, summaryText, TONE_TEXT } from '../src/shared/script.ts';
 import { normalizeSymbol } from '../src/shared/symbols.ts';
 import { dateParts } from '../src/util.ts';
 import type { ArchiveImage, Briefing, Comparison, Deadline, Fact, Format, Line, Markets, Place, Story, Tone } from '../src/shared/types.ts';
@@ -165,13 +165,18 @@ export function marketBlock(lines: Line[], tone: Tone): Line[] {
   return [{ role: 'LEITUNG', text: TONE_TEXT[tone].markets, story: 'maerkte', kind: 'frage' }, ...lines];
 }
 
-/** Zusammenfassung aus den Schlagworten der drei wichtigsten Meldungen, in der Reihenfolge der Folge. */
-export function summaryLine(stories: Story[], tone: Tone): Line | null {
+/** Schlagworte der drei wichtigsten Meldungen, in der Reihenfolge der Folge (geprüfte `short`). */
+export function topShorts(stories: Story[]): string[] {
   const rank: Record<Format, number> = { aufmacher: 0, meldung: 1, kurz: 2 };
   const top = new Set(
     stories.map((s, i) => ({ s, i })).sort((a, b) => rank[a.s.format] - rank[b.s.format] || (b.s.relevance ?? 0) - (a.s.relevance ?? 0) || a.i - b.i).slice(0, 3).map(x => x.s)
   );
-  const text = summaryText(stories.filter(s => top.has(s)).map(s => s.short), tone);
+  return stories.filter(s => top.has(s)).map(s => s.short);
+}
+
+/** Zusammenfassung aus den Schlagworten der drei wichtigsten Meldungen (im Ton „Assistent“ keine, dort kommt die Vorschau zu Beginn). */
+export function summaryLine(stories: Story[], tone: Tone): Line | null {
+  const text = summaryText(topShorts(stories), tone);
   return text ? { role: 'LEITUNG', text, kind: 'zusammenfassung' } : null;
 }
 
@@ -192,11 +197,13 @@ export function buildBriefing(p: BriefingParts): Briefing {
   const summary = summaryLine(p.stories, tone);
   const usedCats = new Set(p.stories.map(s => s.category));
   if (p.markets) usedCats.add('wirtschaft');
+  const name = p.cfg.episode.name;
   const script: Line[] = [
+    ...introLines(tone, p.date, topShorts(p.stories), name),
     ...p.script,
     ...(p.markets ? marketBlock(p.markets.lines, tone) : []),
     ...(summary ? [summary] : []),
-    ...closingLines(tone)
+    ...closingLines(tone, name)
   ];
   return {
     schema: SCHEMA_VERSION,

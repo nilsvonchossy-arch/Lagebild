@@ -50,7 +50,8 @@ function episodeControls(): string {
     <div class="row"><span>Länge der Folge</span><div class="seg-ctl" role="radiogroup" aria-label="Länge der Folge">${mins}</div></div>
     <div class="row"><span>Ton</span><div class="seg-ctl" role="radiogroup" aria-label="Ton">${tones}</div></div>
     <div class="row"><span>Stimme</span><div class="seg-ctl" role="radiogroup" aria-label="Stimme">${voices}</div></div>
-    <p class="note">Längere Folgen haben mehr Meldungen und kosten bei Claude entsprechend mehr. Lagezentrum: knappe Rückfragen. Podcast: lockerer, mit kurzen Reaktionen. VoxCPM2: offene Stimmen, kostenlos, braucht etwa eine Stunde Rechenzeit am Morgen. Azure: Gratis-Kontingent, braucht einen Azure-Schlüssel.</p>
+    <label class="tname" for="epName"><span>Anrede (Ton Assistent)</span><input id="epName" maxlength="30" autocomplete="given-name" placeholder="dein Vorname, optional" value="${esc(ep.name ?? '')}"></label>
+    <p class="note">Längere Folgen haben mehr Meldungen und kosten bei Claude entsprechend mehr. Assistent: begrüßt dich, spricht dich mit Namen an und erzählt wie ein Freund. Lagezentrum: knappe Rückfragen, ohne Gruß. Podcast: lockerer, mit kurzen Reaktionen. VoxCPM2: offene Stimmen, kostenlos, braucht etwa eine Stunde Rechenzeit am Morgen. Azure: Gratis-Kontingent, braucht einen Azure-Schlüssel.</p>
   </div>`;
 }
 
@@ -254,6 +255,15 @@ export function bindTopics(): void {
       case 'save': void save(); break;
       case 'run': void runNow(); break;
     }
+  });
+  box().addEventListener('change', e => {
+    const el = e.target as HTMLInputElement;
+    if (el.id !== 'epName') return;
+    const name = el.value.trim().replace(/\s+/g, ' ');
+    if (name && !/^[\p{L}' .-]{1,30}$/u.test(name)) { status('Anrede: nur Buchstaben, höchstens 30 Zeichen.', 'err'); return; }
+    if (name) cfg.episode.name = name; else delete cfg.episode.name;
+    dirty = true;
+    status('Noch nicht gespeichert.');
   });
   box().addEventListener('submit', e => {
     e.preventDefault();

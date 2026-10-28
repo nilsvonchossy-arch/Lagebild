@@ -88,7 +88,7 @@ describe('migrateConfig', () => {
     };
     const c = migrateConfig(v1);
     expect(c.version).toBe(2);
-    expect(c.episode).toEqual({ minutes: 3, tone: 'lagezentrum', voice: 'voxcpm2' });
+    expect(c.episode).toEqual({ minutes: 3, tone: 'assistent', voice: 'voxcpm2' });
     expect(c.topics.map(t => t.weight)).toEqual(['ausfuehrlich', 'normal', 'kurz', 'aus']);
     expect(c.topics[0]).not.toHaveProperty('priority');
     expect(validateConfig(c)).toEqual([]);

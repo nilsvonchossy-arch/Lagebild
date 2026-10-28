@@ -10,8 +10,8 @@ export const WEIGHTS: Weight[] = ['aus', 'kurz', 'normal', 'ausfuehrlich'];
 export const WEIGHT_LABEL: Record<Weight, string> = { aus: 'Aus', kurz: 'Nur kurz', normal: 'Normal', ausfuehrlich: 'Ausführlich' };
 
 export const MINUTES = [3, 5, 8] as const;
-export const TONES: Tone[] = ['lagezentrum', 'podcast'];
-export const TONE_LABEL: Record<Tone, string> = { lagezentrum: 'Lagezentrum', podcast: 'Podcast' };
+export const TONES: Tone[] = ['assistent', 'lagezentrum', 'podcast'];
+export const TONE_LABEL: Record<Tone, string> = { assistent: 'Assistent', lagezentrum: 'Lagezentrum', podcast: 'Podcast' };
 /** Wer die Folge spricht: offenes Modell VoxCPM2 (kostenlos auf dem GitHub-Server) oder Azure (Gratis-Kontingent) */
 export type VoiceEngine = 'voxcpm2' | 'azure';
 export const VOICE_ENGINES: VoiceEngine[] = ['voxcpm2', 'azure'];
@@ -43,8 +43,8 @@ export interface Topic {
 
 export interface ThemenConfig {
   version: 2;
-  /** Länge in Minuten, Ton und Stimme der Folge (ohne Angabe: VoxCPM2) */
-  episode: { minutes: number; tone: Tone; voice?: VoiceEngine };
+  /** Länge in Minuten, Ton und Stimme der Folge (ohne Angabe: VoxCPM2); name: wie der Assistent dich anspricht */
+  episode: { minutes: number; tone: Tone; voice?: VoiceEngine; name?: string };
   categories: ConfigCategory[];
   topics: Topic[];
 }
@@ -62,7 +62,7 @@ export function migrateConfig(raw: unknown): ThemenConfig {
   const toWeight = (t: TopicV1): Weight => (t.active === false ? 'aus' : t.priority === 3 ? 'ausfuehrlich' : t.priority === 1 ? 'kurz' : 'normal');
   return {
     version: 2,
-    episode: { minutes: 3, tone: 'lagezentrum', voice: 'voxcpm2' },
+    episode: { minutes: 3, tone: 'assistent', voice: 'voxcpm2' },
     categories: c.categories ?? [],
     topics: (c.topics ?? []).map(t => {
       const { priority: _p, active: _a, ...rest } = t as TopicV1;
@@ -81,6 +81,7 @@ export function validateConfig(c: unknown): string[] {
   if (!ep || !Number.isInteger(ep.minutes) || ep.minutes < 2 || ep.minutes > 12) errs.push('episode.minutes muss 2–12 sein');
   if (!ep || !TONES.includes(ep.tone)) errs.push('episode.tone ungültig');
   if (ep?.voice !== undefined && !VOICE_ENGINES.includes(ep.voice)) errs.push('episode.voice ungültig');
+  if (ep?.name !== undefined && (typeof ep.name !== 'string' || ep.name.length > 30 || !/^[\p{L}' .-]*$/u.test(ep.name))) errs.push('episode.name: höchstens 30 Zeichen, nur Buchstaben');
   const cats = Array.isArray(cfg.categories) ? cfg.categories : [];
   if (!cats.length) errs.push('Keine Kategorien');
   const catIds = new Set(cats.map(k => k.id));

@@ -4,7 +4,7 @@
  "generated": "2026-10-27T17:40:00+01:00",
  "note": "Demo-Folge mit den Meldungen vom 27.10.2026, aus den verlinkten Quellen. Ohne Audiodatei spricht die Systemstimme des Geräts. Die täglichen Folgen kommen, sobald die Pipeline läuft.",
  "episode": 1,
- "tone": "lagezentrum",
+ "tone": "assistent",
  "categories": [
   {
    "id": "welt",
@@ -351,6 +351,16 @@
  ],
  "script": [
   {
+   "role": "LEITUNG",
+   "text": "Guten Morgen! Heute ist Dienstag, der 27. Oktober.",
+   "kind": "begruessung"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Ich hab dir das Wichtigste rausgesucht: Rekordbeteiligung in Israel, Druck auf das Penicillin-Werk in Kundl und Kursgewinne an der Wall Street. Los geht's.",
+   "kind": "begruessung"
+  },
+  {
    "role": "LAGE",
    "text": "Israel wählt – und bis 16 Uhr haben schon 55,7 Prozent abgestimmt.",
    "story": "israel",
@@ -386,7 +396,7 @@
   },
   {
    "role": "LEITUNG",
-   "text": "Wer tritt an?",
+   "text": "Und wer tritt an?",
    "story": "israel",
    "kind": "frage"
   },
@@ -411,7 +421,7 @@
   },
   {
    "role": "LEITUNG",
-   "text": "Und in Europa?",
+   "text": "Kurzer Sprung nach Europa?",
    "story": "kundl",
    "kind": "frage"
   },
@@ -483,7 +493,7 @@
   },
   {
    "role": "LEITUNG",
-   "text": "Was machen die Märkte?",
+   "text": "Und an der Wall Street?",
    "story": "wallstreet",
    "kind": "frage"
   },
@@ -517,7 +527,7 @@
   },
   {
    "role": "LEITUNG",
-   "text": "Apropos KI – Apple?",
+   "text": "Apropos KI – was macht Apple?",
    "story": "apple",
    "kind": "frage"
   },
@@ -542,7 +552,7 @@
   },
   {
    "role": "LEITUNG",
-   "text": "Was noch?",
+   "text": "Was hast du noch?",
    "story": "frankreich",
    "kind": "frage"
   },
@@ -566,17 +576,12 @@
   },
   {
    "role": "LEITUNG",
-   "text": "Also: Rekordbeteiligung in Israel, Druck auf das Penicillin-Werk in Kundl und Kursgewinne an der Wall Street.",
-   "kind": "zusammenfassung"
-  },
-  {
-   "role": "LEITUNG",
-   "text": "Das ist die Lage.",
+   "text": "Das war's für heute. Ich halt dich auf dem Laufenden.",
    "kind": "abschluss"
   },
   {
    "role": "LAGE",
-   "text": "Wir bleiben dran.",
+   "text": "Bis morgen!",
    "kind": "abschluss"
   }
  ]

@@ -12,7 +12,8 @@ export type Role = 'LEITUNG' | 'LAGE' | 'EINORDNUNG';
 /** Aufmacher 30–45 s, Meldung 15–25 s, Kurz notiert 5–10 s */
 export type Format = 'aufmacher' | 'meldung' | 'kurz';
 
-export type Tone = 'lagezentrum' | 'podcast';
+/** Lagezentrum: knapp; Podcast: locker; Assistent: persönlich wie ein Freund, mit Begrüßung */
+export type Tone = 'lagezentrum' | 'podcast' | 'assistent';
 
 /** Wo eine Zeile in der Audiodatei der Folge liegt. */
 export interface LineAudio {
@@ -24,8 +25,8 @@ export interface LineAudio {
   words?: [number, number][];
 }
 
-/** Art einer Zeile: Frage/Überleitung, Fakt, Zusammenfassung, feste Abschlussformel */
-export type LineKind = 'frage' | 'fakt' | 'zusammenfassung' | 'abschluss';
+/** Art einer Zeile: Begrüßung (nur Ton „Assistent“), Frage/Überleitung, Fakt, Zusammenfassung, feste Abschlussformel */
+export type LineKind = 'begruessung' | 'frage' | 'fakt' | 'zusammenfassung' | 'abschluss';
 
 export interface Line {
   role: Role;
@@ -33,7 +34,7 @@ export interface Line {
   text: string;
   /** Abweichender Sprechtext, z. B. "S und P 500" statt "S&P 500" */
   say?: string;
-  /** ID der Meldung, zu der die Zeile gehört; "maerkte" für die Marktdaten; fehlt bei Zusammenfassung und Abschluss */
+  /** ID der Meldung, zu der die Zeile gehört; "maerkte" für die Marktdaten; fehlt bei Begrüßung, Zusammenfassung und Abschluss */
   story?: string;
   kind: LineKind;
   /** IDs der geprüften Fakten, auf denen die Zeile beruht (nur Faktzeilen und Zusammenfassung) */

@@ -20,6 +20,8 @@ const LEAD = 0.12;
 /** Wie lange Einblendungen stehen bleiben (ms bei normalem Tempo) */
 const HOLD = { comparison: 5200, deadline: 4200, image: 5600, symbol: 2600 };
 const VISUAL = new Set<Cue['kind']>(['comparison', 'deadline', 'image']);
+/** Rahmen der Folge ohne eigenen Fortschrittsbalken */
+const FRAME = new Set(['_start', '_ende']);
 
 export interface PlayerHooks {
   /** Fortschritt: Abschnitt (Meldung oder Märkte) und Anteil darin */
@@ -37,7 +39,7 @@ export interface PlayerSettings {
   systemVoice: string;
 }
 
-/** Abschnitt der Folge: eine Meldung, die Märkte oder der Schluss */
+/** Abschnitt der Folge: Begrüßung (_start), eine Meldung, die Märkte oder der Schluss (_ende) */
 export interface Scene {
   key: string;
   story: Story | null;
@@ -54,7 +56,7 @@ export interface Scene {
 export function scenesOf(b: Briefing): Scene[] {
   const out: Scene[] = [];
   b.script.forEach((l, i) => {
-    const key = l.story ?? '_ende';
+    const key = l.story ?? (l.kind === 'begruessung' ? '_start' : '_ende');
     const cur = out[out.length - 1];
     if (cur && cur.key === key) { cur.last = i; if (cur.firstFact < 0 && l.role !== 'LEITUNG') cur.firstFact = i; return; }
     out.push({ key, story: b.stories.find(s => s.id === key) ?? null, first: i, last: i, firstFact: l.role !== 'LEITUNG' ? i : -1, hasVisual: false, cmpAtFigure: false });
@@ -114,9 +116,14 @@ export class Player {
     this.scenes.forEach((s, k) => { for (let i = s.first; i <= s.last; i++) this.sceneOfLine[i] = k; });
   }
 
-  /** Abschnitte mit Fortschrittsbalken: Meldungen und Märkte, ohne Schluss */
+  /** Abschnitte mit Fortschrittsbalken: Meldungen und Märkte, ohne Begrüßung und Schluss */
   get segments(): number {
-    return this.scenes.filter(s => s.key !== '_ende').length;
+    return this.scenes.filter(s => !FRAME.has(s.key)).length;
+  }
+
+  /** Nummer des Fortschrittsbalkens zu einem Abschnitt (Begrüßung und Schluss haben keinen) */
+  private segmentOf(scene: number): number {
+    return this.scenes.slice(0, scene).filter(s => !FRAME.has(s.key)).length;
   }
 
   get hasFile(): boolean {
@@ -348,9 +355,9 @@ export class Player {
       if (frac >= c.at && !this.fired.has(key)) { this.fired.add(key); this.fire(c); }
     }
     const scene = this.scenes[this.sceneIdx];
-    if (scene && scene.key !== '_ende') {
+    if (scene && !FRAME.has(scene.key)) {
       const n = scene.last - scene.first + 1;
-      this.hooks.progress(this.sceneIdx, Math.min(1, (i - scene.first + Math.min(1, frac)) / n));
+      this.hooks.progress(this.segmentOf(this.sceneIdx), Math.min(1, (i - scene.first + Math.min(1, frac)) / n));
     }
   }
 
@@ -413,7 +420,12 @@ export class Player {
     let target: [number, number], zoom: number;
     if (story) { target = [story.lon, story.lat]; zoom = story.zoom; }
     else if (scene.key === 'maerkte') { target = FRANKFURT; zoom = 3; }
-    else {
+    else if (scene.key === '_start') {
+      // Begrüßung: Übersicht, langsam in Richtung des ersten Orts
+      const first = b.stories[0];
+      target = [first?.lon ?? 10, Math.max(-10, Math.min(45, first?.lat ?? 30))];
+      zoom = 1.1;
+    } else {
       const last = [...b.stories].reverse()[0];
       target = [(last?.lon ?? 10) + 25, 22];
       zoom = 1;
