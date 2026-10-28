@@ -24,17 +24,21 @@ jobs:
     timeout-minutes: 240
     steps:
       - uses: actions/checkout@v7
-      - name: Mehr Auslagerungsspeicher
+      - name: Platz schaffen und Auslagerungsspeicher
         run: |
+          df -h / | tail -1
+          # vorinstallierte Werkzeuge, die hier niemand braucht (Android, .NET, Haskell, CodeQL)
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/share/swift || true
+          df -h / | tail -1
           sudo swapoff -a || true
-          sudo fallocate -l 9G /swapfile2 && sudo chmod 600 /swapfile2 && sudo mkswap /swapfile2 && sudo swapon /swapfile2
+          sudo fallocate -l 8G /swapfile2 && sudo chmod 600 /swapfile2 && sudo mkswap /swapfile2 && sudo swapon /swapfile2
           free -g; nproc; df -h / | tail -1
       - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
       - name: Pakete (PyTorch nur für die CPU)
         run: |
-          pip install --quiet torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu
           pip install --quiet soundfile numpy
           case "${{ matrix.engine }}" in
             voxcpm2) pip install --quiet "voxcpm>=2.0.3" ;;

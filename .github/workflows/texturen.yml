@@ -20,10 +20,16 @@ jobs:
           get day.jpg https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.jpg
           get night.jpg https://eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg
           get clouds.jpg https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57747/cloud_combined_2048.jpg
-          identify day.jpg night.jpg clouds.jpg | tee -a quellen.txt
-          convert day.jpg -resize 4096x2048! -quality 82 -interlace JPEG earth-day.jpg
-          convert night.jpg -resize 4096x2048! -quality 82 -interlace JPEG earth-night.jpg
-          convert clouds.jpg -resize 2048x1024! -colorspace Gray -quality 80 earth-clouds.jpg
+          pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          Image.MAX_IMAGE_PIXELS = None
+          for src, dst, size, gray in [('day.jpg', 'earth-day.jpg', (4096, 2048), False), ('night.jpg', 'earth-night.jpg', (4096, 2048), False), ('clouds.jpg', 'earth-clouds.jpg', (2048, 1024), True)]:
+              im = Image.open(src)
+              print(src, im.size, im.mode)
+              im = im.convert('L' if gray else 'RGB').resize(size, Image.LANCZOS)
+              im.save(dst, quality=82, optimize=True, progressive=True)
+          PY
           rm day.jpg night.jpg clouds.jpg
           ls -la
       - name: In Branch "texturen" schreiben
