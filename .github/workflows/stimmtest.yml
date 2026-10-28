@@ -10,6 +10,10 @@ on:
         description: 'Welche Modelle (JSON-Liste)'
         type: string
         default: '["omnivoice", "voxcpm2"]'
+      schritte:
+        description: 'OmniVoice: Rechenschritte je Zeile (32 = Standard, 16 = doppelt so schnell)'
+        type: string
+        default: '32'
 
 permissions:
   contents: write
@@ -54,6 +58,8 @@ jobs:
       - name: Dialog
         continue-on-error: true
         timeout-minutes: 180
+        env:
+          STIMMTEST_SCHRITTE: ${{ inputs.schritte }}
         run: python scripts/stimmtest.py ${{ matrix.engine }} --out stimmtest
       - name: Ergebnis in Branch schreiben
         if: always()

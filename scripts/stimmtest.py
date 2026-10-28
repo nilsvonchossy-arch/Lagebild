@@ -22,6 +22,7 @@ import soundfile as sf
 HERE = os.path.dirname(os.path.abspath(__file__))
 DIALOG = json.load(open(os.path.join(HERE, "stimmtest-dialog.json"), encoding="utf-8"))
 SEEDS = {"LEITUNG": 11, "LAGE": 23, "EINORDNUNG": 37}
+STEPS = int(os.environ.get("STIMMTEST_SCHRITTE", "32"))  # OmniVoice: Rechenschritte je Zeile (weniger = schneller)
 
 
 def kind(l):
@@ -168,18 +169,20 @@ def cmd_omnivoice(out):
         os.makedirs(os.path.join(out, "stimmen"), exist_ok=True)
         torch.manual_seed(7)
         for r, v in DIALOG["stimmen"].items():
-            audio = m.generate(text=v["probe"], instruct=design[r])
+            audio = m.generate(text=v["probe"], instruct=design[r], language="de")
             sf.write(refs[r], trim(np.asarray(audio[0], dtype=np.float32), sr), sr)
             print("Stimme entworfen:", r, flush=True)
+    # Stimmprobe einmal kodieren statt für jede Zeile
+    prompts = {r: m.create_voice_clone_prompt(ref_audio=refs[r], ref_text=DIALOG["stimmen"][r]["probe"]) for r in refs}
     chunks, t0 = [], time.time()
     for i, l in enumerate(DIALOG["zeilen"]):
         r = l["role"]
-        audio = m.generate(text=say(l), ref_audio=refs[r], ref_text=DIALOG["stimmen"][r]["probe"])
+        audio = m.generate(text=say(l), voice_clone_prompt=prompts[r], language="de", num_step=STEPS)
         chunks.append((l, np.asarray(audio[0], dtype=np.float32)))
         print(f"{i + 1}/{len(DIALOG['zeilen'])} {r}: {l['text']}", flush=True)
     calc = time.time() - t0
     dur = assemble(chunks, sr, os.path.join(out, "omnivoice", "dialog.mp3"))
-    report(out, "omnivoice", {"laden_s": round(load, 1), "rechenzeit_s": round(calc, 1), "audio_s": round(dur, 1), "rtf": round(calc / dur, 2), "stimmen": "OmniVoice-Entwurf" if own else "VoxCPM2-Entwurf"})
+    report(out, "omnivoice", {"laden_s": round(load, 1), "rechenzeit_s": round(calc, 1), "audio_s": round(dur, 1), "rtf": round(calc / dur, 2), "schritte": STEPS, "stimmen": "OmniVoice-Entwurf" if own else "VoxCPM2-Entwurf"})
 
 
 if __name__ == "__main__":
