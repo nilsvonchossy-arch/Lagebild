@@ -2,7 +2,7 @@
 // Drehbuch-Prüfung → (Stimme und Mischung) → Ablage.
 //
 //   node pipeline/run.ts --out daten               normales Update für heute
-//   node pipeline/run.ts --gate                     nur, wenn es in Berlin nach 5:30 ist und heute noch nichts da ist
+//   node pipeline/run.ts --gate                     nur, wenn es in Berlin nach 5:30 (8-Minuten-Folge mit VoxCPM2: 4:30) ist und heute noch nichts da ist
 //   node pipeline/run.ts --check-feeds              nur Feeds und Suche prüfen, ohne Claude
 //   node pipeline/run.ts --compare claude-opus-5-5,claude-sonnet-5-5,claude-haiku-5-5
 //   node pipeline/run.ts --vertonen public/demo/2026-10-27.json --out demo-out   fertige Folge nur vertonen
@@ -30,7 +30,7 @@ import { planEpisode, wantedStories } from './plan.ts';
 import { fetchFeeds, matchTopics, mergeCandidates, parseFeed, searchGdelt, type Candidate, type Quellen } from './sources.ts';
 import { dayPath, nextEpisode, previousHeadlines, pruneMedia, writeIndex, writeJSON } from './store.ts';
 import { synthesizeLines, type VoiceSpec } from './tts.ts';
-import { synthesizeVoxcpm, type VoxcpmConfig } from './tts-voxcpm.ts';
+import { earliestStart, synthesizeVoxcpm, type VoxcpmConfig } from './tts-voxcpm.ts';
 import { berlinISO, berlinNow, log, pool } from './util.ts';
 
 const { values: args } = parseArgs({
@@ -268,7 +268,8 @@ async function main(): Promise<void> {
   output('changed', 'false');
 
   if (args.gate && !args.force) {
-    if (now.time < '05:30') { log(`Zu früh (${now.time} Uhr in Berlin), nichts zu tun.`); return; }
+    const start = earliestStart(cfg.episode.minutes, cfg.episode.voice ?? 'voxcpm2');
+    if (now.time < start) { log(`Zu früh (${now.time} Uhr in Berlin, Start ab ${start}), nichts zu tun.`); return; }
     if (existsSync(dayPath(OUT, date))) { log(`Update für ${date} existiert schon.`); return; }
   }
 

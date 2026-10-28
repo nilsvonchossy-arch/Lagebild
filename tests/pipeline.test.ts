@@ -10,7 +10,7 @@ import { layoutLines, levelGain, musicBed, parseWav, trimBounds, wavBytes, type 
 import { planEpisode, targetSeconds, wantedStories, type PlanInput } from '../pipeline/plan';
 import { gdeltQuery, mergeCandidates, parseFeed, type Feed } from '../pipeline/sources';
 import { escapeXml, wordMarks } from '../pipeline/tts';
-import { readClips, voxcpmJob, type VoxcpmConfig } from '../pipeline/tts-voxcpm';
+import { earliestStart, readClips, voxcpmJob, type VoxcpmConfig } from '../pipeline/tts-voxcpm';
 import { berlinISO, berlinNow, normalizeUrl, plainText } from '../pipeline/util';
 import { migrateConfig } from '../src/shared/config';
 import { normalizeSymbol } from '../src/shared/symbols';
@@ -518,6 +518,13 @@ describe('Stimme VoxCPM2', () => {
     ]);
     expect(job.lines[2]!.ref).toBe('Und die KI?');
     expect(job.attempts).toBe(3);
+  });
+
+  it('startet eine 8-Minuten-Folge mit VoxCPM2 früher, damit sie bis 8 Uhr fertig ist', () => {
+    expect(earliestStart(3, 'voxcpm2')).toBe('05:30');
+    expect(earliestStart(5, 'voxcpm2')).toBe('05:30');
+    expect(earliestStart(8, 'voxcpm2')).toBe('04:30');
+    expect(earliestStart(8, 'azure')).toBe('05:30');
   });
 
   it('liest die Zeilen der Engine als Clips mit Wortzeiten; unbrauchbare fehlen', async () => {

@@ -8,7 +8,7 @@ Einmalig nötig. Danach läuft Lagebild jeden Morgen von selbst.
 
 Die App liegt danach unter **https://nilsvonchossy-arch.github.io/Lagebild/** (für Suchmaschinen gesperrt, aber per Link erreichbar).
 
-Warum öffentlich: Die GitHub-Server für öffentliche Repos sind kostenlos und haben 4 Kerne und 16 GB Speicher. Die offene Stimme (VoxCPM2) braucht etwa 8 GB; auf den Servern privater Repos (2 Kerne, 7 GB, 2.000 Gratis-Minuten im Monat) muss sie auslagern und wird unzuverlässig langsam. Sichtbar werden Code, Dokumentation (auch diese Datei und CLAUDE.md) und die täglichen Folgen; Schlüssel und der GitHub-Token der App bleiben geheim. Die Historie ist geprüft: keine Schlüssel, alle Commits unter „Claude“ oder dem GitHub-Bot.
+Warum öffentlich: Die GitHub-Server für öffentliche Repos sind kostenlos und haben 4 Kerne und 16 GB Speicher. Die offene Stimme (VoxCPM2) braucht etwa 10 GB; auf den Servern privater Repos (2 Kerne, 7 GB, 2.000 Gratis-Minuten im Monat) muss sie auslagern und wird unzuverlässig langsam. Sichtbar werden Code, Dokumentation (auch diese Datei und CLAUDE.md) und die täglichen Folgen; Schlüssel und der GitHub-Token der App bleiben geheim. Die Historie ist geprüft: keine Schlüssel, alle Commits unter „Claude“ oder dem GitHub-Bot.
 
 ## 2. Claude API (Anthropic)
 Die API ist ein eigenes Konto und **nicht** im Claude-Abo enthalten.
@@ -56,7 +56,7 @@ Repo → **Actions** → **Tages-Update** → **Run workflow**:
 
 Außerdem: **Demo vertonen** (die Demo-Folge mit der Stimme der Pipeline sprechen lassen, gleichzeitig Messlauf für die Rechenzeit), **Stimmtest** (offene Stimm-Modelle vergleichen), **Stimmprüfung** (Whisper schreibt die Stimmtests mit), **Archivbilder (Demo)** und **Texturen** (Satellitenbilder der NASA für den Globus neu laden).
 
-Der tägliche Lauf startet um 5:45 Uhr (Berlin), weil VoxCPM2 auf der CPU rund eine Stunde rechnet; Wiederholungen bis 8:45 Uhr.
+Der tägliche Lauf startet um 5:45 Uhr (Berlin), weil VoxCPM2 auf der CPU etwa 20 Sekunden pro Sekunde Sprache rechnet (3-Minuten-Folge knapp eine Stunde); eine 8-Minuten-Folge startet um 4:45. Wiederholungen bis 8:45 Uhr.
 
 Oder in der App: Einstellungen → **Jetzt recherchieren**.
 

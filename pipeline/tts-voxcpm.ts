@@ -20,6 +20,15 @@ export interface VoxcpmConfig {
   seed?: number;
   /** Rechenformat auf der CPU; float32, weil die meisten Server-CPUs bfloat16 nur umgerechnet können */
   dtype?: 'float32' | 'bfloat16';
+  /** Höchste Rechenzeit; danach fehlen die restlichen Zeilen und die Folge kommt ohne Audiodatei */
+  maxMinutes?: number;
+}
+
+/** Frühester Start des Tageslaufs (Berlin), damit die Folge bis 8 Uhr fertig ist: Die Stimme rechnet
+ *  auf dem öffentlichen GitHub-Server (4 Kerne, float32) etwa 20 Sekunden pro Sekunde Sprache,
+ *  eine 8-Minuten-Folge also gut zwei Stunden. */
+export function earliestStart(minutes: number, voice: string): string {
+  return voice === 'voxcpm2' && minutes >= 8 ? '04:30' : '05:30';
 }
 
 export interface JobLine { i: number; role: Role; say: string; ref: string }

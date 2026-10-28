@@ -3,7 +3,7 @@
   python pipeline/stimme_voxcpm.py auftrag.json ausgabe/
 
 auftrag.json: {"lines": [{"i", "role", "say", "ref"}], "voices": {ROLLE: {"ref", "text"}}, "cfg", "steps",
-               "attempts", "whisper", "seed", "dtype"}
+               "attempts", "whisper", "seed", "dtype", "maxMinutes"}
   say  Sprechtext (Zahlen und Abkürzungen ausgeschrieben, src/shared/sprechtext.ts)
   ref  derselbe Text ohne buchstabierte Abkürzungen, zum Vergleich mit der Whisper-Mitschrift
 
@@ -14,6 +14,9 @@ Whisper ergeben die Untertitel-Zeitmarken.
 
 Auf der CPU rechnet das Modell in float32 (Voreinstellung "dtype"): Das Checkpoint-Format bfloat16
 können die meisten Server-CPUs nicht direkt und rechnen es um, das kostet ein Vielfaches an Zeit.
+
+Nach "maxMinutes" Rechenzeit hört die Engine auf: Die restlichen Zeilen fehlen, die Folge kommt dann ohne
+Audiodatei (die App spricht selbst), statt dass der ganze Lauf an der Zeitgrenze des Workflows scheitert.
 
 Ergebnis: ausgabe/zeile-NNN.wav (16 Bit) und ausgabe/ergebnis.json mit Wortzeiten, Prüfung und Rechenzeiten.
 """
@@ -88,9 +91,18 @@ def main():
 
     results = []
     t_gen = time.time()
+    limit = float(job.get("maxMinutes", 0)) * 60 or float("inf")
+    timed_out = False
     for n, line in enumerate(job["lines"]):
+        if time.time() - t_gen > limit:
+            timed_out = True
+            log(f"Zeitlimit von {job['maxMinutes']} Minuten erreicht: {len(job['lines']) - n} Zeilen fehlen")
+            results.extend({"i": l["i"], "ok": False, "dur": 0, "attempts": 0, "cer": 100, "problems": ["Zeitlimit"]} for l in job["lines"][n:])
+            break
         best = None
         for attempt in range(1, int(job.get("attempts", 3)) + 1):
+            if best and time.time() - t_gen > limit:
+                break
             torch.manual_seed(int(job.get("seed", 7)) + 1000 * attempt + n)
             ts = time.time()
             wav, _, _ = tts.generate_with_prompt_cache(
@@ -130,6 +142,7 @@ def main():
         "engine": "voxcpm2", "sr": sr, "dtype": dtype, "cpu": cpu_info(), "load_tts_s": round(load_tts, 1), "load_whisper_s": round(load_whisper, 1),
         "calc_s": round(calc, 1), "audio_s": round(audio_s, 1), "rtf": round(calc / max(audio_s, 0.1), 2),
         "retried": sum(1 for r in results if r["attempts"] > 1), "failed": [r["i"] for r in results if not r["ok"]],
+        "timeout": timed_out,
         "lines": results,
     }
     json.dump(report, open(os.path.join(out, "ergebnis.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
