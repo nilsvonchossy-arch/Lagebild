@@ -52,10 +52,11 @@ export class Subtitle {
     private readonly textEl: HTMLElement
   ) {}
 
-  show(role: Role, text: string): void {
+  /** `label` ersetzt den Rollennamen, z. B. „LAGEBILD“ für den Assistenten */
+  show(role: Role, text: string, label?: string): void {
     this.box.classList.remove('off');
     this.roleEl.dataset.role = role;
-    this.roleEl.textContent = ROLE_LABEL[role];
+    this.roleEl.textContent = label ?? ROLE_LABEL[role];
     this.blocks = subtitleBlocks(text);
     this.shown = -1;
     this.update(0);

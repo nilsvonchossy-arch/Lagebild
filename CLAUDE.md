@@ -11,7 +11,7 @@ Ich will TikTok deinstallieren und trotzdem jeden Tag auf dem neuesten Stand ble
 ## Stand
 Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine richtige App geworden. Seit Runde 2 (28.10.2026) läuft jede Folge als Gespräch dreier Stimmen nach dem Vorbild Conflictly, siehe `docs/video-analyse-conflictly.md` (Abschnitte 4, 5, 9, 10) und `docs/drehbuch-beispiel.md`.
 - **App:** Vite + TypeScript ohne Framework, Module in `src/`: `player.ts` (Ablauf nach Audio-Zeit), `audio.ts` (Audiodatei der Folge, Systemstimme als Rückfall, Bass-Teppich ohne Datei), `globe.ts` (Kamerafahrt, Hervorhebung, Pins, weitere Orte, Linien), `earth.ts` (Satellitenbild per WebGL), `card.ts` (Karte, Details, Kursverlauf), `viz.ts` (Einblendungen), `icons.ts` (Symbole), `fx.ts` (Untertitel-Blöcke, Hochzählen), `topics.ts` (Themen-Editor), `github.ts`, `main.ts`. Gemeinsame Regeln für App und Pipeline in `src/shared/script.ts` (Pausen, Untertitel-Blöcke, Bild-Beats, Abschlussformeln) und `src/shared/symbols.ts`.
-- **Ablauf einer Folge:** kein Grußtext, Datum und „Folge N“ nur als Grafik. Erster Satz = Kernaussage des Aufmachers. Die Kamera fliegt während der Frage von LEITUNG, die Karte erscheint mit der Antwort, Zahl und weitere Orte erscheinen beim Wort (Wortzeitmarken). Untertitel als Blöcke mit 6–10 Wörtern. Einblendungen erscheinen beim Wort, eine zugleich: Vergleich als Balken, Termin als Uhr oder Kalenderblatt, Archivbild mit Urheber und Lizenz; eine Meldung ohne solche Einblendung zeigt kurz ihr Symbol. Hochkant oben über dem Globus, quer in der rechten Spalte. Karte im Ablauf nur Flagge, Ort, eine Zeile; „Kurz gesagt“, Zahl und Quelle per Tippen auf die Karte und auf dem Endbildschirm. Am Ende Zusammenfassung mit drei Schlagworten und feste Abschlussformel.
+- **Ablauf einer Folge:** Im Ton „Assistent“ (Voreinstellung) begrüßt LEITUNG zuerst mit Wochentag, Datum und auf Wunsch Namen und nennt die drei wichtigsten Schlagworte; der Globus zeigt dabei die Übersicht. In den anderen Tönen kein Grußtext. Datum und „Folge N“ zusätzlich als Grafik. Erster Satz nach der Begrüßung = Kernaussage des Aufmachers. Die Kamera fliegt während der Frage von LEITUNG, die Karte erscheint mit der Antwort, Zahl und weitere Orte erscheinen beim Wort (Wortzeitmarken). Untertitel als Blöcke mit 6–10 Wörtern. Einblendungen erscheinen beim Wort, eine zugleich: Vergleich als Balken, Termin als Uhr oder Kalenderblatt, Archivbild mit Urheber und Lizenz; eine Meldung ohne solche Einblendung zeigt kurz ihr Symbol. Hochkant oben über dem Globus, quer in der rechten Spalte. Karte im Ablauf nur Flagge, Ort, eine Zeile; „Kurz gesagt“, Zahl und Quelle per Tippen auf die Karte und auf dem Endbildschirm. Am Ende Zusammenfassung mit drei Schlagworten und feste Abschlussformel.
 - **Globus:** NASA Blue Marble (Dez. 2004), Black Marble 2016 (Stadtlichter) und Wolken in `public/earth/`, gemeinfrei, geladen mit dem Workflow „Texturen“. Darüber dünne Grenzen aus `world-atlas` (110m, 50m bei engem Ausschnitt). Ohne WebGL der alte Vektor-Globus.
 - **PWA:** Manifest, Icon, Service Worker; offline nutzbar. Mit Audiodatei läuft die Folge bei gesperrtem iPad weiter (Sperrbildschirm-Steuerung über Media Session).
 - **Themen:** `config/themen.json` (Version 2), bearbeitbar in der App. Gespeichert wird per GitHub-API mit einem Fine-grained Token, der nur auf dem iPad liegt.
@@ -33,7 +33,7 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine
 - **Gewichtung pro Thema:** Aus / Nur kurz / Normal / Ausführlich. Format = Relevanz (1–5) + Gewichtung. Gesamtlänge 3, 5 oder 8 Minuten; der Plan verteilt die Zeit danach und lässt überzählige Meldungen weg.
 - **Reihenfolge:** Aufmacher zuerst, dann eine Route ohne Sprünge über den Globus (wichtige Meldungen dürfen etwas weiter weg liegen), „Kurz notiert“ am Ende, dann Märkte.
 - **Pausen:** Antwort auf Frage 0,3 s, Sprecherwechsel 0,5 s, gleiche Stimme im Satz 0,12 s, Themenwechsel 0,9 s, vor der Zusammenfassung 1 s.
-- **Ton:** Lagezentrum (knapp, Abschluss „Das ist die Lage.“ / „Wir bleiben dran.“) oder Podcast (lockerer, Abschluss „Das war es für heute.“ / „Bis morgen!“), einstellbar im Themen-Editor.
+- **Ton:** Assistent (Voreinstellung: LEITUNG ist „Lagebild“, ein persönlicher Assistent wie Jarvis ohne „Sir“, duzt, spricht in Ich-Form, warm und ruhig; Begrüßung und Vorschau statt Zusammenfassung; Abschluss „Das war's für heute[, Name]. Ich halt dich auf dem Laufenden.“ / „Bis morgen!“), Lagezentrum (knapp, Abschluss „Das ist die Lage.“ / „Wir bleiben dran.“) oder Podcast (lockerer, Abschluss „Das war es für heute.“ / „Bis morgen!“). Einstellbar im Themen-Editor, dort auch die Anrede (`episode.name`). Persönlich heißt Anrede und Ton, nicht Inhalt: keine Wertungen der Nachrichten, keine Vermutungen über den Zuhörer, bei ernsten Themen kein Augenzwinkern.
 
 ## Entscheidungen (27.10.2026)
 - **Hosting:** Repo öffentlich, GitHub Pages, Deploy per GitHub Actions. Als PWA auf dem iPad-Homescreen.
@@ -45,7 +45,7 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine
 ## Entscheidungen (28.10.2026)
 - **Gesprächsform:** drei Stimmen und Drehbuch nach `docs/video-analyse-conflictly.md`, ohne „Sir“, ohne Militärjargon, ohne Clips.
 - **Stimme:** vorerst die Gratis-Stimmen von Azure (F0): LEITUNG Conrad, LAGE Seraphina (multilingual), EINORDNUNG Florian (multilingual), Feinheiten in `config/pipeline.json`. Wenn es gut klappt, investiere ich später in eine bessere Stimme (ElevenLabs etwa 8–20 $/Monat, Azure HD etwa 2–6 $, Gemini TTS etwa 1–3 $). Offene Modelle aus VoiceStudio werden kostenlos getestet.
-- **Ton:** Lagezentrum als Voreinstellung, Podcast umschaltbar.
+- **Ton:** Lagezentrum als Voreinstellung, Podcast umschaltbar. (Später am 28.10. geändert: Ton „Assistent“ mit Begrüßung als Voreinstellung, siehe oben.)
 - **Gesamtlänge:** Voreinstellung 3 Minuten.
 - **Daumen hoch/runter:** nur Vorschlag, noch nicht gebaut (Knöpfe auf dem Endbildschirm, Hinweis für die Auswahl, nie Filter für Fakten).
 - **Einblendungen:** Grafiken aus geprüften Fakten (Vergleich, Termin, Kursverlauf, Symbol) und Archivbilder aus Wikimedia Commons (a + b). Keine Aufnahmen vom Ereignis selbst (Rechte bei Agenturen und Verlagen).
@@ -71,7 +71,7 @@ Ein Tag ist ein `Briefing`; Kategorien bringen ihre Farben mit, damit ältere Ta
 ```js
 {
   schema: 2, date: '2026-10-27', generated: '2026-10-27T07:12:00+01:00',
-  episode: 1, tone: 'lagezentrum',
+  episode: 1, tone: 'assistent',             // 'assistent' | 'lagezentrum' | 'podcast'
   categories: [{ id: 'geopolitik', name: 'Geopolitik & Sicherheit', color: '#ff7a3d' }],
   stories: [Story, …],                       // in Sendereihenfolge
   markets: { asOf, source, items: [{ id, name, value, dec, unit, changePct, date }] },   // optional
@@ -82,7 +82,7 @@ Ein Tag ist ein `Briefing`; Kategorien bringen ihre Farben mit, damit ältere Ta
 // Line
 { role: 'LEITUNG' | 'LAGE' | 'EINORDNUNG', text: 'Untertitel', say: 'optional: abweichender Sprechtext',
   story: 'israel',                           // fehlt bei Zusammenfassung und Abschluss; 'maerkte' für Märkte
-  kind: 'frage' | 'fakt' | 'zusammenfassung' | 'abschluss',
+  kind: 'begruessung' | 'frage' | 'fakt' | 'zusammenfassung' | 'abschluss',   // Begrüßung ohne story
   facts: ['A1', 'A2'],                       // nur Faktzeilen
   audio: { at: 12.4, dur: 3.1, words: [[0.31, 0.12], …] } }   // Beginn in der Folge, [Sekunde, Anteil] am Wortende
 // Story

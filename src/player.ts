@@ -328,7 +328,8 @@ export class Player {
     const b = this.briefing!;
     const l = b.script[i]!;
     const scene = this.scenes[this.sceneIdx]!;
-    this.sub.show(l.role, l.text);
+    // Im Ton „Assistent“ hat LEITUNG einen Namen: Lagebild
+    this.sub.show(l.role, l.text, b.tone === 'assistent' && l.role === 'LEITUNG' ? 'LAGEBILD' : undefined);
     this.cues = scene.story ? cuesFor(scene.story, l, { comparisonAtFigure: scene.cmpAtFigure }).filter(c => !this.fired.has(this.cueKey(c))) : [];
     if (i >= scene.firstFact && !this.factStarted) {
       this.factStarted = true;
