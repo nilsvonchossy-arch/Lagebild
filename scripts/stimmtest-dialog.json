@@ -1,0 +1,49 @@
+{
+  "hinweis": "Dialog aus docs/video-analyse-conflictly.md, Abschnitt 10.4. say = Sprechtext mit ausgeschriebenen Zahlen (offene Modelle lesen Ziffern nicht zuverlässig).",
+  "stimmen": {
+    "LEITUNG": {
+      "beschreibung": "A middle-aged German man with a deep, calm, low voice, speaking briefly and matter-of-factly, like a news editor asking short questions",
+      "probe": "Guten Morgen. Wir gehen die Lage gemeinsam durch, Punkt für Punkt, ruhig und der Reihe nach."
+    },
+    "LAGE": {
+      "beschreibung": "A young German woman with a bright, lively, clear voice, speaking at a brisk pace like a news reporter",
+      "probe": "Hier ist der aktuelle Stand: In mehreren Städten wird heute gewählt, und die Beteiligung ist bisher hoch."
+    },
+    "EINORDNUNG": {
+      "beschreibung": "An older German man with a calm, warm, deep voice, speaking in a measured and thoughtful way, like an analyst",
+      "probe": "Wichtig ist der Zusammenhang: Die Angaben stammen von den Behörden und sind noch nicht unabhängig bestätigt."
+    }
+  },
+  "zeilen": [
+    { "role": "LAGE", "story": "israel", "text": "Israel wählt – und bis 16 Uhr haben schon 55,7 Prozent abgestimmt.", "say": "Israel wählt – und bis sechzehn Uhr haben schon fünfundfünfzig Komma sieben Prozent abgestimmt." },
+    { "role": "LEITUNG", "story": "israel", "text": "Ist das viel?" },
+    { "role": "EINORDNUNG", "story": "israel", "text": "So viel wie noch nie um diese Uhrzeit, sagt das Wahlkomitee." },
+    { "role": "EINORDNUNG", "story": "israel", "text": "2022 waren es 47,5 Prozent.", "say": "Zweitausendzweiundzwanzig waren es siebenundvierzig Komma fünf Prozent." },
+    { "role": "LEITUNG", "story": "israel", "text": "Wer tritt an?" },
+    { "role": "LAGE", "story": "israel", "text": "Netanjahus Likud gegen Yashar, die Partei von Gadi Eisenkot.", "say": "Netanjahus Likud gegen Jaschar, die Partei von Gadi Eisenkot." },
+    { "role": "EINORDNUNG", "story": "israel", "text": "Die Wahllokale schließen um 22 Uhr Ortszeit.", "say": "Die Wahllokale schließen um zweiundzwanzig Uhr Ortszeit." },
+    { "role": "LEITUNG", "story": "kundl", "text": "Und in Europa?" },
+    { "role": "LAGE", "story": "kundl", "text": "In Kundl in Tirol steht Europas letztes großes Penicillin-Werk unter Druck." },
+    { "role": "LEITUNG", "story": "kundl", "text": "Wie ernst ist das?" },
+    { "role": "LAGE", "story": "kundl", "text": "Betreiber Sandoz sagt: So ist die Produktion wirtschaftlich nicht tragfähig –" },
+    { "role": "LAGE", "story": "kundl", "text": "außer, Regierungen zahlen mehr für Penicillin." },
+    { "role": "EINORDNUNG", "story": "kundl", "text": "Der Grund ist günstigere Konkurrenz aus China." },
+    { "role": "EINORDNUNG", "story": "kundl", "text": "Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht." },
+    { "role": "LEITUNG", "story": "kundl", "text": "Wie viele arbeiten dort?" },
+    { "role": "EINORDNUNG", "story": "kundl", "text": "Mehr als 2.000 Menschen.", "say": "Mehr als zweitausend Menschen." },
+    { "role": "LEITUNG", "story": "frankreich", "text": "Kurz noch Frankreich." },
+    { "role": "LAGE", "story": "frankreich", "text": "Die Regierung will die Eingangsklassen an öffentlichen Gymnasien bei 28 Schülern deckeln.", "say": "Die Regierung will die Eingangsklassen an öffentlichen Gymnasien bei achtundzwanzig Schülern deckeln." },
+    { "role": "EINORDNUNG", "story": "frankreich", "text": "Und die Studienplatz-Plattform Parcoursup soll bis 2028 abgeschafft werden.", "say": "Und die Studienplatz-Plattform Parcoursup soll bis zweitausendachtundzwanzig abgeschafft werden." },
+    { "role": "LEITUNG", "story": "maerkte", "text": "Okay. Was machen die Märkte?" },
+    { "role": "LAGE", "story": "maerkte", "text": "Die Wall Street hat am Montag zugelegt: Nasdaq plus 0,8, S&P 500 plus 0,7 Prozent.", "say": "Die Wall Street hat am Montag zugelegt: Nasdaq plus null Komma acht, S und P fünfhundert plus null Komma sieben Prozent." },
+    { "role": "EINORDNUNG", "story": "maerkte", "text": "Getragen von KI-Nachrichten: Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen,", "say": "Getragen von Ka-I-Nachrichten: Meta will fünfundneunzig Milliarden Dollar für Ka-I-Infrastruktur aufnehmen," },
+    { "role": "EINORDNUNG", "story": "maerkte", "text": "und Anthropic hat den Börsengang beantragt." },
+    { "role": "LEITUNG", "story": "apple", "text": "Apropos KI – Apple?", "say": "Apropos Ka-I – Apple?" },
+    { "role": "LAGE", "story": "apple", "text": "Neue Macs mit M6-Chip, ausgeliefert ab 6. November. Der iMac kostet ab 1.499 Dollar.", "say": "Neue Macs mit M-sechs-Chip, ausgeliefert ab dem sechsten November. Der iMac kostet ab vierzehnhundertneunundneunzig Dollar." },
+    { "role": "EINORDNUNG", "story": "apple", "text": "Die Neural Engine soll laut Apple 1,9-mal so schnell sein wie beim M5.", "say": "Die Neural Engine soll laut Apple eins Komma neun mal so schnell sein wie beim M fünf." },
+    { "role": "LEITUNG", "kind": "zusammenfassung", "text": "Also: Rekordbeteiligung in Israel, Druck auf das Penicillin-Werk in Tirol,", "say": "Also: Rekordbeteiligung in Israel, Druck auf das Penicillin-Werk in Tirol," },
+    { "role": "LEITUNG", "kind": "zusammenfassung", "text": "KI-Nachrichten treiben die Wall Street.", "say": "Ka-I-Nachrichten treiben die Wall Street." },
+    { "role": "LEITUNG", "kind": "abschluss", "text": "Bis morgen." },
+    { "role": "LAGE", "kind": "abschluss", "text": "Wir bleiben dran." }
+  ]
+}

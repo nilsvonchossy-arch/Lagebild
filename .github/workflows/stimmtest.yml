@@ -1,0 +1,65 @@
+# Hörprobe mit offenen Stimm-Modellen (VoxCPM2, OmniVoice), kostenlos auf den GitHub-Servern (CPU).
+# Ergebnis im Branch "stimmtest": stimmen/*.wav, voxcpm2/dialog.mp3, omnivoice/dialog.mp3, bericht.json
+name: Stimmtest
+
+on:
+  workflow_dispatch:
+    inputs:
+      engines:
+        description: 'Welche Modelle (Leerzeichen getrennt)'
+        type: string
+        default: 'voxcpm2 omnivoice'
+
+permissions:
+  contents: write
+
+jobs:
+  stimmen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Modelle zwischenspeichern
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/huggingface
+          key: hf-stimmtest-v1
+      - name: Pakete (PyTorch nur für die CPU)
+        run: |
+          free -g; nproc
+          pip install --quiet torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet soundfile numpy
+          for e in ${{ inputs.engines }}; do
+            case "$e" in
+              voxcpm2) pip install --quiet "voxcpm>=2.0.3" ;;
+              omnivoice) pip install --quiet omnivoice ;;
+            esac
+          done
+      - name: Stimmen entwerfen (VoxCPM2)
+        if: contains(inputs.engines, 'voxcpm2')
+        continue-on-error: true
+        timeout-minutes: 60
+        run: python scripts/stimmtest.py design --out stimmtest
+      - name: Dialog mit VoxCPM2
+        if: contains(inputs.engines, 'voxcpm2')
+        continue-on-error: true
+        timeout-minutes: 90
+        run: python scripts/stimmtest.py voxcpm2 --out stimmtest
+      - name: Dialog mit OmniVoice
+        if: contains(inputs.engines, 'omnivoice')
+        continue-on-error: true
+        timeout-minutes: 90
+        run: python scripts/stimmtest.py omnivoice --out stimmtest
+      - name: Ergebnis in Branch "stimmtest" schreiben
+        if: always()
+        run: |
+          cd stimmtest || exit 0
+          for f in stimmen/*.wav; do [ -f "$f" ] && ffmpeg -y -loglevel error -i "$f" -b:a 96k "${f%.wav}.mp3" && rm "$f"; done
+          cat bericht.json || true
+          git init -q -b stimmtest
+          git add -A
+          git -c user.name="Lagebild" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Stimmtest $(date +%F)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" stimmtest
