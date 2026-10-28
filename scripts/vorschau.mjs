@@ -24,7 +24,7 @@ for (const p of walk(out)) {
   const rel = relative(out, p).split('\\').join('/');
   if (!/^(assets|demo|earth)\//.test(rel)) continue;
   // nur woff2 in lateinischen Schnitten; die CSS fordert für deutsche Texte nichts anderes an
-  if (rel.endsWith('.woff') || (rel.endsWith('.woff2') && !/-latin(-ext)?-\d+-normal/.test(rel))) continue;
+  if (rel.endsWith('.woff') || (rel.endsWith('.woff2') && !/-latin(-ext)?-(\d+|wght)-normal/.test(rel))) continue;
   files[rel] = p;
 }
 writeFileSync(join(out, 'files.json'), JSON.stringify(files, null, 1) + '\n');
