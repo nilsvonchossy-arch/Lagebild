@@ -181,7 +181,7 @@ describe('Archivbilder', () => {
       if (url.includes('wbgetentities')) return res({ entities: {
         // Q1: gleichnamiges Schiff, Q2: der Mensch
         Q1: { labels: { de: { value: 'Eisenkot (Schiff)' } }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q11446' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Schiff.jpg' } } }] } },
-        Q2: { labels: { de: { value: 'Gadi Eisenkot' } }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q5' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Gadi Eisenkot 2015.jpg' } } }] } }
+        Q2: { labels: { de: { value: 'Gadi Eizenkot' }, en: { value: 'Gadi Eisenkot' } }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q5' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Gadi Eisenkot 2015.jpg' } } }] } }
       } });
       if (url.includes('commons.wikimedia.org/w/api.php')) {
         expect(url).toContain(encodeURIComponent('File:Gadi Eisenkot 2015.jpg'));
@@ -200,10 +200,10 @@ describe('Archivbilder', () => {
   });
 
   it('nimmt kein Bild eines anderen Eintrags, wenn der Name nicht genau passt', async () => {
-    // „Sandoz“ liefert bei der Suche auch „Novartis“ (mit Bild); das darf nicht als Sandoz erscheinen
+    // „Sandoz“ ist bei Wikidata ein Alias von Novartis (mit Bild); das darf nicht als Sandoz erscheinen
     const fake = async (url: string): Promise<Response> => new Response(JSON.stringify(
-      url.includes('wbsearchentities') ? { search: [{ id: 'Q7', label: 'Novartis', match: { type: 'alias', text: 'Sandoz AG' } }] }
-        : { entities: { Q7: { claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q4830453' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Novartis.jpg' } } }] } } } }
+      url.includes('wbsearchentities') ? { search: [{ id: 'Q7' }] }
+        : { entities: { Q7: { labels: { de: { value: 'Novartis' }, en: { value: 'Novartis' } }, aliases: { de: [{ value: 'Sandoz' }] }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q4830453' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Novartis.jpg' } } }] } } } }
     ));
     const issues: string[] = [];
     expect(await resolveImages([{ name: 'Sandoz', art: 'organisation', suche: 'Sandoz' }], '/tmp', 'bilder/x', issues, fake)).toEqual([]);

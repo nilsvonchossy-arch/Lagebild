@@ -3,7 +3,7 @@ import '@fontsource/michroma/400.css';
 import './styles.css';
 import { Atmo, EpisodeAudio, SystemVoice } from './audio';
 import { Card, categoryColor, detailsHTML, formatLabel, marketsHTML, plainHeadline, relevanceHTML } from './card';
-import { DATA_BASE, loadDay, loadDemo, loadIndex } from './data';
+import { DATA_BASE, DEMO_BASE, loadDay, loadDemo, loadIndex } from './data';
 import { Subtitle } from './fx';
 import { loadWorld110, loadWorld50 } from './geo/world';
 import { Globe } from './globe';
@@ -140,6 +140,7 @@ function renderEnd(): void {
 }
 
 function show(b: Briefing): void {
+  player.dataBase = isDemo ? DEMO_BASE : DATA_BASE;
   player.load(b);
   renderStart(b);
   $('#end').hidden = true;

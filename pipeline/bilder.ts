@@ -44,7 +44,7 @@ export function matchWord(m: Motive): string {
   return /person/i.test(m.art) ? name.split(/\s+/).pop()! : name;
 }
 
-interface SearchResult { search?: { id: string; label?: string; description?: string; match?: { type?: string; text?: string } }[] }
+interface SearchResult { search?: { id: string }[] }
 
 /** Für den Namensvergleich: klein, ohne Akzente, Satzzeichen und Leerzeichen */
 export const nameKey = (s: string): string => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
@@ -61,26 +61,24 @@ const ids = (claims: Claim[] | undefined): string[] =>
 async function findEntity(m: Motive, f: Fetcher): Promise<{ label: string; file: string } | null> {
   const q = encodeURIComponent(m.suche.trim() || m.name.trim());
   const found = await json<SearchResult>(f, `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${q}&language=de&uselang=de&type=item&limit=6&format=json`);
-  // Nur Treffer, deren Name oder Alias genau dem Suchnamen entspricht – sonst lieber kein Bild als ein falsches
-  const want = nameKey(m.suche.trim() || m.name.trim());
-  const named = new Map<string, string>();
-  for (const x of found.search ?? []) {
-    const hit = [x.match?.text, x.label].find(t => t && nameKey(t) === want);
-    if (hit) named.set(x.id, hit);
-  }
-  const cand = [...named.keys()];
+  const cand = (found.search ?? []).map(x => x.id);
   if (!cand.length) return null;
   const ent = await json<Entities>(f, `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${cand.join('|')}&props=claims|labels&languages=de|en&format=json`);
+  // Nur Einträge, deren deutscher oder englischer Hauptname genau dem Suchnamen entspricht. Aliase zählen
+  // nicht: „Sandoz“ ist bei Wikidata auch ein Alias von Novartis – lieber kein Bild als ein falsches.
+  const want = nameKey(m.suche.trim() || m.name.trim());
   for (const id of cand) {
     const e = ent.entities?.[id];
     if (!e) continue;
+    const label = [e.labels?.de?.value, e.labels?.en?.value].find(l => l && nameKey(l) === want);
+    if (!label) continue;
     const types = ids(e.claims?.P31);
     if (types.includes(DISAMBIGUATION)) continue;
     if (/person/i.test(m.art) !== types.includes(HUMAN)) continue;
     if (/ort|bauwerk/i.test(m.art) && !e.claims?.P625?.length) continue;
     const file = e.claims?.P18?.[0]?.mainsnak.datavalue?.value;
     if (typeof file !== 'string') continue;
-    return { label: named.get(id)!, file };
+    return { label, file };
   }
   return null;
 }

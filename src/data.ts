@@ -4,7 +4,9 @@ import type { Briefing, DayIndex } from './shared/types';
 
 const BASE = import.meta.env.BASE_URL;
 export const DATA_BASE = `${BASE}data/`;
-const DEMO_URL = `${BASE}demo/2026-10-27.json`;
+/** Ordner der Demo-Folge; Bildpfade der Demo sind relativ dazu */
+export const DEMO_BASE = `${BASE}demo/`;
+const DEMO_URL = `${DEMO_BASE}2026-10-27.json`;
 
 async function getJSON<T>(url: string): Promise<T | null> {
   try {
