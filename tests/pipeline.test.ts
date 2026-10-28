@@ -10,6 +10,7 @@ import { layoutLines, levelGain, musicBed, parseWav, trimBounds, wavBytes, type 
 import { planEpisode, targetSeconds, wantedStories, type PlanInput } from '../pipeline/plan';
 import { gdeltQuery, mergeCandidates, parseFeed, type Feed } from '../pipeline/sources';
 import { escapeXml, wordMarks } from '../pipeline/tts';
+import { readClips, voxcpmJob, type VoxcpmConfig } from '../pipeline/tts-voxcpm';
 import { berlinISO, berlinNow, normalizeUrl, plainText } from '../pipeline/util';
 import { migrateConfig } from '../src/shared/config';
 import { normalizeSymbol } from '../src/shared/symbols';
@@ -486,6 +487,45 @@ describe('Normalisierung', () => {
     expect(normalizeVerdict('???')).toBe('nicht_belegt');
     expect(normalizeKind('Vorbehalt')).toBe('vorbehalt');
     expect(normalizeKind('irgendwas')).toBe('detail');
+  });
+});
+
+describe('Stimme VoxCPM2', () => {
+  const cfg: VoxcpmConfig = { voices: { LEITUNG: { ref: 'l.wav', text: 'a' }, LAGE: { ref: 'g.wav', text: 'b' }, EINORDNUNG: { ref: 'e.wav', text: 'c' } }, cfg: 2, steps: 10, attempts: 3, whisper: 'large-v3-turbo' };
+
+  it('schickt Sprechtext zum Sprechen und Text ohne Buchstabieren zum Vergleich', () => {
+    const job = voxcpmJob([
+      { role: 'LAGE', text: 'Bis 16 Uhr haben 55,7 % abgestimmt.', story: 'a', kind: 'fakt' },
+      { role: 'EINORDNUNG', text: 'S&P 500 plus 0,7 %.', say: 'S und P 500 plus 0,7 %.', story: 'a', kind: 'fakt' },
+      { role: 'LEITUNG', text: 'Und die KI?', story: 'a', kind: 'frage' }
+    ], cfg);
+    expect(job.lines.map(l => [l.i, l.role, l.say])).toEqual([
+      [0, 'LAGE', 'Bis sechzehn Uhr haben fünfundfünfzig Komma sieben Prozent abgestimmt.'],
+      [1, 'EINORDNUNG', 'S und P fünfhundert plus null Komma sieben Prozent.'],
+      [2, 'LEITUNG', 'Und die Ka-I?']
+    ]);
+    expect(job.lines[2]!.ref).toBe('Und die KI?');
+    expect(job.attempts).toBe(3);
+  });
+
+  it('liest die Zeilen der Engine als Clips mit Wortzeiten; unbrauchbare fehlen', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const dir = mkdtempSync(join(tmpdir(), 'lagebild-vox-'));
+    writeFileSync(join(dir, 'zeile-000.wav'), wavBytes(new Float32Array(4800).fill(0.1), 48000));
+    const clips = readClips(dir, {
+      failed: [1],
+      lines: [
+        { i: 0, ok: true, file: 'zeile-000.wav', bounds: [{ end: 0.05, len: 3 }, { end: 0.1, len: 1 }], problems: [], attempts: 1, cer: 0 },
+        { i: 1, ok: false, file: 'zeile-001.wav', bounds: [], problems: ['Verneinung fehlt: „nicht“'], attempts: 3, cer: 12 }
+      ]
+    }, 3);
+    expect(clips[0]?.sr).toBe(48000);
+    expect(clips[0]?.pcm.length).toBe(4800);
+    expect(clips[0]?.words).toEqual([[0.05, 0.75], [0.1, 1]]);
+    expect(clips[1]).toBeNull();
+    expect(clips[2]).toBeNull();
   });
 });
 

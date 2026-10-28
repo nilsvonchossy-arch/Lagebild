@@ -5,7 +5,9 @@
 //   node pipeline/run.ts --gate                     nur, wenn es in Berlin nach 6:30 ist und heute noch nichts da ist
 //   node pipeline/run.ts --check-feeds              nur Feeds und Suche prüfen, ohne Claude
 //   node pipeline/run.ts --compare claude-opus-5-5,claude-sonnet-5-5,claude-haiku-5-5
-import { appendFileSync, existsSync } from 'node:fs';
+//   node pipeline/run.ts --vertonen public/demo/2026-10-27.json --out demo-out   fertige Folge nur vertonen
+import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import Anthropic from '@anthropic-ai/sdk';
@@ -28,6 +30,7 @@ import { planEpisode, wantedStories } from './plan.ts';
 import { fetchFeeds, matchTopics, mergeCandidates, parseFeed, searchGdelt, type Candidate, type Quellen } from './sources.ts';
 import { dayPath, nextEpisode, previousHeadlines, pruneMedia, writeIndex, writeJSON } from './store.ts';
 import { synthesizeLines, type VoiceSpec } from './tts.ts';
+import { synthesizeVoxcpm, type VoxcpmConfig } from './tts-voxcpm.ts';
 import { berlinISO, berlinNow, log, pool } from './util.ts';
 
 const { values: args } = parseArgs({
@@ -40,7 +43,9 @@ const { values: args } = parseArgs({
     'check-feeds': { type: 'boolean', default: false },
     compare: { type: 'string' },
     'no-tts': { type: 'boolean', default: false },
-    probe: { type: 'string' }
+    probe: { type: 'string' },
+    vertonen: { type: 'string' },
+    stimme: { type: 'string' }
   }
 });
 
@@ -198,6 +203,30 @@ function dateLabel(date: string): string {
   return `${p.weekday}, ${p.day}. ${p.monthName} ${p.year} (Berlin ${berlinNow().time} Uhr)`;
 }
 
+/* ---------- Stimme ---------- */
+
+/**
+ * Folge vertonen und mischen: VoxCPM2 (Voreinstellung, kostenlos auf dem GitHub-Server) oder Azure.
+ * Fehlt danach auch nur eine Zeile, gibt es keine Audiodatei; die App spricht dann mit der Systemstimme.
+ */
+async function voice(b: Briefing, engine: string): Promise<Record<string, unknown>> {
+  let r: { clips: (Clip | null)[]; report: Record<string, unknown> };
+  if (engine === 'azure') {
+    if (!process.env.AZURE_SPEECH_KEY || !process.env.AZURE_SPEECH_REGION) {
+      log('Stimme Azure gewählt, aber kein Azure-Schlüssel gesetzt: keine Audiodatei.');
+      return { engine, skipped: 'kein Schlüssel' };
+    }
+    r = await synthesizeLines(b.script, { key: process.env.AZURE_SPEECH_KEY, region: process.env.AZURE_SPEECH_REGION, voices: pipelineCfg.voices as Record<Role, VoiceSpec> });
+  } else {
+    r = synthesizeVoxcpm(b.script, pipelineCfg.voxcpm2 as VoxcpmConfig, join(tmpdir(), 'lagebild-stimme', b.date));
+  }
+  if (r.clips.every((c): c is Clip => c !== null)) {
+    b.audio = mixEpisode(b.script, r.clips, OUT, `audio/${b.date}`);
+    log(`Folge gemischt: ${b.audio.dur.toFixed(0)} s`);
+  } else log('Nicht alle Zeilen vertont, keine Audiodatei (die App spricht selbst).');
+  return { engine, ...r.report };
+}
+
 /* ---------- Modellvergleich ---------- */
 
 async function compare(models: string[], date: string, cands: Candidate[], markets: { markets: Markets; lines: Line[] } | null): Promise<void> {
@@ -245,6 +274,18 @@ async function main(): Promise<void> {
 
   if (args.probe) { await probe(args.probe.split(/[\s,]+/).filter(Boolean)); return; }
 
+  if (args.vertonen) {
+    // Fertige Folge (z. B. die Demo) nur vertonen und mischen, ohne Claude
+    const b = JSON.parse(readFileSync(args.vertonen, 'utf8')) as Briefing;
+    for (const l of b.script) delete l.audio;
+    delete b.audio;
+    const report = await voice(b, args.stimme ?? cfg.episode.voice ?? 'voxcpm2');
+    writeJSON(join(OUT, `${b.date}.json`), b);
+    writeJSON(join(OUT, 'logs', `stimme-${b.date}.json`), report);
+    output('changed', 'true');
+    return;
+  }
+
   if (!args['check-feeds'] && !process.env.ANTHROPIC_API_KEY) {
     // Noch nicht eingerichtet: kein Fehler, damit nicht jeden Morgen eine Fehlermail kommt
     console.log('::warning::Kein ANTHROPIC_API_KEY gesetzt – Tages-Update übersprungen. Anleitung: docs/einrichtung.md');
@@ -279,15 +320,7 @@ async function main(): Promise<void> {
 
   log(`Drehbuch für ${built.length} Meldungen …`);
   const { briefing, scriptIssues } = await compose(claude, built, date, markets, storyLogs, model);
-  let tts: Record<string, unknown> = { skipped: true };
-  if (!args['no-tts'] && process.env.AZURE_SPEECH_KEY && process.env.AZURE_SPEECH_REGION) {
-    const r = await synthesizeLines(briefing.script, { key: process.env.AZURE_SPEECH_KEY, region: process.env.AZURE_SPEECH_REGION, voices: pipelineCfg.voices as Record<Role, VoiceSpec> });
-    tts = r.report;
-    if (r.clips.every((c): c is Clip => c !== null)) {
-      briefing.audio = mixEpisode(briefing.script, r.clips, OUT, `audio/${date}`);
-      log(`Folge gemischt: ${briefing.audio.dur.toFixed(0)} s`);
-    } else log('Nicht alle Zeilen vertont, keine Audiodatei (die App spricht selbst).');
-  }
+  const tts = args['no-tts'] ? { skipped: true } : await voice(briefing, args.stimme ?? cfg.episode.voice ?? 'voxcpm2');
   briefing.meta = { ...briefing.meta!, costUsd: +claude.usage.costUsd.toFixed(4) };
 
   writeJSON(dayPath(OUT, date), briefing);

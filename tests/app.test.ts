@@ -8,6 +8,7 @@ import { scenesOf } from '../src/player';
 import { comparisonAtFigure, cuesFor, deadlinePattern, estimateScript, findNumber, fracToSec, numberVariants, pauseBefore, secToFrac, subtitleBlocks, summaryText } from '../src/shared/script';
 import { buildLayer, countryInfo, findCountry, flagEmoji } from '../src/geo/world';
 import type { Briefing, Line } from '../src/shared/types';
+import { jahreswort, ordnungswort, sprechtext, zahlwort } from '../src/shared/sprechtext';
 import { dateParts, shortDate } from '../src/util';
 
 const w110 = buildLayer(topo110 as unknown as Topology);
@@ -223,5 +224,37 @@ describe('Drehbuch-Regeln', () => {
   it('baut die Zusammenfassung aus drei Schlagworten', () => {
     expect(summaryText(['Rekord in Israel', 'Druck in Kundl', 'KI treibt Börse', 'zu viel'], 'lagezentrum')).toBe('Also: Rekord in Israel, Druck in Kundl und KI treibt Börse.');
     expect(summaryText(['Eins.'], 'podcast')).toBe('Das Wichtigste: Eins.');
+  });
+});
+
+describe('Sprechtext für offene Stimmen', () => {
+  it('schreibt Zahlen aus', () => {
+    expect([0, 1, 16, 21, 100, 101, 1000, 1499, 2022, 17000, 1000000, 2500000, 3200000000].map(zahlwort)).toEqual([
+      'null', 'eins', 'sechzehn', 'einundzwanzig', 'einhundert', 'einhunderteins', 'eintausend', 'eintausendvierhundertneunundneunzig',
+      'zweitausendzweiundzwanzig', 'siebzehntausend', 'eine Million', 'zwei Millionen fünfhunderttausend', 'drei Milliarden zweihundert Millionen'
+    ]);
+    expect([1973, 1100, 1999].map(jahreswort)).toEqual(['neunzehnhundertdreiundsiebzig', 'elfhundert', 'neunzehnhundertneunundneunzig']);
+    expect([1, 3, 6, 7, 8, 20, 31].map(n => ordnungswort(n))).toEqual(['ersten', 'dritten', 'sechsten', 'siebten', 'achten', 'zwanzigsten', 'einunddreißigsten']);
+  });
+
+  it('liest Prozent, Datum, Uhrzeit, Jahre, Vorzeichen und Abkürzungen wie in den Nachrichten', () => {
+    const cases: [string, string][] = [
+      ['Bis 16 Uhr haben 55,7 % abgestimmt.', 'Bis sechzehn Uhr haben fünfundfünfzig Komma sieben Prozent abgestimmt.'],
+      ['Ausgeliefert ab 6. November.', 'Ausgeliefert ab sechsten November.'],
+      ['Der 3. Oktober ist ein Feiertag.', 'Der dritte Oktober ist ein Feiertag.'],
+      ['Um 18:30 Uhr und um 22:00.', 'Um achtzehn Uhr dreißig und um zweiundzwanzig Uhr.'],
+      ['Seit 1973, bis 2028.', 'Seit neunzehnhundertdreiundsiebzig, bis zweitausendachtundzwanzig.'],
+      ['Mehr als 2.000 Menschen, ein iMac für 1.499 Dollar.', 'Mehr als zweitausend Menschen, ein iMac für eintausendvierhundertneunundneunzig Dollar.'],
+      ['Der DAX −2,3 %, der Nasdaq +0,8 %.', 'Der DAX minus zwei Komma drei Prozent, der Nasdaq plus null Komma acht Prozent.'],
+      ['Meta will 95 Mrd. $ aufnehmen.', 'Meta will fünfundneunzig Milliarden Dollar aufnehmen.'],
+      ['S&P 500 und M6-Chip, 1,9-mal so schnell.', 'S und P fünfhundert und M sechs Chip, eins Komma neun mal so schnell.'],
+      ['1 Million Euro, 1 Prozent, Platz 1.', 'eine Million Euro, ein Prozent, Platz eins.'],
+      ['KI-Nachrichten aus der EU, z. B. von der CDU.', 'Ka-I-Nachrichten aus der E-U, zum Beispiel von der Ze-De-U.']
+    ];
+    for (const [a, b] of cases) expect(sprechtext(a)).toBe(b);
+    // Für den Vergleich mit Whisper bleiben Abkürzungen stehen
+    expect(sprechtext('KI in der EU', { spell: false })).toBe('KI in der EU');
+    // Wörter, die wie Abkürzungen beginnen, bleiben
+    expect(sprechtext('Kiel und Europa')).toBe('Kiel und Europa');
   });
 });

@@ -41,12 +41,15 @@ describe('validateConfig', () => {
     expect(errs.some(e => e.includes('Gewichtung'))).toBe(true);
   });
 
-  it('prüft Länge und Ton der Folge', () => {
+  it('prüft Länge, Ton und Stimme der Folge', () => {
     const c = clone();
-    c.episode = { minutes: 30, tone: 'radio' as never };
+    c.episode = { minutes: 30, tone: 'radio' as never, voice: 'robot' as never };
     const errs = validateConfig(c);
     expect(errs.some(e => e.includes('minutes'))).toBe(true);
     expect(errs.some(e => e.includes('tone'))).toBe(true);
+    expect(errs.some(e => e.includes('voice'))).toBe(true);
+    c.episode = { minutes: 3, tone: 'podcast' };
+    expect(validateConfig(c)).toEqual([]);
   });
 
   it('verlangt mindestens ein eingeschaltetes Thema', () => {
@@ -85,7 +88,7 @@ describe('migrateConfig', () => {
     };
     const c = migrateConfig(v1);
     expect(c.version).toBe(2);
-    expect(c.episode).toEqual({ minutes: 3, tone: 'lagezentrum' });
+    expect(c.episode).toEqual({ minutes: 3, tone: 'lagezentrum', voice: 'voxcpm2' });
     expect(c.topics.map(t => t.weight)).toEqual(['ausfuehrlich', 'normal', 'kurz', 'aus']);
     expect(c.topics[0]).not.toHaveProperty('priority');
     expect(validateConfig(c)).toEqual([]);

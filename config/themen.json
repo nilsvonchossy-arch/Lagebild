@@ -2,7 +2,8 @@
   "version": 2,
   "episode": {
     "minutes": 3,
-    "tone": "lagezentrum"
+    "tone": "lagezentrum",
+    "voice": "voxcpm2"
   },
   "categories": [
     {

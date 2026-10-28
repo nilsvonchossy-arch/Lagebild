@@ -2,7 +2,7 @@
 // weil die tägliche Recherche auf GitHub läuft und nicht auf dem iPad.
 import bundled from '../config/themen.json';
 import { checkAccess, dispatch, getFile, getToken, lastRun, putFile, REPO, setToken } from './github';
-import { LIMITS, migrateConfig, MINUTES, slugify, TONE_LABEL, TONES, validateConfig, WEIGHT_LABEL, WEIGHTS } from './shared/config';
+import { LIMITS, migrateConfig, MINUTES, slugify, TONE_LABEL, TONES, validateConfig, VOICE_ENGINES, VOICE_LABEL, WEIGHT_LABEL, WEIGHTS } from './shared/config';
 import type { ThemenConfig, Topic, Weight } from './shared/config';
 import { $, esc } from './util';
 
@@ -45,10 +45,12 @@ function episodeControls(): string {
   const ep = cfg.episode;
   const mins = MINUTES.map(m => `<button type="button" role="radio" data-act="minutes" data-v="${m}" aria-checked="${ep.minutes === m}">${m} Min.</button>`).join('');
   const tones = TONES.map(t => `<button type="button" role="radio" data-act="tone" data-v="${t}" aria-checked="${ep.tone === t}">${TONE_LABEL[t]}</button>`).join('');
+  const voices = VOICE_ENGINES.map(v => `<button type="button" role="radio" data-act="voice" data-v="${v}" aria-checked="${(ep.voice ?? 'voxcpm2') === v}">${VOICE_LABEL[v]}</button>`).join('');
   return `<div class="tep">
     <div class="row"><span>Länge der Folge</span><div class="seg-ctl" role="radiogroup" aria-label="Länge der Folge">${mins}</div></div>
     <div class="row"><span>Ton</span><div class="seg-ctl" role="radiogroup" aria-label="Ton">${tones}</div></div>
-    <p class="note">Längere Folgen haben mehr Meldungen und kosten bei Claude entsprechend mehr. Lagezentrum: knappe Rückfragen. Podcast: lockerer, mit kurzen Reaktionen.</p>
+    <div class="row"><span>Stimme</span><div class="seg-ctl" role="radiogroup" aria-label="Stimme">${voices}</div></div>
+    <p class="note">Längere Folgen haben mehr Meldungen und kosten bei Claude entsprechend mehr. Lagezentrum: knappe Rückfragen. Podcast: lockerer, mit kurzen Reaktionen. VoxCPM2: offene Stimmen, kostenlos, braucht etwa eine Stunde Rechenzeit am Morgen. Azure: Gratis-Kontingent, braucht einen Azure-Schlüssel.</p>
   </div>`;
 }
 
@@ -227,6 +229,9 @@ export function bindTopics(): void {
         break;
       case 'tone':
         cfg.episode.tone = el.dataset.v as ThemenConfig['episode']['tone']; dirty = true; render();
+        break;
+      case 'voice':
+        cfg.episode.voice = el.dataset.v as NonNullable<ThemenConfig['episode']['voice']>; dirty = true; render();
         break;
       case 'add': editing = 'neu'; render(); break;
       case 'cancel': editing = null; render(); break;
