@@ -1,0 +1,42 @@
+# Verständlichkeit der Stimmtest-Aufnahmen: Whisper schreibt dialog.mp3 aus den Branches
+# "stimmtest-*" mit und vergleicht mit dem Sprechtext. Ergebnis im Branch "stimmtest-pruefung".
+name: Stimmprüfung
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Pakete
+        run: pip install --quiet faster-whisper num2words
+      - name: Aufnahmen holen
+        run: |
+          for b in $(git ls-remote --heads origin 'stimmtest-*' | sed 's#.*refs/heads/##' | grep -v pruefung); do
+            e=${b#stimmtest-}
+            git fetch -q origin "$b"
+            for x in mp3 wav; do
+              if git cat-file -e "origin/$b:$e/dialog.$x" 2>/dev/null; then
+                mkdir -p "aufnahmen/$e" && git show "origin/$b:$e/dialog.$x" > "aufnahmen/$e/dialog.$x"
+              fi
+            done
+          done
+          ls -R aufnahmen || true
+      - name: Mitschreiben und vergleichen
+        run: python scripts/stimmpruefung.py aufnahmen --out pruefung.json
+      - name: Ergebnis in Branch schreiben
+        run: |
+          mkdir out && cp pruefung.json out/ && cd out
+          git init -q -b stimmtest-pruefung
+          git add -A
+          git -c user.name="Lagebild" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Stimmprüfung $(date +%F)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" stimmtest-pruefung
