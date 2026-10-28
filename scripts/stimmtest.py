@@ -85,8 +85,11 @@ def assemble(chunks, sr, out_mp3):
     full = np.concatenate(parts)
     tmp = out_mp3.replace(".mp3", ".wav")
     sf.write(tmp, full, sr)
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ac", "1", "-b:a", "96k", out_mp3], check=True)
-    os.remove(tmp)
+    try:
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ac", "1", "-b:a", "96k", out_mp3], check=True)
+        os.remove(tmp)
+    except (OSError, subprocess.CalledProcessError) as e:  # ohne ffmpeg bleibt die WAV-Datei
+        print("ffmpeg fehlt oder schlug fehl, WAV bleibt:", e, flush=True)
     return len(full) / sr
 
 

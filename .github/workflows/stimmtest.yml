@@ -33,6 +33,8 @@ jobs:
           sudo swapoff -a || true
           sudo fallocate -l 8G /swapfile2 && sudo chmod 600 /swapfile2 && sudo mkswap /swapfile2 && sudo swapon /swapfile2
           free -g; nproc; df -h / | tail -1
+      - name: ffmpeg
+        run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
       - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
