@@ -39,7 +39,7 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine
 
 ## Entscheidungen (27.10.2026)
 - **Hosting:** Repo öffentlich, GitHub Pages, Deploy per GitHub Actions. Als PWA auf dem iPad-Homescreen.
-- **Claude-Modell:** Erst Opus 5.5, Sonnet 5.5 und Haiku 5.5 auf denselben Artikeln vergleichen, dann fällt die Entscheidung.
+- **Claude-Modell:** Erst Opus 5.5, Sonnet 5.5 und Haiku 5.5 auf denselben Artikeln vergleichen, dann fällt die Entscheidung. (Am 28.10. ohne Vergleich entschieden: Haiku 5.5, siehe unten.)
 - **Uhrzeit:** Update um 8:00 Uhr fertig (Europe/Berlin).
 - **Themen:** 5 Kategorien: Geopolitik & Sicherheit (USA-Politik, Nahost, Russland/Ukraine & NATO, China & Taiwan), Deutschland, Wirtschaft & Märkte (Wirtschaft, Marktanalyse), KI & Technologie (KI-Neuentwicklungen, KI & Arbeit, KI-Risiken & Regulierung, Cybersicherheit), Wissenschaft & Klima. Jede Meldung bekommt eine Relevanz 1–5. Eigene Themen lassen sich im Interface hinzufügen; sie steuern die Recherche.
 - **Quellen:** deutsche und internationale Medien gemischt, nur frei lesbare Artikel (der Faktencheck braucht den Volltext).
@@ -53,10 +53,11 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine
 - **Einblendungen:** Grafiken aus geprüften Fakten (Vergleich, Termin, Kursverlauf, Symbol) und Archivbilder aus Wikimedia Commons (a + b). Keine Aufnahmen vom Ereignis selbst (Rechte bei Agenturen und Verlagen).
 - **Stimme (Nachtrag):** Nach dem Hörvergleich ist VoxCPM2 „ruhig“ die Stimme (vorher Azure, dann OmniVoice erwogen). Azure bleibt im Themen-Editor wählbar.
 - **Hosting (Nachtrag):** Repo seit 28.10. öffentlich (kostenlose Server mit 4 Kernen und 16 GB für die Stimme), GitHub Pages mit Source „GitHub Actions“ eingeschaltet. Persönliche Formulierungen in der Doku sind neutral gehalten; eine Anrede im Themen-Editor wäre öffentlich sichtbar.
-- **Weiter offen:** Budget-Grenze für die API, sobald der Modellvergleich vorliegt.
+- **Claude-Modell (Nachtrag):** Haiku 5.5 mit Effort „high“ für alle Schritte (`config/pipeline.json`). Geschätzt etwa 5–10 Cent pro Tag statt etwa 2 $ mit Opus 5.5. Kein serverseitiger Fallback bei Ablehnungen: Die Meldung fällt dann weg. Wird der Faktencheck zu lasch, als Erstes nur Faktenziehen und Faktencheck auf Sonnet 5.5 oder Opus 5.5 stellen.
+- **Weiter offen:** Budget-Grenze in der Anthropic-Console.
 
 ## Nächste Schritte
-1. Claude-Schlüssel als Secret eintragen (`docs/einrichtung.md`, Schritte 2 und 4), erster echter Lauf mit Drehbuch und VoxCPM2, Modellvergleich auswerten.
+1. Claude-Schlüssel als Secret eintragen (`docs/einrichtung.md`, Schritte 2 und 4), erster echter Lauf mit Haiku, Drehbuch und VoxCPM2 („steuerbar“); Prüfprotokoll in `logs/` auf verworfene oder korrigierte Fakten ansehen.
 2. Rechenzeit der Stimme im echten Tageslauf beobachten. Richtwert aus dem Messlauf „Demo vertonen“: 97 s Sprache in 33 Minuten (Faktor 20). Wird es knapp: Vertonung auf mehrere parallele Jobs verteilen (öffentliche Server kostenlos, etwa Faktor 3–4 schneller).
 3. Feinschliff nach dem ersten echten Lauf (Pausen, Lautstärke des Musikbetts, Globus-Look).
 
