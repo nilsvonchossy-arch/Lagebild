@@ -45,5 +45,11 @@
     { "role": "LEITUNG", "kind": "zusammenfassung", "text": "KI-Nachrichten treiben die Wall Street.", "say": "Ka-I-Nachrichten treiben die Wall Street." },
     { "role": "LEITUNG", "kind": "abschluss", "text": "Bis morgen." },
     { "role": "LAGE", "kind": "abschluss", "text": "Wir bleiben dran." }
-  ]
+  ],
+  "stimmen_ruhig": {
+    "LEITUNG": { "beschreibung": "A German man in his forties with a calm, low, warm voice, speaking slowly and quietly in a relaxed way, like a late-night radio host asking short questions" },
+    "LAGE": { "beschreibung": "A German woman in her thirties with a calm, warm, medium-low voice, speaking at a steady, unhurried pace, clear and friendly, like a radio news presenter" },
+    "EINORDNUNG": { "beschreibung": "A German man in his fifties with a deep, soft, warm voice, speaking slowly and thoughtfully in a relaxed way, like a radio documentary narrator" }
+  },
+  "supertonic": { "LEITUNG": "M1", "LAGE": "F3", "EINORDNUNG": "M4" }
 }

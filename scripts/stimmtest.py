@@ -3,6 +3,8 @@
   python scripts/stimmtest.py design   --out stimmtest        # drei Stimmen aus Beschreibungen entwerfen (VoxCPM2)
   python scripts/stimmtest.py voxcpm2  --out stimmtest        # Dialog aus 10.4 mit VoxCPM2 vertonen
   python scripts/stimmtest.py omnivoice --out stimmtest       # denselben Dialog mit OmniVoice vertonen
+  python scripts/stimmtest.py design --variante ruhig && python scripts/stimmtest.py voxcpm2-ruhig   # ruhigere Stimmen
+  python scripts/stimmtest.py supertonic --out stimmtest      # Supertonic-3 mit fertigen Sprechern (schnell)
 
 Die Stimmen werden aus einer Beschreibung entworfen, es wird keine echte Person geklont. Jede Zeile
 wird einzeln erzeugt, danach mit den Pausen-Regeln aus src/shared/script.ts zusammengesetzt.
@@ -119,13 +121,20 @@ def load_voxcpm():
     return m, time.time() - t
 
 
-def cmd_design(out):
+def voices(variante):
+    """Stimmbeschreibungen: "standard" (erster Test) oder "ruhig" (ruhiger, langsamer, tiefer)."""
+    if variante != "ruhig":
+        return DIALOG["stimmen"]
+    return {r: {**DIALOG["stimmen"][r], **v} for r, v in DIALOG["stimmen_ruhig"].items()}
+
+
+def cmd_design(out, variante="standard"):
     """Drei Referenzstimmen aus Beschreibungen (VoxCPM2 Voice Design)."""
     m, load = load_voxcpm()
     sr = m.tts_model.sample_rate
     os.makedirs(os.path.join(out, "stimmen"), exist_ok=True)
     info = {"laden_s": round(load, 1), "stimmen": {}}
-    for role, v in DIALOG["stimmen"].items():
+    for role, v in voices(variante).items():
         t = time.time()
         seed(SEEDS[role])
         wav = m.generate(text=f"({v['beschreibung']}){v['probe']}", cfg_value=2.0, inference_timesteps=10)
@@ -136,11 +145,11 @@ def cmd_design(out):
     report(out, "design", info)
 
 
-def cmd_voxcpm2(out):
+def cmd_voxcpm2(out, engine="voxcpm2"):
     m, load = load_voxcpm()
     sr = m.tts_model.sample_rate
     refs = {r: os.path.join(out, "stimmen", f"{r}.wav") for r in DIALOG["stimmen"]}
-    os.makedirs(os.path.join(out, "voxcpm2"), exist_ok=True)
+    os.makedirs(os.path.join(out, engine), exist_ok=True)
     chunks, t0 = [], time.time()
     for i, l in enumerate(DIALOG["zeilen"]):
         r = l["role"]
@@ -149,8 +158,8 @@ def cmd_voxcpm2(out):
         chunks.append((l, np.asarray(wav, dtype=np.float32)))
         print(f"{i + 1}/{len(DIALOG['zeilen'])} {r}: {l['text']}", flush=True)
     calc = time.time() - t0
-    dur = assemble(chunks, sr, os.path.join(out, "voxcpm2", "dialog.mp3"))
-    report(out, "voxcpm2", {"laden_s": round(load, 1), "rechenzeit_s": round(calc, 1), "audio_s": round(dur, 1), "rtf": round(calc / dur, 2)})
+    dur = assemble(chunks, sr, os.path.join(out, engine, "dialog.mp3"))
+    report(out, engine, {"laden_s": round(load, 1), "rechenzeit_s": round(calc, 1), "audio_s": round(dur, 1), "rtf": round(calc / dur, 2)})
 
 
 def cmd_omnivoice(out):
@@ -185,14 +194,55 @@ def cmd_omnivoice(out):
     report(out, "omnivoice", {"laden_s": round(load, 1), "rechenzeit_s": round(calc, 1), "audio_s": round(dur, 1), "rtf": round(calc / dur, 2), "schritte": STEPS, "stimmen": "OmniVoice-Entwurf" if own else "VoxCPM2-Entwurf"})
 
 
+SUPERTONIC_VOICES = ["M1", "M2", "M3", "M4", "M5", "F1", "F2", "F3", "F4", "F5"]
+
+
+def cmd_supertonic(out):
+    """Supertonic-3: fertige Sprecher statt entworfener Stimmen, läuft schnell auf der CPU (ONNX).
+    Alle zehn Sprecher lesen eine Probe zur Auswahl, der Dialog nutzt die Zuordnung aus stimmtest-dialog.json."""
+    from supertonic import TTS
+    t = time.time()
+    tts = TTS(model="supertonic-3", auto_download=True)
+    load = time.time() - t
+    sr = tts.sample_rate
+    os.makedirs(os.path.join(out, "stimmen"), exist_ok=True)
+    os.makedirs(os.path.join(out, "supertonic"), exist_ok=True)
+    probe = DIALOG["stimmen"]["LAGE"]["probe"]
+    styles = {}
+    for v in SUPERTONIC_VOICES:
+        try:
+            styles[v] = tts.get_voice_style(voice_name=v)
+        except Exception as e:  # nicht jede Version hat alle zehn
+            print("Sprecher fehlt:", v, e, flush=True)
+            continue
+        wav, _ = tts.synthesize(probe, voice_style=styles[v], lang="de")
+        sf.write(os.path.join(out, "stimmen", f"{v}.wav"), trim(np.asarray(wav, dtype=np.float32).squeeze(), sr), sr)
+    cast = DIALOG["supertonic"]
+    chunks, t0 = [], time.time()
+    for i, l in enumerate(DIALOG["zeilen"]):
+        r = l["role"]
+        wav, _ = tts.synthesize(say(l), voice_style=styles[cast[r]], lang="de")
+        chunks.append((l, np.asarray(wav, dtype=np.float32).squeeze()))
+        print(f"{i + 1}/{len(DIALOG['zeilen'])} {r}: {l['text']}", flush=True)
+    calc = time.time() - t0
+    dur = assemble(chunks, sr, os.path.join(out, "supertonic", "dialog.mp3"))
+    report(out, "supertonic", {"laden_s": round(load, 1), "rechenzeit_s": round(calc, 1), "audio_s": round(dur, 1), "rtf": round(calc / dur, 3), "sprecher": cast})
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["design", "voxcpm2", "omnivoice"])
+    ap.add_argument("cmd", choices=["design", "voxcpm2", "voxcpm2-ruhig", "omnivoice", "supertonic"])
     ap.add_argument("--out", default="stimmtest")
+    ap.add_argument("--variante", default="standard", choices=["standard", "ruhig"], help="nur für design")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     try:
-        {"design": cmd_design, "voxcpm2": cmd_voxcpm2, "omnivoice": cmd_omnivoice}[a.cmd](a.out)
+        if a.cmd == "design":
+            cmd_design(a.out, a.variante)
+        elif a.cmd.startswith("voxcpm2"):
+            cmd_voxcpm2(a.out, a.cmd)
+        else:
+            {"omnivoice": cmd_omnivoice, "supertonic": cmd_supertonic}[a.cmd](a.out)
     except Exception as e:  # Fehler in den Bericht, damit der Lauf weitergeht
         report(a.out, a.cmd, {"fehler": f"{type(e).__name__}: {e}"})
         print("FEHLER", e, file=sys.stderr)
