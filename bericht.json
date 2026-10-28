@@ -1,0 +1,13 @@
+{
+ "supertonic": {
+  "laden_s": 7.4,
+  "rechenzeit_s": 38.2,
+  "audio_s": 110.7,
+  "rtf": 0.345,
+  "sprecher": {
+   "LEITUNG": "M1",
+   "LAGE": "F3",
+   "EINORDNUNG": "M4"
+  }
+ }
+}
