@@ -4,7 +4,7 @@
 // Jeder Start und jeder Sprung erhöht `gen`; alte Abläufe merken das und brechen ab.
 import { Atmo, EpisodeAudio, SystemVoice, estimateMs, silentLine } from './audio';
 import { Card, categoryColor } from './card';
-import { countUp, scramble, Subtitle } from './fx';
+import { countUp, fadeText, Subtitle } from './fx';
 import type { Globe } from './globe';
 import { fallbackSymbol } from './shared/symbols';
 import { comparisonAtFigure, cuesFor, LEAD_IN, pauseBefore, secToFrac, type Cue } from './shared/script';
@@ -329,7 +329,7 @@ export class Player {
     const l = b.script[i]!;
     const scene = this.scenes[this.sceneIdx]!;
     // Im Ton „Assistent“ hat LEITUNG einen Namen: Lagebild
-    this.sub.show(l.role, l.text, b.tone === 'assistent' && l.role === 'LEITUNG' ? 'LAGEBILD' : undefined);
+    this.sub.show(l.role, l.text, b.tone === 'assistent' && l.role === 'LEITUNG' ? 'Lagebild' : undefined);
     this.cues = scene.story ? cuesFor(scene.story, l, { comparisonAtFigure: scene.cmpAtFigure }).filter(c => !this.fired.has(this.cueKey(c))) : [];
     if (i >= scene.firstFact && !this.factStarted) {
       this.factStarted = true;
@@ -448,11 +448,11 @@ export class Player {
       if (story) {
         this.globe.highlight(story.country, color);
         $('#pinFlag').textContent = story.flag;
-        scramble($('#pinName'), story.label, 550);
+        fadeText($('#pinName'), story.label);
         this.globe.pin([story.lon, story.lat]);
       } else if (scene.key === 'maerkte') {
         $('#pinFlag').textContent = '📈';
-        scramble($('#pinName'), 'FRANKFURT', 550);
+        fadeText($('#pinName'), 'Frankfurt');
         this.globe.pin(FRANKFURT);
       } else {
         this.globe.setIdle(true);
@@ -464,17 +464,13 @@ export class Player {
   private intro(): void {
     const b = this.briefing!;
     const d = dateParts(b.date);
-    this.globe.glitch(950);
     this.atmo.blip();
-    const app = $('#app');
-    app.classList.add('glitch');
-    setTimeout(() => app.classList.remove('glitch'), 800);
     const tt = $('#title');
     tt.classList.add('on');
-    scramble($('#tDate'), `${pad2(d.day)}/${pad2(d.month)}/${d.year}`, 900);
+    fadeText($('#tDate'), `${d.weekday}, ${d.day}. ${d.monthName}`);
     $('#tSub').textContent = '';
     const my = this.gen;
-    setTimeout(() => { if (my === this.gen) scramble($('#tSub'), `LAGEBILD · FOLGE ${b.episode}`, 700); }, 700 / speed());
+    setTimeout(() => { if (my === this.gen) fadeText($('#tSub'), `Folge ${b.episode}`); }, 500 / speed());
     setTimeout(() => tt.classList.remove('on'), 3400 / speed());
   }
 

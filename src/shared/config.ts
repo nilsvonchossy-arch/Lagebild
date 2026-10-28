@@ -7,7 +7,7 @@ import type { Tone } from './types.ts';
 export type Weight = 'aus' | 'kurz' | 'normal' | 'ausfuehrlich';
 
 export const WEIGHTS: Weight[] = ['aus', 'kurz', 'normal', 'ausfuehrlich'];
-export const WEIGHT_LABEL: Record<Weight, string> = { aus: 'Aus', kurz: 'Nur kurz', normal: 'Normal', ausfuehrlich: 'Ausführlich' };
+export const WEIGHT_LABEL: Record<Weight, string> = { aus: 'Aus', kurz: 'Kurz', normal: 'Normal', ausfuehrlich: 'Mehr' };
 
 export const MINUTES = [3, 5, 8] as const;
 export const TONES: Tone[] = ['assistent', 'lagezentrum', 'podcast'];

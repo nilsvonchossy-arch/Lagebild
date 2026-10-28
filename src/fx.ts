@@ -1,24 +1,15 @@
-// Text-Effekte: Entschlüsseln, Hochzählen, Untertitel als Blöcke.
+// Text-Effekte: sanftes Einblenden, Hochzählen, Untertitel als Blöcke.
 import { subtitleBlocks, type Block } from './shared/script';
 import type { Figure, Role } from './shared/types';
 import { reduceMotion, speed } from './util';
 
-const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&@0123456789';
-
-/** Titel „entschlüsseln“: zufällige Zeichen, die von links nach rechts zum Klartext werden. */
-export function scramble(el: HTMLElement, final: string, dur = 700): void {
-  if (reduceMotion()) { el.textContent = final; return; }
-  const t0 = performance.now();
-  const D = dur / speed();
-  const tick = (now: number): void => {
-    const k = Math.min(1, (now - t0) / D);
-    const n = Math.floor(final.length * k);
-    let out = final.slice(0, n);
-    for (let i = n; i < final.length; i++) out += /[\s/·]/.test(final[i]!) ? final[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
-    el.textContent = out;
-    if (k < 1) requestAnimationFrame(tick);
-  };
-  tick(t0);
+/** Text sanft einblenden (CSS-Klasse .fade-in). */
+export function fadeText(el: HTMLElement, text: string): void {
+  el.textContent = text;
+  if (reduceMotion()) return;
+  el.classList.remove('fade-in');
+  void el.offsetWidth;
+  el.classList.add('fade-in');
 }
 
 export const fmtNum = (v: number, f: Figure): string =>
@@ -36,7 +27,7 @@ export function countUp(el: HTMLElement, f: Figure, ms = 1100): void {
   tick(t0);
 }
 
-const ROLE_LABEL: Record<Role, string> = { LEITUNG: 'LEITUNG', LAGE: 'LAGE', EINORDNUNG: 'EINORDNUNG' };
+const ROLE_LABEL: Record<Role, string> = { LEITUNG: 'Leitung', LAGE: 'Lage', EINORDNUNG: 'Einordnung' };
 
 /**
  * Untertitel: Jede Zeile wird in Blöcke mit 6–10 Wörtern geteilt (an Atempausen). Ein Block erscheint
@@ -52,7 +43,7 @@ export class Subtitle {
     private readonly textEl: HTMLElement
   ) {}
 
-  /** `label` ersetzt den Rollennamen, z. B. „LAGEBILD“ für den Assistenten */
+  /** `label` ersetzt den Rollennamen, z. B. „Lagebild“ für den Assistenten */
   show(role: Role, text: string, label?: string): void {
     this.box.classList.remove('off');
     this.roleEl.dataset.role = role;

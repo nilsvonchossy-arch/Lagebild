@@ -382,10 +382,10 @@ export class Globe {
           ctx.setLineDash([]);
           ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
           ctx.beginPath(); ctx.arc(p[0], p[1], 7 + 4 * Math.sin(t / 300), 0, 7); ctx.strokeStyle = hexA(this.acc, 0.7); ctx.lineWidth = 1; ctx.stroke();
-          ctx.font = '400 9.5px Michroma, system-ui, sans-serif';
+          ctx.font = '600 11px -apple-system, "Inter Variable", system-ui, sans-serif';
           ctx.fillStyle = '#eef1f5';
           ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
-          ctx.fillText(m.label.toUpperCase(), p[0] + 10, p[1] + 3.5);
+          ctx.fillText(m.label, p[0] + 10, p[1] + 4);
         }
       }
       ctx.restore();

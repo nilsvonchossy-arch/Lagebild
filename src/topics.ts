@@ -41,18 +41,29 @@ function topicRow(t: Topic, color: string): string {
   </li>${editing === t.id ? formHTML(t) : ''}`;
 }
 
+const TONE_HINT: Record<ThemenConfig['episode']['tone'], string> = {
+  assistent: 'Begrüßt dich, spricht dich mit Namen an und erzählt wie ein Freund.',
+  lagezentrum: 'Knappe Rückfragen, ohne Begrüßung.',
+  podcast: 'Locker, mit kurzen Reaktionen.'
+};
+const VOICE_HINT: Record<NonNullable<ThemenConfig['episode']['voice']>, string> = {
+  voxcpm2: 'VoxCPM2: offene Stimmen, kostenlos, rechnet morgens etwa eine Stunde.',
+  azure: 'Azure: Gratis-Kontingent, braucht einen Azure-Schlüssel.'
+};
+
 function episodeControls(): string {
   const ep = cfg.episode;
   const mins = MINUTES.map(m => `<button type="button" role="radio" data-act="minutes" data-v="${m}" aria-checked="${ep.minutes === m}">${m} Min.</button>`).join('');
   const tones = TONES.map(t => `<button type="button" role="radio" data-act="tone" data-v="${t}" aria-checked="${ep.tone === t}">${TONE_LABEL[t]}</button>`).join('');
   const voices = VOICE_ENGINES.map(v => `<button type="button" role="radio" data-act="voice" data-v="${v}" aria-checked="${(ep.voice ?? 'voxcpm2') === v}">${VOICE_LABEL[v]}</button>`).join('');
-  return `<div class="tep">
-    <div class="row"><span>Länge der Folge</span><div class="seg-ctl" role="radiogroup" aria-label="Länge der Folge">${mins}</div></div>
+  const voice = ep.voice ?? 'voxcpm2';
+  return `<div class="list">
+    <div class="row"><span>Länge</span><div class="seg-ctl" role="radiogroup" aria-label="Länge der Folge">${mins}</div></div>
     <div class="row"><span>Ton</span><div class="seg-ctl" role="radiogroup" aria-label="Ton">${tones}</div></div>
     <div class="row"><span>Stimme</span><div class="seg-ctl" role="radiogroup" aria-label="Stimme">${voices}</div></div>
-    <label class="tname" for="epName"><span>Anrede (Ton Assistent)</span><input id="epName" maxlength="30" autocomplete="given-name" placeholder="dein Vorname, optional" value="${esc(ep.name ?? '')}"></label>
-    <p class="note">Längere Folgen haben mehr Meldungen und kosten bei Claude entsprechend mehr. Assistent: begrüßt dich, spricht dich mit Namen an und erzählt wie ein Freund. Lagezentrum: knappe Rückfragen, ohne Gruß. Podcast: lockerer, mit kurzen Reaktionen. VoxCPM2: offene Stimmen, kostenlos, braucht etwa eine Stunde Rechenzeit am Morgen. Azure: Gratis-Kontingent, braucht einen Azure-Schlüssel.</p>
-  </div>`;
+    ${ep.tone === 'assistent' ? `<label class="row ep-name" for="epName"><span>Anrede</span><input id="epName" maxlength="30" autocomplete="given-name" placeholder="Vorname, optional" value="${esc(ep.name ?? '')}"></label>` : ''}
+  </div>
+  <p class="note">${TONE_HINT[ep.tone]} ${VOICE_HINT[voice]} Längere Folgen kosten bei Claude etwas mehr.${ep.tone === 'assistent' ? ' Die Anrede steht im öffentlichen Repo.' : ''}</p>`;
 }
 
 function formHTML(t: Topic | null): string {
@@ -75,14 +86,14 @@ function formHTML(t: Topic | null): string {
 function render(): void {
   const groups = cfg.categories.map(c => {
     const rows = cfg.topics.filter(t => t.category === c.id).map(t => topicRow(t, c.color)).join('');
-    return `<div class="tcat"><span class="p-res" style="--c:${c.color}">${esc(c.name)}</span><ul class="tlist">${rows || '<li class="note">Noch keine Themen.</li>'}</ul></div>`;
+    return `<div class="tcat"><span class="lbl cat" style="--c:${c.color}">${esc(c.name)}</span><ul class="tlist list">${rows || '<li class="note">Noch keine Themen.</li>'}</ul></div>`;
   }).join('');
-  box().innerHTML = `<span class="lbl">Folge</span>
+  box().innerHTML = `<span class="lbl">Deine Folge</span>
     ${episodeControls()}
-    <span class="lbl">Themen für die Recherche</span>
-    <p class="note">Die Gewichtung steuert Recherche und Länge: Aus = wird nicht gesucht, Nur kurz = höchstens „Kurz notiert“, Normal = Meldung, Ausführlich = darf vertieft werden, wenn die Quelle genug hergibt.</p>
+    <span class="lbl">Themen</span>
+    <p class="note">Wie viel Raum ein Thema bekommt: <b>Aus</b> wird nicht gesucht, <b>Kurz</b> höchstens als Kurzmeldung, <b>Normal</b> als Meldung, <b>Mehr</b> darf vertieft werden.</p>
     ${groups}
-    ${editing === 'neu' ? `<ul class="tlist">${formHTML(null)}</ul>` : '<button class="btn" type="button" data-act="add">+ Eigenes Thema</button>'}
+    ${editing === 'neu' ? `<ul class="tlist list">${formHTML(null)}</ul>` : '<button class="btn ghost" type="button" data-act="add">+ Eigenes Thema</button>'}
     <div class="p-actions">
       <button class="btn primary" type="button" data-act="save"${dirty && !busy ? '' : ' disabled'}>Speichern</button>
       <button class="btn" type="button" data-act="run"${busy ? ' disabled' : ''}>Jetzt recherchieren</button>

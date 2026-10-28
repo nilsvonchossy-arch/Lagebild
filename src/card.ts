@@ -1,6 +1,6 @@
 // Karte im unteren Drittel: runde Flagge, Ort in breiten Versalien, eine Zeile, Zähler.
 // „Kurz gesagt“, Zahl und Quelle stehen in den Details (Tippen auf die Karte) und auf dem Endbildschirm.
-import { fmtNum, scramble } from './fx';
+import { fadeText, fmtNum } from './fx';
 import type { Category, Markets, Story } from './shared/types';
 import { $, esc, pad2, shortDate, sleep } from './util';
 
@@ -90,7 +90,7 @@ export class Card {
     $('#cLine').innerHTML = headlineHTML(s.headline, 0.3);
     $('#cLine').hidden = false;
     this.open();
-    scramble($('#cPlace'), s.label, 550);
+    fadeText($('#cPlace'), s.label);
   }
 
   showMarkets(m: Markets, color: string): void {
@@ -99,13 +99,13 @@ export class Card {
     c.dataset.kind = 'markets';
     c.style.setProperty('--acc', color);
     $('#cFlag').textContent = '📈';
-    $('#cCount').textContent = `STAND ${shortDate(m.asOf)}`;
+    $('#cCount').textContent = `Stand ${shortDate(m.asOf)}`;
     $('#cLine').hidden = true;
     const grid = $('#cMarkets');
     grid.hidden = false;
     grid.innerHTML = marketsHTML(m);
     this.open();
-    scramble($('#cPlace'), 'MÄRKTE', 550);
+    fadeText($('#cPlace'), 'Märkte');
   }
 
   private open(): void {

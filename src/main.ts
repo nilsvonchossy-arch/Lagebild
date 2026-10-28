@@ -1,14 +1,16 @@
 // Einstieg: Oberfläche verdrahten, Daten und Weltkarte laden.
-import '@fontsource/michroma/400.css';
+import '@fontsource-variable/inter/index.css';
 import './styles.css';
 import { Atmo, EpisodeAudio, SystemVoice } from './audio';
-import { Card, categoryColor, detailsHTML, formatLabel, marketsHTML, plainHeadline, relevanceHTML } from './card';
+import { Card, categoryColor, detailsHTML, formatLabel, marketsHTML, plainHeadline } from './card';
 import { DATA_BASE, DEMO_BASE, loadDay, loadDemo, loadIndex } from './data';
 import { Subtitle } from './fx';
 import { loadWorld110, loadWorld50 } from './geo/world';
 import { Globe } from './globe';
+import { symbolSVG } from './icons';
 import { Player } from './player';
 import { estimateScript } from './shared/script';
+import { fallbackSymbol } from './shared/symbols';
 import { SCHEMA_VERSION, type Briefing, type DayIndex } from './shared/types';
 import { bindTopics, openTopics } from './topics';
 import { $, dateParts, esc, pad2 } from './util';
@@ -110,16 +112,16 @@ const minutes = (b: Briefing): number => Math.max(1, Math.round((b.audio?.dur ??
 function renderStart(b: Briefing): void {
   const d = dateParts(b.date);
   const n = b.stories.length;
-  $('#metaDate').textContent = `${pad2(d.day)}/${pad2(d.month)}/${d.year}`;
-  $('#metaEp').textContent = `LAGEBILD · FOLGE ${b.episode}`;
+  $('#metaDate').textContent = `${d.weekday.slice(0, 2)}, ${d.day}. ${d.monthName.slice(0, 3)}.`;
+  $('#metaEp').textContent = isDemo ? 'Demo' : `Folge ${b.episode}`;
   $('#progress').innerHTML = '<span class="seg"><i></i></span>'.repeat(player.segments);
-  $('#sKicker').textContent = isDemo ? `LAGEBILD · DEMO-FOLGE` : `LAGEBILD · FOLGE ${b.episode}`;
+  $('#sKicker').textContent = isDemo ? 'Lagebild · Demo-Folge' : `Lagebild · Folge ${b.episode}`;
   $('#sTitle').textContent = `${d.weekday}, ${d.day}. ${d.monthName}`;
   $('#sSub').textContent = n
-    ? `${n} ${n === 1 ? 'Meldung' : 'Meldungen'}${b.markets ? ' und Märkte' : ''} · ca. ${minutes(b)} Min. · ${b.audio ? 'Stimmen' : 'Systemstimme'} und Untertitel`
+    ? `${n} ${n === 1 ? 'Meldung' : 'Meldungen'}${b.markets ? ' und Märkte' : ''} · ca. ${minutes(b)} Min.${b.audio ? '' : ' · Systemstimme'}`
     : 'Heute keine Meldungen.';
   $('#sList').innerHTML = n
-    ? b.stories.map((s, i) => `<li style="--c:${categoryColor(b.categories, s.category)}"><span class="p-num">${pad2(i + 1)}</span><span class="p-res">${esc(s.topic)} · ${esc(formatLabel(s))}${relevanceHTML(s.relevance)}</span><span class="p-head">${esc(plainHeadline(s.headline))}</span></li>`).join('')
+    ? b.stories.map(s => `<li style="--c:${categoryColor(b.categories, s.category)}"><span class="p-ico" aria-hidden="true">${symbolSVG(s.symbol ?? fallbackSymbol(s.category))}</span><span class="p-res">${esc(s.topic)} · ${esc(formatLabel(s))}</span><span class="p-head">${esc(plainHeadline(s.headline))}</span></li>`).join('')
     : '<li class="empty">Für deine Themen gab es heute keine Meldung.</li>';
   const pb = $<HTMLButtonElement>('#playBtn');
   pb.innerHTML = `${ICON.play} Folge abspielen`;
@@ -133,7 +135,7 @@ function renderStart(b: Briefing): void {
 function renderEnd(): void {
   const b = player.briefing;
   if (!b) return;
-  $('#eKicker').textContent = `FOLGE ${b.episode} BEENDET`;
+  $('#eKicker').textContent = isDemo ? 'Demo-Folge beendet' : `Folge ${b.episode} beendet`;
   $('#eList').innerHTML = b.stories.map(s => detailsHTML(s, b.categories)).join('') +
     (b.markets ? `<article class="det" style="--acc:${categoryColor(b.categories, 'wirtschaft')}"><div class="det-top"><span class="tag">Märkte</span></div><div class="mkt">${marketsHTML(b.markets)}</div><a class="src" href="${esc(b.markets.source.url)}" target="_blank" rel="noopener">Quelle <span class="sep"></span> <b>${esc(b.markets.source.name)}</b> ↗</a></article>` : '');
   $('#againBtn').innerHTML = `${ICON.play} Nochmal abspielen`;
@@ -155,7 +157,7 @@ function renderArchive(): void {
   const days = index?.days ?? [];
   $('#aList').innerHTML = days.map((d, i) => {
     const p = dateParts(d.date);
-    return `<li><span class="p-num">${pad2(i + 1)}</span><button class="day-btn" type="button" data-date="${esc(d.date)}"><span class="p-res" style="--c:var(--ink)">${d.episode ? `Folge ${d.episode} · ` : ''}${p.weekday}, ${p.day}. ${p.monthName} · ${d.count} Meldungen</span><span class="p-head">${esc(plainHeadline(d.top))}</span></button></li>`;
+    return `<li><span class="p-num">${pad2(i + 1)}</span><button class="day-btn" type="button" data-date="${esc(d.date)}"><span class="p-res" style="--c:var(--soft)">${d.episode ? `Folge ${d.episode} · ` : ''}${p.weekday}, ${p.day}. ${p.monthName} · ${d.count} Meldungen</span><span class="p-head">${esc(plainHeadline(d.top))}</span></button></li>`;
   }).join('') || '<li class="empty">Noch kein Archiv.</li>';
 }
 
