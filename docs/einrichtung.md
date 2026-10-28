@@ -18,7 +18,7 @@ Die API ist ein eigenes Konto und **nicht** im Claude-Abo enthalten.
 ## 3. Azure Speech (Stimmen)
 1. [portal.azure.com](https://portal.azure.com) → Konto anlegen (Kreditkarte nur zur Verifizierung).
 2. Oben „Speech service“ suchen → **Create**.
-3. Region **West Europe**, Pricing tier **Free F0** (500.000 Zeichen pro Monat gratis, Lagebild braucht etwa 80.000).
+3. Region **West Europe**, Pricing tier **Free F0** (500.000 Zeichen pro Monat gratis; Lagebild braucht etwa 100.000 bei 3 Minuten pro Tag, 250.000 bei 8 Minuten).
 4. Nach dem Anlegen: **Keys and Endpoint** → **Key 1** kopieren.
 
 ## 4. Schlüssel als Secrets bei GitHub eintragen
@@ -48,7 +48,10 @@ Der Token liegt nur auf dem iPad. Geht das iPad verloren: Token auf github.com w
 Repo → **Actions** → **Tages-Update** → **Run workflow**:
 - `update`: neues Tages-Update (mit „force“ auch, wenn es heute schon eins gibt)
 - `check-feeds`: nur prüfen, ob alle Nachrichtenquellen erreichbar sind (kostet nichts)
-- `compare`: dieselben Meldungen mit mehreren Claude-Modellen schreiben lassen, Ergebnis im Branch `daten` unter `vergleich/`
+- `compare`: dieselben Meldungen mit mehreren Claude-Modellen schreiben lassen (inklusive Drehbuch), Ergebnis im Branch `daten` unter `vergleich/`
+- `voices`: Hörproben der deutschen Azure-Stimmen im Branch `daten` unter `stimmproben/`
+
+Außerdem: **Stimmtest** (offene Stimm-Modelle, kostenlos auf der CPU) und **Texturen** (Satellitenbilder der NASA für den Globus neu laden).
 
 Oder in der App: Einstellungen → **Jetzt recherchieren**.
 
