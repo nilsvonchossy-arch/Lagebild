@@ -14,7 +14,8 @@
     "test": "vitest run",
     "gen:countries": "node scripts/gen-countries.mjs",
     "update": "node pipeline/run.ts",
-    "check-feeds": "node pipeline/run.ts --check-feeds"
+    "check-feeds": "node pipeline/run.ts --check-feeds",
+    "vorschau": "node scripts/vorschau.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

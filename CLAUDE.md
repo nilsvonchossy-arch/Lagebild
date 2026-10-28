@@ -20,7 +20,8 @@ Aus dem Prototyp (`docs/prototyp.html`, eine Datei aus dem Claude-Chat) ist eine
 - **Recherche:** 59 RSS-Feeds (`config/quellen.json`). Die Suchbegriffe aller Themen werden zusätzlich auf alle Feed-Artikel angewendet, damit wirken auch eigene Themen ohne eigene Feeds. GDELT nur für Themen mit zu wenig Treffern (drosselt geteilte GitHub-Server).
 - **Marktdaten:** `pipeline/markets.ts` holt Kurse (Yahoo Finance) und baut die gesprochenen Sätze ohne KI aus den Zahlen. In der App ein eigener Abschnitt nach den Meldungen.
 - **Daten:** Branch `daten` mit `JJJJ-MM-TT.json`, `index.json`, `audio/` (14 Tage) und `logs/` (Kosten, verworfene Meldungen und Prüfprotokoll). Der Branch wird bei jedem Lauf als einzelner Commit neu geschrieben, damit das Repo nicht wächst. Ohne Daten zeigt die App `public/demo/2026-10-27.json`.
-- **Befehle:** `npm run dev`, `npm run build`, `npm test`, `npm run typecheck`, `npm run update`, `npm run check-feeds`.
+- **Vorschau ohne Konten:** private claude.ai-Seite https://claude.ai/artifact/1f8cZC4BGbMBqFDg1Lq8XG mit den Demo-Meldungen (ohne Service Worker, Themen-Editor speichert nicht). Neu bauen mit `npm run vorschau`, dann `vorschau/lagebild.html` mit den Dateien aus `vorschau/files.json` an dieselbe Adresse veröffentlichen.
+- **Befehle:** `npm run dev`, `npm run build`, `npm test`, `npm run typecheck`, `npm run update`, `npm run check-feeds`, `npm run vorschau`.
 
 ## Entscheidungen (27.10.2026)
 - **Hosting:** Repo öffentlich, GitHub Pages, Deploy per GitHub Actions. Als PWA auf dem iPad-Homescreen.

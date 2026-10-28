@@ -1,12 +1,16 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Vorschau-Build (LAGEBILD_PREVIEW=1): ohne Service Worker, Themen-Editor speichert nichts
+const preview = process.env.LAGEBILD_PREVIEW === '1';
+
 export default defineConfig({
   // Relative Pfade, damit die App unter https://<name>.github.io/Lagebild/ und lokal gleich funktioniert.
   base: './',
   define: {
     // Repo für den Themen-Editor (in GitHub Actions automatisch gesetzt)
-    __REPO__: JSON.stringify(process.env.GITHUB_REPOSITORY ?? 'nilsvonchossy-arch/Lagebild')
+    __REPO__: JSON.stringify(process.env.GITHUB_REPOSITORY ?? 'nilsvonchossy-arch/Lagebild'),
+    __PREVIEW__: JSON.stringify(preview)
   },
   build: {
     target: 'es2022',
@@ -15,6 +19,7 @@ export default defineConfig({
   },
   plugins: [
     VitePWA({
+      disable: preview,
       // Neue Versionen übernehmen beim nächsten Öffnen, ohne laufende Wiedergabe neu zu laden.
       registerType: 'autoUpdate',
       injectRegister: 'script',

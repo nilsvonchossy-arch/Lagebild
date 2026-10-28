@@ -6,6 +6,8 @@ import { LIMITS, PRIORITY_LABEL, slugify, validateConfig } from './shared/config
 import type { Priority, ThemenConfig, Topic } from './shared/config';
 import { $, esc } from './util';
 
+declare const __PREVIEW__: boolean;
+
 const PATH = 'config/themen.json';
 const WORKFLOW = 'update.yml';
 
@@ -77,6 +79,11 @@ function render(): void {
 
 function renderGitHub(): void {
   const token = getToken();
+  if (__PREVIEW__) {
+    ghBox().innerHTML = `<span class="lbl">GitHub-Zugang</span>
+      <p class="note">Das ist eine Vorschau mit Demo-Meldungen. Themen lassen sich ansehen und ausprobieren, gespeichert wird hier nichts.</p>`;
+    return;
+  }
   ghBox().innerHTML = token
     ? `<span class="lbl">GitHub-Zugang</span>
        <div class="row"><span>Verbunden mit ${esc(REPO)}</span><button class="btn" type="button" data-act="logout">Trennen</button></div>
@@ -94,6 +101,7 @@ function renderGitHub(): void {
 }
 
 async function showLastRun(): Promise<void> {
+  if (__PREVIEW__) return;
   try {
     const r = await lastRun(WORKFLOW);
     if (!r || busy || $('#topicStatus').textContent) return;
@@ -153,6 +161,7 @@ function readForm(form: HTMLFormElement, old: Topic | null): Topic | string {
 async function save(): Promise<void> {
   const errs = validateConfig(cfg);
   if (errs.length) { status(errs[0]!, 'err'); return; }
+  if (__PREVIEW__) { status('In der Vorschau wird nichts gespeichert.', 'err'); return; }
   if (!getToken()) { status('Zum Speichern unten den GitHub-Zugang einrichten.', 'err'); $<HTMLInputElement>('#tokenIn').focus(); return; }
   busy = true;
   render();
@@ -172,6 +181,7 @@ async function save(): Promise<void> {
 }
 
 async function runNow(): Promise<void> {
+  if (__PREVIEW__) { status('In der Vorschau läuft keine Recherche.', 'err'); return; }
   if (!getToken()) { status('Dafür unten den GitHub-Zugang einrichten.', 'err'); return; }
   if (dirty) { status('Bitte zuerst speichern.', 'err'); return; }
   busy = true;
@@ -205,13 +215,19 @@ export function bindTopics(): void {
       case 'add': editing = 'neu'; render(); break;
       case 'cancel': editing = null; render(); break;
       case 'delete': {
+        // Zweistufig im Formular statt confirm(): der erste Tipp fragt nach, der zweite löscht
         const cur = cfg.topics.find(x => x.id === editing);
-        if (cur && confirm(`Thema „${cur.name}“ löschen?`)) {
-          cfg.topics = cfg.topics.filter(x => x !== cur);
-          editing = null;
-          dirty = true;
-          render();
+        if (!cur) break;
+        if (el.dataset.armed !== '1') {
+          el.dataset.armed = '1';
+          el.textContent = 'Wirklich löschen?';
+          break;
         }
+        cfg.topics = cfg.topics.filter(x => x !== cur);
+        editing = null;
+        dirty = true;
+        render();
+        status(`„${cur.name}“ entfernt. Noch nicht gespeichert.`);
         break;
       }
       case 'save': void save(); break;
