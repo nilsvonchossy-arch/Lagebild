@@ -1,6 +1,5 @@
 // Symbole für Meldungen ohne eigenes Bild: eigene, schlichte Linienzeichnungen (24×24, nur Striche).
-import type { Category, SymbolId } from './shared/types';
-import { SYMBOLS } from './shared/types';
+import type { SymbolId } from './shared/types';
 
 const PATHS: Record<SymbolId, string> = {
   wahl: '<path d="M3 13h18v7H3z"/><path d="M7 13V4h10v9"/><path d="M10 8.5l1.8 1.8L15 6.5"/>',
@@ -26,20 +25,6 @@ const PATHS: Record<SymbolId, string> = {
   bildung: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v6"/>'
 };
 
-export const SYMBOL_LABEL: Record<SymbolId, string> = {
-  wahl: 'Wahl', parlament: 'Parlament', regierung: 'Regierung', diplomatie: 'Diplomatie', gericht: 'Justiz',
-  sicherheit: 'Sicherheit', geld: 'Finanzen', boerse: 'Börse', handel: 'Handel', fabrik: 'Industrie', arbeit: 'Arbeit',
-  energie: 'Energie', klima: 'Klima', medizin: 'Gesundheit', forschung: 'Forschung', ki: 'KI', chip: 'Technik',
-  cyber: 'Cybersicherheit', raumfahrt: 'Raumfahrt', verkehr: 'Verkehr', bildung: 'Bildung'
-};
-
-export const isSymbol = (s: unknown): s is SymbolId => typeof s === 'string' && (SYMBOLS as readonly string[]).includes(s);
-
 export function symbolSVG(id: SymbolId): string {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[id]}</svg>`;
-}
-
-/** Ersatz, wenn eine Meldung kein Symbol hat: nach Kategorie */
-export function fallbackSymbol(category: Category['id']): SymbolId {
-  return ({ geopolitik: 'diplomatie', deutschland: 'regierung', wirtschaft: 'boerse', ki: 'ki', wissen: 'forschung' } as Record<string, SymbolId>)[category] ?? 'diplomatie';
 }

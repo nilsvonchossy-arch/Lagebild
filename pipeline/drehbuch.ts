@@ -23,6 +23,8 @@ export interface ScriptStory {
   places: string[];
   /** Hauptzahl für den Ton, z. B. „55,7 % (Wahlbeteiligung um 16 Uhr)“ */
   figure: string | null;
+  /** Was eingeblendet wird, sobald es gesagt wird (Vergleichswerte, Termin, Namen der Bildmotive) */
+  visuals?: string | null;
   facts: ScriptFact[];
 }
 
@@ -92,7 +94,7 @@ export function drehbuchPrompt(stories: ScriptStory[]): string {
     const words = Math.round(s.seconds * 2.5);
     return `${s.key} · ${FORMAT_TEXT[s.format]} · etwa ${s.seconds} Sekunden (≈ ${words} Wörter, ${LINES[s.format]})
 Thema: ${s.topic} · Ort: ${s.label}${s.places.length ? ` · weitere Orte: ${s.places.join(', ')}` : ''}
-Hauptzahl: ${s.figure ?? '(keine)'}
+Hauptzahl: ${s.figure ?? '(keine)'}${s.visuals ? `\nEinblendungen beim Wort (wenn es passt, genau so nennen): ${s.visuals}` : ''}
 Fakten:
 ${s.facts.map(f => `${f.id} [${f.kind}] ${f.text}`).join('\n')}`;
   }).join('\n\n');

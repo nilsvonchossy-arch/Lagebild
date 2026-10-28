@@ -16,6 +16,7 @@ import { migrateConfig, validateConfig } from '../src/shared/config.ts';
 import type { Briefing, Line, Markets, Role, Story } from '../src/shared/types.ts';
 import { dateParts } from '../src/util.ts';
 import { buildBriefing, KEYS, toScriptStory, toStory, type Built } from './assemble.ts';
+import { resolveImages } from './bilder.ts';
 import { Claude, RefusalError } from './claude.ts';
 import { writeScript } from './drehbuch.ts';
 import { selectStories, verifyStory, writeStory, type Selection } from './editorial.ts';
@@ -25,7 +26,7 @@ import { fetchMarkets } from './markets.ts';
 import { mixEpisode, type Clip } from './mix.ts';
 import { planEpisode, wantedStories } from './plan.ts';
 import { fetchFeeds, matchTopics, mergeCandidates, parseFeed, searchGdelt, type Candidate, type Quellen } from './sources.ts';
-import { dayPath, nextEpisode, previousHeadlines, pruneAudio, writeIndex, writeJSON } from './store.ts';
+import { dayPath, nextEpisode, previousHeadlines, pruneMedia, writeIndex, writeJSON } from './store.ts';
 import { synthesizeLines, type VoiceSpec } from './tts.ts';
 import { berlinISO, berlinNow, log, pool } from './util.ts';
 
@@ -154,7 +155,7 @@ async function produce(claude: Claude, selections: Selection[], cands: Candidate
 }
 
 /** Plan, Drehbuch und Montage: aus den geprüften Meldungen wird die Folge. */
-async function compose(claude: Claude, built: Built[], date: string, markets: { markets: Markets; lines: Line[] } | null, logs: StoryLog[], model: string): Promise<{ briefing: Briefing; scriptIssues: string[] }> {
+async function compose(claude: Claude, built: Built[], date: string, markets: { markets: Markets; lines: Line[] } | null, logs: StoryLog[], model: string, images = true): Promise<{ briefing: Briefing; scriptIssues: string[] }> {
   const plan = planEpisode(
     built.map(b => ({ relevance: b.sel.relevance, weight: b.topic.weight, facts: b.draft.facts.length, lon: b.place.lon, lat: b.place.lat, minPerDay: Boolean(b.topic.minPerDay) })),
     cfg.episode.minutes,
@@ -163,6 +164,14 @@ async function compose(claude: Claude, built: Built[], date: string, markets: { 
   for (const i of plan.dropped) {
     const l = logs.find(x => x.title === built[i]!.sel.working_title);
     if (l) l.result = 'aus Zeitgründen weggelassen';
+  }
+  if (images) {
+    // Archivbilder nur für Meldungen, die in der Folge vorkommen (Wikimedia Commons, kostenlos)
+    await pool(plan.items, 2, async p => {
+      const b = built[p.index]!;
+      const l = logs.find(x => x.title === b.sel.working_title);
+      b.images = await resolveImages(b.draft.motive, OUT, `bilder/${date}`, l?.issues ?? []);
+    });
   }
   const taken: string[] = [];
   const stories: Story[] = plan.items.map((p, k) => {
@@ -210,7 +219,7 @@ async function compare(models: string[], date: string, cands: Candidate[], marke
     const claude = new Claude(m, pipelineCfg.effort as 'medium');
     const logs: StoryLog[] = [];
     const built = await produce(claude, refSelection, cands, logs, want);
-    const { briefing, scriptIssues } = await compose(claude, built, date, markets, logs, m);
+    const { briefing, scriptIssues } = await compose(claude, built, date, markets, logs, m, false);
     briefing.meta = { ...briefing.meta!, costUsd: +claude.usage.costUsd.toFixed(4) };
     writeJSON(join(dir, `${m}.json`), briefing);
     Object.assign((report.models as Record<string, Record<string, unknown>>)[m]!, { usage: claude.usage, stories: logs, script: scriptIssues });
@@ -283,7 +292,7 @@ async function main(): Promise<void> {
 
   writeJSON(dayPath(OUT, date), briefing);
   writeIndex(OUT, briefing.generated);
-  const pruned = pruneAudio(OUT, date, pipelineCfg.audioDays);
+  const pruned = pruneMedia(OUT, date, pipelineCfg.audioDays);
   writeJSON(join(OUT, 'logs', `${date}.json`), { date, model, candidates: candidates.length, research: report, selections, stories: storyLogs, script: { source: briefing.meta.script, issues: scriptIssues }, usage: claude.usage, tts, pruned });
   log(`Fertig: Folge ${briefing.episode}, ${briefing.stories.length} Meldungen (${briefing.meta.script === 'claude' ? 'Drehbuch' : 'einfache Fassung'}), Claude-Kosten ${claude.usage.costUsd.toFixed(3)} $ (${claude.usage.calls} Aufrufe).`);
   output('changed', 'true');

@@ -6,7 +6,7 @@ import { Atmo, EpisodeAudio, SystemVoice, estimateMs, silentLine } from './audio
 import { Card, categoryColor } from './card';
 import { countUp, scramble, Subtitle } from './fx';
 import type { Globe } from './globe';
-import { fallbackSymbol } from './icons';
+import { fallbackSymbol } from './shared/symbols';
 import { cuesFor, LEAD_IN, pauseBefore, secToFrac, type Cue } from './shared/script';
 import type { Briefing, Story } from './shared/types';
 import { $, dateParts, pad2, sleep, speed } from './util';

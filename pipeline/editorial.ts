@@ -101,7 +101,13 @@ Formate:
 - short: Schlagwort für die Zusammenfassung am Ende der Folge, 2–5 Wörter, z. B. „Rekordbeteiligung in Israel“.
 - place: Hauptort der Meldung für den Globus. label in Großbuchstaben (z. B. „BRÜSSEL“, „GAZA“, „SAN FRANCISCO“), country_iso3 als ISO-3166-Alpha-3-Code, lon/lat als Koordinaten dieses Ortes. Bei Firmenmeldungen ohne Ortsangabe der Firmensitz. Der Ort ist ein Metadatum für die Karte, keine Aussage in der Meldung.
 - places: höchstens zwei weitere Orte, die im Quelltext ausdrücklich eine Rolle spielen (z. B. Gegenseite eines Konflikts, Herkunft einer Drohne). label so geschrieben, wie der Ort in einem deutschen Satz vorkommt („Nordkorea“, „Mailand“), route nur true, wenn der Text eine Bewegung von dort zum Hauptort beschreibt. Sonst eine leere Liste.
-- source_date: Veröffentlichungsdatum des Artikels als JJJJ-MM-TT, wenn bekannt, sonst null.`;
+- source_date: Veröffentlichungsdatum des Artikels als JJJJ-MM-TT, wenn bekannt, sonst null.
+
+Einblendungen (erscheinen im Video beim passenden Wort; sie zeigen nur, was in deinen Fakten steht):
+- vergleich: nur wenn der Text mindestens zwei vergleichbare Werte derselben Art nennt (z. B. Wahlbeteiligung jetzt und bei der letzten Wahl, Umsatz in zwei Jahren). label sagt, was verglichen wird („Wahlbeteiligung“), unit die Einheit mit Leerzeichen davor („ %“, „ Mrd. Euro“) oder leer, decimals die Nachkommastellen. items: 2 bis 4 Werte; jeder Wert steht genau so in einem deiner Fakten, und das label des Werts ist ein Wort aus demselben Fakt („2022“, „16 Uhr“, „Nasdaq“) oder „jetzt“ für den aktuellen Wert. Sonst null.
+- termin: nur wenn ein Fakt eine konkrete Uhrzeit oder ein Datum nennt, das für die Meldung wichtig ist (Wahllokale schließen, Marktstart, Frist). time als HH:MM oder null, date als JJJJ-MM-TT oder null, label kurz („Wahllokale schließen, Ortszeit“). Sonst null.
+- symbol: ein Wort für das Symbol der Meldung: wahl, parlament, regierung, diplomatie, gericht, sicherheit, geld, boerse, handel, fabrik, arbeit, energie, klima, medizin, forschung, ki, chip, cyber, raumfahrt, verkehr oder bildung.
+- motive: höchstens zwei Bildmotive für ein Archivbild: Personen, Orte, Organisationen oder Bauwerke, die im Quelltext namentlich vorkommen und für die Meldung zentral sind. name so, wie er im Quelltext steht; art ist person, ort, organisation oder bauwerk; suche ist der übliche vollständige Name für ein Lexikon (z. B. „Benjamin Netanjahu“, „Sandoz“, „Kundl“). Keine Motive, die nur im Hintergrund erwähnt werden. Sonst eine leere Liste.`;
 
 const PlaceSchema = z.object({ label: z.string(), country_iso3: z.string(), lon: z.number(), lat: z.number() });
 
@@ -114,7 +120,11 @@ export const WriteSchema = z.object({
   short: z.string(),
   place: PlaceSchema,
   places: z.array(PlaceSchema.extend({ route: z.boolean() })),
-  source_date: z.string().nullable()
+  source_date: z.string().nullable(),
+  vergleich: z.object({ label: z.string(), unit: z.string(), decimals: z.number().int(), items: z.array(z.object({ label: z.string(), value: z.number() })) }).nullable(),
+  termin: z.object({ time: z.string().nullable(), date: z.string().nullable(), label: z.string() }).nullable(),
+  symbol: z.string(),
+  motive: z.array(z.object({ name: z.string(), art: z.string().describe('person, ort, organisation oder bauwerk'), suche: z.string() }))
 });
 export type Draft = z.infer<typeof WriteSchema>;
 
@@ -139,7 +149,8 @@ export async function writeStory(claude: Claude, a: Article, meta: Parameters<ty
   return {
     ...raw,
     facts: raw.facts.map(f => ({ text: f.text.trim(), kind: normalizeKind(f.kind) })).filter(f => f.text).slice(0, 12),
-    places: raw.places.slice(0, 2)
+    places: raw.places.slice(0, 2),
+    motive: raw.motive.filter(m => m.name.trim() && a.text.toLowerCase().includes(m.name.trim().toLowerCase())).slice(0, 2)
   };
 }
 
@@ -154,12 +165,12 @@ Bewertung pro Element:
 
 Achte besonders auf Zahlen und Einheiten, Namen und Funktionen, Zeitangaben, die Zuordnung von Aussagen (wer behauptet was), wertende oder deutende Wörter, Wissen, das nicht im Text steht, auch wenn es zutrifft, und auf Zitate: Was in Anführungszeichen steht, muss wörtlich im Text stehen.
 
-Bei teilweise oder nicht_belegt: Nenne das Problem in "problem" und gib in "correction" eine korrigierte Fassung, die nur Belegtes enthält und dasselbe Format hat (bei der Headline mit [Akzent]-Klammern, höchstens 60 Zeichen; Fakten als ein Hauptsatz, höchstens 160 Zeichen). Lässt sich nichts Belegtes retten, ist correction null. Bei figure gibt es keine Korrektur, nur die Bewertung.
+Bei teilweise oder nicht_belegt: Nenne das Problem in "problem" und gib in "correction" eine korrigierte Fassung, die nur Belegtes enthält und dasselbe Format hat (bei der Headline mit [Akzent]-Klammern, höchstens 60 Zeichen; Fakten als ein Hauptsatz, höchstens 160 Zeichen). Lässt sich nichts Belegtes retten, ist correction null. Bei figure, vergleich und termin gibt es keine Korrektur, nur die Bewertung; prüfe dort, ob Werte, Beschriftungen und Zeiten genau so im Quelltext stehen und dasselbe meinen.
 Bei belegt sind problem und correction null.`;
 
 export const VerifySchema = z.object({
   items: z.array(z.object({
-    id: z.string().describe('headline, brief, figure, short, f1, f2, …'),
+    id: z.string().describe('headline, brief, figure, short, vergleich, termin, f1, f2, …'),
     verdict: z.string().describe('belegt, teilweise oder nicht_belegt'),
     problem: z.string().nullable(),
     correction: z.string().nullable()
@@ -176,6 +187,8 @@ async function check(claude: Claude, label: string, a: Article, d: Draft): Promi
 
 export function verifyPrompt(a: Article, d: Draft): string {
   const fig = d.figure ? `${d.figure.prefix}${d.figure.value}${d.figure.suffix} (${d.figure.label})` : '(keine)';
+  const cmp = d.vergleich ? `${d.vergleich.label}: ${d.vergleich.items.map(i => `${i.label} ${i.value}${d.vergleich!.unit}`).join(' · ')}` : null;
+  const ter = d.termin ? `${d.termin.label}: ${[d.termin.date, d.termin.time].filter(Boolean).join(' ')}` : null;
   const facts = d.facts.map((f, i) => `f${i + 1} [${f.kind}]: ${f.text}`).join('\n');
   return `QUELLTEXT
 <<<
@@ -187,7 +200,7 @@ headline: ${d.headline}
 brief: ${d.brief}
 figure: ${fig}
 short: ${d.short}
-${facts}`;
+${cmp ? `vergleich: ${cmp}\n` : ''}${ter ? `termin: ${ter}\n` : ''}${facts}`;
 }
 
 export interface Checked { draft: Draft | null; issues: string[] }
@@ -206,8 +219,8 @@ export function applyVerdicts(d: Draft, items: Verdict[]): Checked & { changed: 
       if (!fix) return { draft: null, issues: [...issues, `${v.id} nicht belegt, Meldung verworfen`], changed: true };
       next[v.id] = fix;
       changed = true;
-    } else if (v.id === 'figure') {
-      next.figure = null;
+    } else if (v.id === 'figure' || v.id === 'vergleich' || v.id === 'termin') {
+      next[v.id] = null;
       changed = true;
     } else {
       const m = /^f(?:akt)?(\d+)$/.exec(v.id);

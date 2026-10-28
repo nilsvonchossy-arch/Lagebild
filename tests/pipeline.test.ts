@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import themen from '../config/themen.json';
-import { buildBriefing, cleanHeadline, summaryLine, toScriptStory, toStory, type Built } from '../pipeline/assemble';
+import { buildBriefing, checkComparison, checkDeadline, cleanHeadline, summaryLine, toScriptStory, toStory, type Built } from '../pipeline/assemble';
+import { freeLicense, matchWord, plain, resolveImages } from '../pipeline/bilder';
 import { applyLineVerdicts, cleanDraft, fillGaps, normalizeLineVerdict, simpleLines, tidy, type ScriptStory } from '../pipeline/drehbuch';
 import { applyVerdicts, type Draft } from '../pipeline/editorial';
 import { extractArticle } from '../pipeline/extract';
@@ -11,6 +12,7 @@ import { gdeltQuery, mergeCandidates, parseFeed, type Feed } from '../pipeline/s
 import { escapeXml, wordMarks } from '../pipeline/tts';
 import { berlinISO, berlinNow, normalizeUrl, plainText } from '../pipeline/util';
 import { migrateConfig } from '../src/shared/config';
+import { normalizeSymbol } from '../src/shared/symbols';
 import type { Line } from '../src/shared/types';
 
 const cfg = migrateConfig(themen);
@@ -92,7 +94,11 @@ const draft = (): Draft => ({
   short: 'neues Gesetz in Berlin',
   place: { label: 'BERLIN', country_iso3: 'DEU', lon: 13.4, lat: 52.52 },
   places: [],
-  source_date: '2026-10-27'
+  source_date: '2026-10-27',
+  vergleich: { label: 'Ja-Stimmen', unit: '', decimals: 0, items: [{ label: 'jetzt', value: 412 }, { label: '2020', value: 380 }] },
+  termin: null,
+  symbol: 'parlament',
+  motive: []
 });
 
 describe('Faktencheck', () => {
@@ -100,12 +106,14 @@ describe('Faktencheck', () => {
     const r = applyVerdicts(draft(), [
       { id: 'headline', verdict: 'belegt', problem: null, correction: null },
       { id: 'figure', verdict: 'nicht_belegt', problem: 'Zahl fehlt im Text', correction: null },
+      { id: 'vergleich', verdict: 'teilweise', problem: 'Wert 2020 fehlt', correction: null },
       { id: 'f2', verdict: 'teilweise', problem: 'Datum falsch', correction: 'Es gilt ab Februar.' },
       { id: 'f3', verdict: 'nicht_belegt', problem: 'Wertung', correction: null }
     ]);
     expect(r.draft?.figure).toBeNull();
+    expect(r.draft?.vergleich).toBeNull();
     expect(r.draft?.facts.map(f => f.text)).toEqual(['Der Bundestag hat ein Gesetz beschlossen.', 'Es gilt ab Februar.']);
-    expect(r.issues).toHaveLength(3);
+    expect(r.issues).toHaveLength(4);
     expect(r.changed).toBe(true);
   });
 
@@ -116,6 +124,90 @@ describe('Faktencheck', () => {
   it('verwirft die Meldung bei weniger als zwei belegten Fakten', () => {
     const r = applyVerdicts(draft(), ['f1', 'f2'].map(id => ({ id, verdict: 'nicht_belegt' as const, problem: 'x', correction: null })));
     expect(r.draft).toBeNull();
+  });
+});
+
+describe('Einblendungen', () => {
+  const facts = [
+    { id: 'A1', text: 'Bis 16 Uhr haben 55,7 Prozent der Wahlberechtigten abgestimmt.' },
+    { id: 'A2', text: '2022 lag die Beteiligung zur selben Zeit bei 47,5 Prozent.' },
+    { id: 'A3', text: 'Die Wahllokale schließen um 22 Uhr Ortszeit.' },
+    { id: 'A4', text: 'Die neuen Geräte kommen ab dem 6. November in den Handel.' }
+  ];
+
+  it('nimmt einen Vergleich nur, wenn Werte und Beschriftungen in den Fakten stehen', () => {
+    const ok = checkComparison({ label: 'Wahlbeteiligung', unit: ' %', decimals: 1, items: [{ label: '16 Uhr', value: 55.7 }, { label: '2022', value: 47.5 }] }, facts);
+    expect(ok).toEqual({ label: 'Wahlbeteiligung', unit: ' %', dec: 1, items: [{ label: '16 Uhr', value: 55.7 }, { label: '2022', value: 47.5 }], facts: ['A1', 'A2'] });
+    // falscher Wert, falsche Beschriftung, nur ein Wert
+    expect(checkComparison({ label: 'x', unit: ' %', decimals: 1, items: [{ label: '16 Uhr', value: 55.7 }, { label: '2022', value: 45.1 }] }, facts)).toBeNull();
+    expect(checkComparison({ label: 'x', unit: ' %', decimals: 1, items: [{ label: '16 Uhr', value: 55.7 }, { label: '2018', value: 47.5 }] }, facts)).toBeNull();
+    expect(checkComparison({ label: 'x', unit: ' %', decimals: 1, items: [{ label: 'jetzt', value: 55.7 }] }, facts)).toBeNull();
+  });
+
+  it('nimmt einen Termin nur, wenn Uhrzeit oder Datum in einem Fakt stehen', () => {
+    expect(checkDeadline({ time: '22:00', date: null, label: 'Wahllokale schließen' }, facts)).toEqual({ time: '22:00', label: 'Wahllokale schließen', facts: ['A3'] });
+    expect(checkDeadline({ time: null, date: '2026-11-06', label: 'Marktstart' }, facts)).toEqual({ date: '2026-11-06', label: 'Marktstart', facts: ['A4'] });
+    expect(checkDeadline({ time: '21:00', date: null, label: 'x' }, facts)).toBeNull();
+    expect(checkDeadline({ time: 'abends', date: null, label: 'x' }, facts)).toBeNull();
+  });
+
+  it('ordnet Symbole zu und fällt sonst auf die Kategorie zurück', () => {
+    expect(normalizeSymbol('Börse', 'ki')).toBe('boerse');
+    expect(normalizeSymbol('wahl.', 'ki')).toBe('wahl');
+    expect(normalizeSymbol('Gesundheit', 'ki')).toBe('medizin');
+    expect(normalizeSymbol('Vulkan', 'wissen')).toBe('forschung');
+  });
+});
+
+describe('Archivbilder', () => {
+  it('erkennt freie Lizenzen und bereinigt Urheberangaben', () => {
+    for (const l of ['CC BY-SA 4.0', 'CC BY 2.0', 'CC0', 'Public domain', 'CC BY-SA 3.0 de']) expect(freeLicense(l)).toBe(true);
+    for (const l of ['Fair use', 'All rights reserved', '', 'Copyrighted free use']) expect(freeLicense(l)).toBe(false);
+    expect(plain('<a href="//x">Jane&nbsp;Doe</a> (<span>Flickr</span>)')).toBe('Jane Doe ( Flickr )');
+    expect(matchWord({ name: 'Gadi Eisenkot', art: 'person', suche: 'Gadi Eisenkot' })).toBe('Eisenkot');
+    expect(matchWord({ name: 'Kundl', art: 'ort', suche: 'Kundl' })).toBe('Kundl');
+  });
+
+  it('sucht über Wikidata, nimmt bei Personen nur Menschen und speichert das Vorschaubild', async () => {
+    const { mkdtempSync, existsSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const out = mkdtempSync(join(tmpdir(), 'lagebild-bild-'));
+    const res = (body: unknown, type = 'application/json'): Response => new Response(body instanceof Blob ? body : JSON.stringify(body), { headers: { 'content-type': type } });
+    const calls: string[] = [];
+    const fake = async (url: string): Promise<Response> => {
+      calls.push(url);
+      if (url.includes('wbsearchentities')) return res({ search: [{ id: 'Q1' }, { id: 'Q2' }] });
+      if (url.includes('wbgetentities')) return res({ entities: {
+        // Q1: gleichnamiges Schiff, Q2: der Mensch
+        Q1: { labels: { de: { value: 'Eisenkot (Schiff)' } }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q11446' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Schiff.jpg' } } }] } },
+        Q2: { labels: { de: { value: 'Gadi Eisenkot' } }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q5' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Gadi Eisenkot 2015.jpg' } } }] } }
+      } });
+      if (url.includes('commons.wikimedia.org/w/api.php')) {
+        expect(url).toContain(encodeURIComponent('File:Gadi Eisenkot 2015.jpg'));
+        return res({ query: { pages: { '1': { imageinfo: [{ thumburl: 'https://upload.wikimedia.org/x/960px-G.jpg', thumbwidth: 960, thumbheight: 1200, descriptionurl: 'https://commons.wikimedia.org/wiki/File:Gadi_Eisenkot_2015.jpg', extmetadata: { LicenseShortName: { value: 'CC BY-SA 3.0' }, Artist: { value: '<a href="x">IDF Spokesperson</a>' }, LicenseUrl: { value: 'https://creativecommons.org/licenses/by-sa/3.0' } } }] } } } });
+      }
+      return res(new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])]), 'image/jpeg');
+    };
+    const issues: string[] = [];
+    const imgs = await resolveImages([{ name: 'Eisenkot', art: 'person', suche: 'Gadi Eisenkot' }], out, 'bilder/2026-10-28', issues, fake);
+    expect(issues).toEqual([]);
+    expect(imgs).toHaveLength(1);
+    expect(imgs[0]).toMatchObject({ motif: 'Gadi Eisenkot', match: 'Eisenkot', author: 'IDF Spokesperson', license: 'CC BY-SA 3.0', w: 960, h: 1200, page: 'https://commons.wikimedia.org/wiki/File:Gadi_Eisenkot_2015.jpg' });
+    expect(imgs[0]!.src).toMatch(/^bilder\/2026-10-28\/[0-9a-f]{12}\.jpg$/);
+    expect(existsSync(join(out, imgs[0]!.src))).toBe(true);
+    expect(calls.every(u => !/vonchossy\.eu/.test(u))).toBe(true);
+  });
+
+  it('lässt Bilder ohne freie Lizenz weg und protokolliert den Grund', async () => {
+    const fake = async (url: string): Promise<Response> => new Response(JSON.stringify(
+      url.includes('wbsearchentities') ? { search: [{ id: 'Q9' }] }
+        : url.includes('wbgetentities') ? { entities: { Q9: { labels: { de: { value: 'Sandoz' } }, claims: { P31: [{ mainsnak: { datavalue: { value: { id: 'Q4830453' } } } }], P18: [{ mainsnak: { datavalue: { value: 'Logo.png' } } }] } } } }
+          : { query: { pages: { '1': { imageinfo: [{ thumburl: 'https://u/x.png', descriptionurl: 'https://c/File:Logo.png', extmetadata: { LicenseShortName: { value: 'Fair use' } } }] } } } }
+    ));
+    const issues: string[] = [];
+    expect(await resolveImages([{ name: 'Sandoz', art: 'organisation', suche: 'Sandoz' }], '/tmp', 'bilder/x', issues, fake)).toEqual([]);
+    expect(issues[0]).toContain('Lizenz nicht frei');
   });
 });
 
@@ -385,28 +477,34 @@ describe('Normalisierung', () => {
 });
 
 describe('Ablage', () => {
-  it('schreibt den Index, zählt Folgen und räumt altes Audio samt Verweisen auf', async () => {
+  it('schreibt den Index, zählt Folgen und räumt altes Audio und alte Bilder samt Verweisen auf', async () => {
     const { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
     const { tmpdir } = await import('node:os');
-    const { pruneAudio, writeIndex, previousHeadlines, writeJSON, nextEpisode } = await import('../pipeline/store');
+    const { pruneMedia, writeIndex, previousHeadlines, writeJSON, nextEpisode } = await import('../pipeline/store');
     const out = mkdtempSync(join(tmpdir(), 'lagebild-'));
     const day = (date: string, headline: string, episode: number) => ({
       schema: 2, date, generated: `${date}T07:00:00+01:00`, episode, tone: 'lagezentrum', categories: [],
-      stories: [{ id: 'x', category: 'k', topic: 'T', format: 'aufmacher', country: 'DEU', label: 'B', flag: '', lon: 0, lat: 0, zoom: 2, headline, brief: 'b', source: { name: 'Q', url: 'https://q.de', date }, short: 's', facts: [] }],
+      stories: [{ id: 'x', category: 'k', topic: 'T', format: 'aufmacher', country: 'DEU', label: 'B', flag: '', lon: 0, lat: 0, zoom: 2, headline, brief: 'b', source: { name: 'Q', url: 'https://q.de', date }, short: 's', facts: [], images: [{ src: `bilder/${date}/a.jpg`, w: 1, h: 1, motif: 'M', match: 'M', author: 'A', license: 'CC0', page: 'https://commons.wikimedia.org/wiki/File:A.jpg' }] }],
       script: [{ role: 'LAGE', text: 't', story: 'x', kind: 'fakt', audio: { at: 0.8, dur: 1 } }],
       audio: { src: `audio/${date}/folge.mp3`, voice: `audio/${date}/folge-stimme.mp3`, dur: 3 }
     });
     writeJSON(join(out, '2026-10-01.json'), day('2026-10-01', '[Alt] Meldung', 1));
     writeJSON(join(out, '2026-10-27.json'), day('2026-10-27', '[Gestern] Meldung', 2));
-    for (const d of ['2026-10-01', '2026-10-27']) { mkdirSync(join(out, 'audio', d), { recursive: true }); writeFileSync(join(out, 'audio', d, 'folge.mp3'), ''); }
+    for (const d of ['2026-10-01', '2026-10-27']) {
+      mkdirSync(join(out, 'audio', d), { recursive: true }); writeFileSync(join(out, 'audio', d, 'folge.mp3'), '');
+      mkdirSync(join(out, 'bilder', d), { recursive: true }); writeFileSync(join(out, 'bilder', d, 'a.jpg'), '');
+    }
     const idx = writeIndex(out, 'jetzt');
     expect(idx.days.map(d => [d.date, d.episode, d.dur])).toEqual([['2026-10-27', 2, 3], ['2026-10-01', 1, 3]]);
     expect(previousHeadlines(out, '2026-10-28')).toEqual(['Gestern Meldung']);
     expect(nextEpisode(out, '2026-10-28')).toBe(3);
     expect(nextEpisode(out, '2026-10-27')).toBe(2);
-    expect(pruneAudio(out, '2026-10-28', 14)).toEqual(['2026-10-01']);
+    expect(pruneMedia(out, '2026-10-28', 14)).toEqual(['2026-10-01']);
     expect(existsSync(join(out, 'audio', '2026-10-01'))).toBe(false);
+    expect(existsSync(join(out, 'bilder', '2026-10-01'))).toBe(false);
+    expect(readFileSync(join(out, '2026-10-01.json'), 'utf8')).not.toContain('"images"');
+    expect(readFileSync(join(out, '2026-10-27.json'), 'utf8')).toContain('"images"');
     expect(existsSync(join(out, 'audio', '2026-10-27'))).toBe(true);
     expect(readFileSync(join(out, '2026-10-01.json'), 'utf8')).not.toContain('"audio"');
     expect(readFileSync(join(out, '2026-10-27.json'), 'utf8')).toContain('"audio"');

@@ -50,25 +50,27 @@ export function previousHeadlines(out: string, date: string): string[] {
 }
 
 /**
- * Audio älter als `keepDays` löschen. Die Texte bleiben im Archiv; die Verweise auf die Audiodatei werden
- * entfernt, damit die App bei alten Tagen gleich die Systemstimme nimmt.
+ * Audio und Archivbilder älter als `keepDays` löschen. Die Texte bleiben im Archiv; die Verweise auf
+ * Audiodatei und Bilder werden entfernt, damit die App bei alten Tagen gleich die Systemstimme nimmt.
  */
-export function pruneAudio(out: string, today: string, keepDays: number): string[] {
-  const dir = join(out, 'audio');
-  if (!existsSync(dir)) return [];
+export function pruneMedia(out: string, today: string, keepDays: number): string[] {
   const limit = new Date(Date.parse(`${today}T00:00:00Z`) - keepDays * 86400000).toISOString().slice(0, 10);
-  const removed: string[] = [];
-  for (const d of readdirSync(dir)) {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(d) && d < limit) {
+  const removed = new Set<string>();
+  for (const kind of ['audio', 'bilder'] as const) {
+    const dir = join(out, kind);
+    if (!existsSync(dir)) continue;
+    for (const d of readdirSync(dir)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d >= limit) continue;
       rmSync(join(dir, d), { recursive: true, force: true });
-      removed.push(d);
+      removed.add(d);
       const b = readJSON<Briefing>(dayPath(out, d));
-      if (b) {
+      if (!b) continue;
+      if (kind === 'audio') {
         delete b.audio;
         for (const l of b.script ?? []) delete l.audio;
-        writeJSON(dayPath(out, d), b);
-      }
+      } else for (const s of b.stories) delete s.images;
+      writeJSON(dayPath(out, d), b);
     }
   }
-  return removed;
+  return [...removed].sort();
 }

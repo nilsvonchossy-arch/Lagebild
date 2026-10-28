@@ -1,7 +1,8 @@
 // Einblendungen beim passenden Wort: Vergleich als Balken, Termin als Uhr oder Kalenderblatt,
 // Archivbild mit Urheber und Lizenz, Symbol der Meldung. Immer nur eine zugleich; die nächste ersetzt sie.
 // Alle Zahlen und Zeiten stammen aus geprüften Fakten; Archivbilder sind als solche beschriftet.
-import { SYMBOL_LABEL, symbolSVG } from './icons';
+import { symbolSVG } from './icons';
+import { SYMBOL_LABEL } from './shared/symbols';
 import { countUp, fmtNum } from './fx';
 import type { ArchiveImage, Comparison, Deadline, SymbolId } from './shared/types';
 import { $, dateParts, esc, sleep, speed } from './util';
