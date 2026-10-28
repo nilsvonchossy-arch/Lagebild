@@ -64,7 +64,7 @@ DIE FAKTENREGEL (wichtiger als alles andere)
 - Jede LAGE- und EINORDNUNG-Zeile beruht nur auf den Fakten der Meldung, zu der sie gehört. Nenne in "facts" die IDs der Fakten, auf denen die Zeile beruht.
 - Du darfst Fakten kürzen, umstellen, in gesprochene Sprache bringen und auf zwei Zeilen verteilen. Du darfst nichts hinzufügen: keine Ortszeit, keine Ursache, kein „deshalb“ oder „damit“ zwischen Fakten, wenn der Zusammenhang nicht im Fakt steht, kein Allgemeinwissen, keine Wertung („dramatisch“, „überraschend“, „gute Nachricht“).
 - Zuschreibungen bleiben erhalten: Was in einem Fakt „laut X“ ist, bleibt „laut X“ oder „sagt X“. Wörtliche Rede nur, wenn der Fakt ein wörtliches Zitat in Anführungszeichen enthält; sonst indirekte Rede („Sandoz sagt, so sei …“).
-- Zahlen exakt wie im Fakt. Pro Meldung höchstens eine Zahl im Ton, möglichst die angegebene Hauptzahl; weitere Zahlen stehen auf dem Endbildschirm. Runden nur, wenn es wahr bleibt („Milliarden“ statt „95 Milliarden“). Uhrzeiten, Daten und Jahreszahlen zählen nicht als Zahl.
+- Zahlen exakt wie im Fakt. Pro Meldung höchstens zwei Zahlen im Ton, zuerst die angegebene Hauptzahl; weitere Zahlen stehen auf dem Endbildschirm. Runden nur, wenn es wahr bleibt („Milliarden“ statt „95 Milliarden“). Uhrzeiten, Daten und Jahreszahlen zählen nicht als Zahl.
 - Fragen, Reaktionen und Überleitungen von LEITUNG enthalten keine Tatsachen. Sie dürfen Thema oder Ort der nächsten Meldung nennen („Und in Europa?“, „Apropos KI – Apple?“), aber nichts darüber behaupten.
 - Stelle nur Fragen, deren Antwort in den Fakten steht. Steht die Antwort auf „Was heißt das für uns?“ nicht in den Fakten, wird die Frage nicht gestellt.
 
@@ -72,9 +72,11 @@ AUFBAU DER FOLGE
 - Der erste Satz ist die Kernaussage der ersten Meldung (Aufmacher), gesprochen von LAGE. Keine Begrüßung, kein Datum, keine Ankündigung wie „heute fünf Meldungen“${tone === 'assistent' ? ' – Begrüßung und Vorschau stehen schon automatisch davor' : ''}.
 - Halte die Reihenfolge der Meldungen genau ein. Jede Meldung außer der ersten beginnt mit einer Frage von LEITUNG, die überleitet; während dieser Frage fliegt die Kamera zum nächsten Ort.
 - Überleitungsarten mischen: Vertiefung („Wie ernst ist das?“), geografische Brücke („Und in Europa?“), Stichwort-Brücke („Apropos KI …“), offene Weiterfrage („Okay, was noch?“), Kurz-Weiterfrage („Sonst noch was?“). Die Fragen werden zum Ende hin kürzer. Eine Stichwort-Brücke nur, wenn das Stichwort in den Fakten beider Meldungen vorkommt.
-- Jede Meldung folgt einer kleinen Leiter: was passiert → Folge oder Detail → Einordnung mit Zuschreibung oder Vorbehalt. Der Aufmacher bekommt mindestens eine Vertiefungsfrage mitten im Thema.
+- BRIEFING STATT SCHLAGZEILE: Der Zuhörer will jede Meldung so verstehen wie eine Regierungschefin nach einem Lagebriefing – die Kerninformationen und Probleme, so knapp wie möglich. Jede Meldung folgt dieser Leiter, soweit die Fakten sie hergeben: Kern (was ist passiert) → Problem (worum es eigentlich geht, was auf dem Spiel steht, Fakten der Art „problem“) → Positionen und Größenordnung (wer will was, Zahl) → Ausblick (was als Nächstes passiert, Fakten der Art „ausblick“) → offener Punkt (Vorbehalt). Eine Meldung, die nur den Kern sagt, obwohl Problem- oder Ausblick-Fakten da sind, ist zu oberflächlich.
+- Nimm lieber die Fakten mit Substanz als die mit Farbe: Problem, Ausblick und Positionen gehen vor Details. Kein Satz ohne neue Information.
+- Die Fragen von LEITUNG führen durch diese Leiter, kurz und gezielt: „Worum geht's im Kern?“, „Wo liegt das Problem?“, „Wer steht dagegen?“, „Was heißt das konkret?“, „Und wie geht's weiter?“, „Was ist noch offen?“. Reaktionen bleiben, aber kurz und meist in der Frage selbst („Oha. Und das Problem?“). Der Aufmacher bekommt mindestens eine Vertiefungsfrage mitten im Thema.
 - Rollenmuster variieren, nicht jedes Thema „LAGE, LAGE, EINORDNUNG“.
-- Meldungen im Format „Kurz notiert“ laufen am Ende als Block: eine kurze Frage von LEITUNG davor (z. B. „${TONE_TEXT[tone].more}“), dann je Meldung eine oder zwei Zeilen ohne weitere Fragen.
+- Meldungen im Format „Kurz notiert“ laufen am Ende als Block: eine kurze Frage von LEITUNG davor (z. B. „${TONE_TEXT[tone].more}“), dann je Meldung eine oder zwei Zeilen ohne weitere Fragen: der Kern und, wenn vorhanden, das Problem oder der nächste Schritt.
 - Länge: Halte dich an die Wortzahl jeder Meldung (etwa 2,5 Wörter pro Sekunde). Weniger ist besser als aufgebläht: Hat eine Meldung wenig Fakten, wird sie kürzer.
 - Keine Zusammenfassung und keine Verabschiedung am Ende, die kommen automatisch.
 
@@ -236,7 +238,7 @@ export function applyLineVerdicts(lines: DraftLine[], items: LineVerdict[], stri
 
 /* ---------- Einfache Fassung ---------- */
 
-const EINORDNEND = new Set(['vorbehalt', 'hintergrund', 'reaktion', 'zitat']);
+const EINORDNEND = new Set(['problem', 'ausblick', 'vorbehalt', 'hintergrund', 'reaktion', 'zitat']);
 
 /** Dialog direkt aus den geprüften Fakten, ohne Umformulierung: sicher, aber hölzerner. */
 export function simpleLines(stories: ScriptStory[], tone: Tone, only?: Set<string>): DraftLine[] {

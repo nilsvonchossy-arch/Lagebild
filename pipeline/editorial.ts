@@ -22,7 +22,7 @@ So wählst du aus:
 - Höchstens zwei Meldungen pro Thema. Achte auf Abwechslung zwischen den Kategorien.
 - Was gestern schon im Lagebild war, nimmst du nur bei einer wesentlichen neuen Entwicklung.
 - Sortiere nach Bedeutung, die wichtigste zuerst.
-- Ordne die Artikel-IDs jeder Meldung nach ihrer Eignung als Quelle: ausführliche, frei lesbare Berichte zuerst (Nachrichtenagenturen, öffentlich-rechtliche Sender, Qualitätsmedien), Artikel hinter Bezahlschranken ans Ende.
+- Ordne die Artikel-IDs jeder Meldung nach ihrer Eignung als Quelle: Berichte, die neben dem Ereignis auch Hintergrund, Streitpunkte und Folgen erklären, vor kurzen Tickermeldungen; ausführliche, frei lesbare Berichte zuerst (Nachrichtenagenturen, öffentlich-rechtliche Sender, Qualitätsmedien), Artikel hinter Bezahlschranken ans Ende.
 
 Relevanz (1–5) ist eine redaktionelle Einschätzung, wie wichtig die Meldung für einen allgemein informierten Leser mit diesen Interessen ist:
 5 = große Tragweite: betrifft sehr viele Menschen oder Staaten, Krieg und Frieden, historische Weichenstellung
@@ -93,10 +93,17 @@ Die wichtigste Regel: Du verwendest ausschließlich Informationen aus dem QUELLT
 - Enthält der Text keine echte Nachricht (Kommentar, Bezahlschranke, Ankündigung ohne Inhalt, Sammelartikel), setze usable auf false.
 
 Formate:
-- facts: 3 bis 12 Einzelfakten, nach Wichtigkeit sortiert. Der erste ist die Kernaussage: was passiert ist. Jeder Fakt ist genau eine Aussage als vollständiger, gut sprechbarer deutscher Hauptsatz, höchstens 160 Zeichen. Zuschreibungen gehören in den Fakt („laut Wahlkomitee …“, „Sandoz nennt …“). Vorbehalte der Quelle sind eigene Fakten („Die Ursache ist laut Polizei noch unklar.“). Wörtliche Zitate nur, wenn sie wörtlich im Quelltext stehen und nicht übersetzt werden müssen; sonst indirekte Rede. Gibt der Text nur drei Fakten her, sind es drei. Keine Fakten erfinden oder aufblähen, um auf eine Anzahl zu kommen.
-  kind ist eines von: kern, detail, zahl, zitat, vorbehalt, hintergrund, reaktion.
+- facts: 3 bis 12 Einzelfakten wie für ein Briefing an eine Regierungschefin, die in einer Minute das Wesentliche verstehen muss: nicht die Schlagzeile, sondern die Kerninformationen und Probleme. Wähle aus dem Quelltext in dieser Reihenfolge, soweit er es hergibt:
+  1. kern: was passiert ist, in einem Satz.
+  2. problem: worum es eigentlich geht – der Streitpunkt, das Risiko, die Folge oder was auf dem Spiel steht, so wie der Quelltext es beschreibt.
+  3. Wer beteiligt ist und wer was will (Positionen, Forderungen, Reaktionen mit Zuschreibung).
+  4. zahl: die ein, zwei Zahlen, die die Größenordnung zeigen.
+  5. ausblick: was als Nächstes passiert – Entscheidung, Frist, Abstimmung, nächster Schritt.
+  6. vorbehalt: was unklar oder umstritten ist.
+  Lass Farbe und Nebensächliches weg (Wetter, Anekdoten, Szenen, Wiederholungen), wenn dafür Substanz fehlen würde. Jeder Fakt ist genau eine Aussage als vollständiger, gut sprechbarer deutscher Hauptsatz, höchstens 160 Zeichen. Zuschreibungen gehören in den Fakt („laut Wahlkomitee …“, „Sandoz nennt …“). Vorbehalte der Quelle sind eigene Fakten („Die Ursache ist laut Polizei noch unklar.“). Wörtliche Zitate nur, wenn sie wörtlich im Quelltext stehen und nicht übersetzt werden müssen; sonst indirekte Rede. Gibt der Text nur drei Fakten her, sind es drei. Keine Fakten erfinden oder aufblähen, um auf eine Anzahl zu kommen.
+  kind ist eines von: kern, problem, ausblick, detail, zahl, zitat, vorbehalt, hintergrund, reaktion.
 - headline: eine Zeile für die Karte, 5–9 Wörter, höchstens 60 Zeichen, normale Schreibweise, ein bis zwei Schlüsselwörter in eckigen Klammern für die Akzentfarbe, z. B. „[Israel] wählt mit [Rekord]beteiligung“. Keine verschachtelten Klammern.
-- brief („Kurz gesagt“, für den Endbildschirm): 2–3 Sätze, höchstens 380 Zeichen, die wichtigsten Fakten mit Zahlen.
+- brief („Kurz gesagt“, für den Endbildschirm): 2–3 Sätze, höchstens 380 Zeichen: was passiert ist, worin das Problem liegt, was als Nächstes kommt – mit den wichtigsten Zahlen.
 - figure: die Zahl, die man sich merken soll, aus dem Text. value als Zahl, decimals = Nachkommastellen, prefix z. B. „+“ oder leer, suffix z. B. „ %“ oder „ Mrd. Dollar“ oder leer, label kurz wie „Wahlbeteiligung um 16 Uhr“. Ohne sinnvolle Zahl: null.
 - short: Schlagwort für die Zusammenfassung am Ende der Folge, 2–5 Wörter, z. B. „Rekordbeteiligung in Israel“.
 - place: Hauptort der Meldung für den Globus. label in Großbuchstaben (z. B. „BRÜSSEL“, „GAZA“, „SAN FRANCISCO“), country_iso3 als ISO-3166-Alpha-3-Code, lon/lat als Koordinaten dieses Ortes. Bei Firmenmeldungen ohne Ortsangabe der Firmensitz. Der Ort ist ein Metadatum für die Karte, keine Aussage in der Meldung.
@@ -113,7 +120,7 @@ const PlaceSchema = z.object({ label: z.string(), country_iso3: z.string(), lon:
 
 export const WriteSchema = z.object({
   usable: z.boolean(),
-  facts: z.array(z.object({ text: z.string(), kind: z.string().describe('kern, detail, zahl, zitat, vorbehalt, hintergrund oder reaktion') })),
+  facts: z.array(z.object({ text: z.string(), kind: z.string().describe('kern, problem, ausblick, detail, zahl, zitat, vorbehalt, hintergrund oder reaktion') })),
   headline: z.string(),
   brief: z.string(),
   figure: z.object({ value: z.number(), decimals: z.number().int(), prefix: z.string(), suffix: z.string(), label: z.string() }).nullable(),
@@ -140,7 +147,7 @@ ${a.title ? `${a.title}\n\n` : ''}${a.text}
 >>>`;
 }
 
-const KINDS = ['kern', 'detail', 'zahl', 'zitat', 'vorbehalt', 'hintergrund', 'reaktion'];
+const KINDS = ['kern', 'problem', 'ausblick', 'detail', 'zahl', 'zitat', 'vorbehalt', 'hintergrund', 'reaktion'];
 /** Fakten-Art vereinheitlichen; das SDK prüft Auswahlwerte erst nach der Antwort. */
 export const normalizeKind = (k: string): string => KINDS.find(x => k.toLowerCase().includes(x)) ?? 'detail';
 
