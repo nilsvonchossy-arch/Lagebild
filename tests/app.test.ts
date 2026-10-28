@@ -5,7 +5,7 @@ import topo50 from 'world-atlas/countries-50m.json';
 import demo from '../public/demo/2026-10-27.json';
 import { detailsHTML, headlineHTML, plainHeadline, relevanceHTML } from '../src/card';
 import { scenesOf } from '../src/player';
-import { cuesFor, estimateScript, fracToSec, numberVariants, pauseBefore, secToFrac, subtitleBlocks, summaryText } from '../src/shared/script';
+import { comparisonAtFigure, cuesFor, deadlinePattern, estimateScript, findNumber, fracToSec, numberVariants, pauseBefore, secToFrac, subtitleBlocks, summaryText } from '../src/shared/script';
 import { buildLayer, countryInfo, findCountry, flagEmoji } from '../src/geo/world';
 import type { Briefing, Line } from '../src/shared/types';
 import { dateParts, shortDate } from '../src/util';
@@ -123,6 +123,29 @@ describe('Demo-Folge', () => {
   });
 });
 
+describe('Einblendungen der Demo', () => {
+  const b = demo as unknown as Briefing;
+  it('nimmt Vergleichswerte und Termine nur aus den genannten Fakten', () => {
+    for (const s of b.stories) {
+      const facts = (ids: string[]) => s.facts.filter(f => ids.includes(f.id)).map(f => f.text);
+      if (s.comparison) for (const it of s.comparison.items) expect(facts(s.comparison.facts).some(t => findNumber(t, it.value, s.comparison!.dec) >= 0), `${s.id} ${it.label}`).toBe(true);
+      if (s.deadline) expect(facts(s.deadline.facts).some(t => deadlinePattern(s.deadline!)!.test(t)), s.id).toBe(true);
+    }
+  });
+  it('hat Archivbilder mit Datei, Urheber und freier Lizenz', async () => {
+    const { existsSync } = await import('node:fs');
+    for (const s of b.stories) for (const img of s.images ?? []) {
+      expect(existsSync(`public/demo/${img.src}`)).toBe(true);
+      expect(img.author.length).toBeGreaterThan(1);
+      expect(img.license).toMatch(/^(CC0|CC BY|Public domain)/);
+      expect(img.page).toMatch(/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
+    }
+  });
+  it('zeigt in jeder Meldung mindestens eine Einblendung oder das Symbol', () => {
+    for (const sc of scenesOf(b)) if (sc.story) expect(sc.hasVisual || Boolean(sc.story.symbol), sc.key).toBe(true);
+  });
+});
+
 describe('Drehbuch-Regeln', () => {
   const L = (role: Line['role'], text: string, story?: string, kind: Line['kind'] = role === 'LEITUNG' ? 'frage' : 'fakt'): Line => ({ role, text, kind, ...(story ? { story } : {}) });
 
@@ -177,6 +200,15 @@ describe('Drehbuch-Regeln', () => {
     expect(cuesFor(story, { text: 'Gegen ihn tritt Gadi Eisenkot an.' })).toEqual([{ at: expect.any(Number), kind: 'image', image: 0 }]);
     expect(cuesFor({ deadline: { date: '2026-11-06', label: 'x', facts: [] } }, { text: 'Ausgeliefert ab dem 6. November.' })).toHaveLength(1);
     expect(cuesFor({ deadline: { time: '22:00', label: 'x', facts: [] } }, { text: 'Um 122 Uhr' })).toEqual([]);
+  });
+
+  it('zeigt den Vergleich bei der Hauptzahl nur, wenn kein anderer Vergleichswert gesagt wird', () => {
+    const story = { figure: { value: 0.8, dec: 1, label: 'x' }, comparison: { label: 'Kursplus', unit: ' %', dec: 1, items: [{ label: 'Nasdaq', value: 0.8 }, { label: 'S&P 500', value: 0.7 }], facts: [] } };
+    const only = [{ text: 'Der Nasdaq legte um 0,8 Prozent zu.' }];
+    expect(cuesFor(story, only[0]!).map(c => c.kind)).toEqual(['figure']);
+    expect(comparisonAtFigure(story, only)).toBe(true);
+    expect(cuesFor(story, only[0]!, { comparisonAtFigure: true }).map(c => c.kind)).toEqual(['figure', 'comparison']);
+    expect(comparisonAtFigure(story, [...only, { text: 'Der S&P 500 plus 0,7 Prozent.' }])).toBe(false);
   });
 
   it('rechnet zwischen Textanteil und Sekunde', () => {

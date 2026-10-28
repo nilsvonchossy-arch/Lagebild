@@ -64,6 +64,12 @@ export default defineConfig({
             }
           },
           {
+            // Archivbilder (Wikimedia Commons) der Tages-Updates und der Demo ändern sich nie
+            urlPattern: ({ url }) => /\/(data|demo)\/bilder\//.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'lagebild-bilder', cacheableResponse: { statuses: [200] }, expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 21 } }
+          },
+          {
             // Satellitenbilder für den Globus ändern sich selten
             urlPattern: ({ url }) => url.pathname.includes('/earth/'),
             handler: 'CacheFirst',

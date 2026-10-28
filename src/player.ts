@@ -7,7 +7,7 @@ import { Card, categoryColor } from './card';
 import { countUp, scramble, Subtitle } from './fx';
 import type { Globe } from './globe';
 import { fallbackSymbol } from './shared/symbols';
-import { cuesFor, LEAD_IN, pauseBefore, secToFrac, type Cue } from './shared/script';
+import { comparisonAtFigure, cuesFor, LEAD_IN, pauseBefore, secToFrac, type Cue } from './shared/script';
 import type { Briefing, Story } from './shared/types';
 import { $, dateParts, pad2, sleep, speed } from './util';
 import { comparisonHTML, deadlineHTML, symbolHTML, type Viz } from './viz';
@@ -47,6 +47,8 @@ export interface Scene {
   firstFact: number;
   /** Mindestens ein Vergleich, Termin oder Archivbild wird im Dialog genannt; sonst zeigt die Meldung ihr Symbol */
   hasVisual: boolean;
+  /** Der Dialog nennt keinen anderen Vergleichswert: Vergleich bei der Hauptzahl zeigen */
+  cmpAtFigure: boolean;
 }
 
 export function scenesOf(b: Briefing): Scene[] {
@@ -55,12 +57,15 @@ export function scenesOf(b: Briefing): Scene[] {
     const key = l.story ?? '_ende';
     const cur = out[out.length - 1];
     if (cur && cur.key === key) { cur.last = i; if (cur.firstFact < 0 && l.role !== 'LEITUNG') cur.firstFact = i; return; }
-    out.push({ key, story: b.stories.find(s => s.id === key) ?? null, first: i, last: i, firstFact: l.role !== 'LEITUNG' ? i : -1, hasVisual: false });
+    out.push({ key, story: b.stories.find(s => s.id === key) ?? null, first: i, last: i, firstFact: l.role !== 'LEITUNG' ? i : -1, hasVisual: false, cmpAtFigure: false });
   });
   for (const s of out) {
     if (s.firstFact < 0) s.firstFact = s.first;
     const st = s.story;
-    if (st) s.hasVisual = b.script.slice(s.first, s.last + 1).some(l => cuesFor(st, l).some(c => VISUAL.has(c.kind)));
+    if (!st) continue;
+    const lines = b.script.slice(s.first, s.last + 1);
+    s.cmpAtFigure = comparisonAtFigure(st, lines);
+    s.hasVisual = lines.some(l => cuesFor(st, l, { comparisonAtFigure: s.cmpAtFigure }).some(c => VISUAL.has(c.kind)));
   }
   return out;
 }
@@ -317,7 +322,7 @@ export class Player {
     const l = b.script[i]!;
     const scene = this.scenes[this.sceneIdx]!;
     this.sub.show(l.role, l.text);
-    this.cues = scene.story ? cuesFor(scene.story, l).filter(c => !this.fired.has(this.cueKey(c))) : [];
+    this.cues = scene.story ? cuesFor(scene.story, l, { comparisonAtFigure: scene.cmpAtFigure }).filter(c => !this.fired.has(this.cueKey(c))) : [];
     if (i >= scene.firstFact && !this.factStarted) {
       this.factStarted = true;
       void sleep(300).then(() => this.maybeShowCard());
@@ -393,7 +398,7 @@ export class Player {
     this.arrived = false;
     this.factStarted = false;
     $('#pinFig').classList.remove('on');
-    void this.viz.hide();
+    this.viz.release();
     void this.card.hide().then(() => this.hooks.layout());
     this.globe.highlight(null);
     this.globe.pin(null);

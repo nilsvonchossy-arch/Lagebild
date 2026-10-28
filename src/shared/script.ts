@@ -138,8 +138,12 @@ export function deadlinePattern(d: { time?: string; date?: string }): RegExp | n
 
 type CueStory = Pick<Story, 'figure' | 'places' | 'comparison' | 'deadline' | 'images'>;
 
-/** Wo in einer Zeile die Zahl, ein weiterer Ort, ein Vergleichswert, ein Termin oder ein Bildmotiv genannt wird. */
-export function cuesFor(story: CueStory, line: Pick<Line, 'text'>): Cue[] {
+/**
+ * Wo in einer Zeile die Zahl, ein weiterer Ort, ein Vergleichswert, ein Termin oder ein Bildmotiv genannt wird.
+ * Der Vergleich erscheint beim Vergleichswert; nur mit `comparisonAtFigure` (der Dialog nennt keinen
+ * anderen Wert) auch bei der Hauptzahl.
+ */
+export function cuesFor(story: CueStory, line: Pick<Line, 'text'>, opts: { comparisonAtFigure?: boolean } = {}): Cue[] {
   const text = line.text;
   const cues: Cue[] = [];
   const at = (i: number): number => i / text.length;
@@ -158,7 +162,7 @@ export function cuesFor(story: CueStory, line: Pick<Line, 'text'>): Cue[] {
   if (c) {
     // Am liebsten beim Vergleichswert, nicht bei der Zahl, die ohnehin am Pin hochzählt
     const hits = c.items.map(it => ({ i: findNumber(text, it.value, c.dec), same: Boolean(f && Math.abs(f.value - it.value) < 1e-9) })).filter(h => h.i >= 0);
-    const hit = hits.find(h => !h.same) ?? hits[0];
+    const hit = hits.find(h => !h.same) ?? (opts.comparisonAtFigure ? hits[0] : undefined);
     if (hit) cues.push({ at: at(hit.i), kind: 'comparison' });
   }
   const d = story.deadline && deadlinePattern(story.deadline);
@@ -173,6 +177,11 @@ export function cuesFor(story: CueStory, line: Pick<Line, 'text'>): Cue[] {
     if (m) cues.push({ at: at(m.index), kind: 'image', image: k });
   });
   return cues.sort((a, b) => a.at - b.at);
+}
+
+/** Nennt der Dialog einer Meldung einen Vergleichswert außer der Hauptzahl? Sonst erscheint der Vergleich bei der Hauptzahl. */
+export function comparisonAtFigure(story: CueStory, lines: Pick<Line, 'text'>[]): boolean {
+  return Boolean(story.comparison) && !lines.some(l => cuesFor(story, l).some(c => c.kind === 'comparison'));
 }
 
 /** Sekunde ab Zeilenbeginn, zu der das Wort an Textanteil `frac` beginnt (aus den Wortenden der Stimme). */

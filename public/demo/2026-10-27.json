@@ -83,6 +83,46 @@
      "id": "A6",
      "text": "Die Wahllokale schließen um 22 Uhr."
     }
+   ],
+   "symbol": "wahl",
+   "comparison": {
+    "label": "Wahlbeteiligung bis 16 Uhr",
+    "unit": " %",
+    "dec": 1,
+    "items": [
+     {
+      "label": "jetzt",
+      "value": 55.7
+     },
+     {
+      "label": "2022",
+      "value": 47.5
+     }
+    ],
+    "facts": [
+     "A2",
+     "A4"
+    ]
+   },
+   "deadline": {
+    "time": "22:00",
+    "label": "Wahllokale schließen",
+    "facts": [
+     "A6"
+    ]
+   },
+   "images": [
+    {
+     "src": "bilder/a50e41d40bf4.jpg",
+     "w": 960,
+     "h": 1073,
+     "motif": "Gadi Eisenkot",
+     "match": "Eisenkot",
+     "author": "יהב טרודלר (Yahav Trudler - Yahav Studio)",
+     "license": "CC BY-SA 3.0",
+     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Gadi_Eisenkot_2_(cropped_-_WD).jpg"
+    }
    ]
   },
   {
@@ -130,6 +170,20 @@
     {
      "id": "B5",
      "text": "Am Standort arbeiten mehr als 2.000 Menschen."
+    }
+   ],
+   "symbol": "medizin",
+   "images": [
+    {
+     "src": "bilder/3803c6bc5e95.jpg",
+     "w": 960,
+     "h": 720,
+     "motif": "Kundl",
+     "match": "Kundl",
+     "author": "Sabs14",
+     "license": "CC BY-SA 3.0",
+     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kundl_view_from_hahntax.JPG"
     }
    ]
   },
@@ -180,7 +234,31 @@
      "id": "C5",
      "text": "Anthropic hat den Börsengang beantragt."
     }
-   ]
+   ],
+   "symbol": "boerse",
+   "comparison": {
+    "label": "Kursplus am Montag",
+    "unit": " %",
+    "dec": 1,
+    "items": [
+     {
+      "label": "Nasdaq",
+      "value": 0.8
+     },
+     {
+      "label": "S&P 500",
+      "value": 0.7
+     },
+     {
+      "label": "Technologiewerte",
+      "value": 1.7
+     }
+    ],
+    "facts": [
+     "C2",
+     "C3"
+    ]
+   }
   },
   {
    "id": "apple",
@@ -220,7 +298,15 @@
      "id": "D3",
      "text": "Die Neural Engine für KI-Aufgaben soll laut Apple 1,9-mal so schnell sein wie beim M5."
     }
-   ]
+   ],
+   "symbol": "chip",
+   "deadline": {
+    "date": "2026-11-06",
+    "label": "Auslieferung der neuen Macs",
+    "facts": [
+     "D2"
+    ]
+   }
   },
   {
    "id": "frankreich",
@@ -259,7 +345,8 @@
      "id": "E3",
      "text": "Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an."
     }
-   ]
+   ],
+   "symbol": "bildung"
   }
  ],
  "script": [
@@ -286,6 +373,15 @@
    "kind": "fakt",
    "facts": [
     "A3"
+   ]
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "2022 waren es zur gleichen Zeit 47,5 Prozent.",
+   "story": "israel",
+   "kind": "fakt",
+   "facts": [
+    "A4"
    ]
   },
   {

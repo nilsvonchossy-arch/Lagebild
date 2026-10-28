@@ -64,6 +64,7 @@ export class Viz {
   private readonly el = $('#viz');
   private timer = 0;
   private gen = 0;
+  private shownAt = 0;
 
   /** Einblendung zeigen und nach `ms` wieder ausblenden; eine neue ersetzt die alte. */
   show(html: string, acc: string, ms: number): void {
@@ -75,6 +76,7 @@ export class Viz {
     el.dataset.state = 'hidden';
     void el.offsetWidth;
     el.dataset.state = 'in';
+    this.shownAt = performance.now();
     for (const n of el.querySelectorAll<HTMLElement>('.vz-num')) {
       countUp(n, { value: Number(n.dataset.v), dec: Number(n.dataset.dec), suffix: n.dataset.unit ?? '', label: '' }, 1000);
     }
@@ -86,6 +88,16 @@ export class Viz {
     if (!(await preload(base + img.src, 1500))) return;
     if (my !== this.gen) return;
     this.show(imageHTML(img, base), acc, ms);
+  }
+
+  /** Beim Themenwechsel: eine gerade erst erschienene Einblendung noch kurz stehen lassen (mindestens 2,2 s insgesamt). */
+  release(): void {
+    if (this.el.dataset.state !== 'in') { void this.hide(); return; }
+    const rest = Math.min(1500, 2200 - (performance.now() - this.shownAt) * speed());
+    if (rest <= 0) { void this.hide(); return; }
+    const my = this.gen;
+    clearTimeout(this.timer);
+    this.timer = window.setTimeout(() => { if (my === this.gen) void this.hide(); }, rest / speed());
   }
 
   async hide(): Promise<void> {
