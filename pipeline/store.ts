@@ -1,7 +1,7 @@
 // Ablage im Daten-Branch: ein JSON pro Tag, ein Index fürs Archiv, Audio nur für die letzten Tage.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Briefing, DayIndex, Line } from '../src/shared/types.ts';
+import type { Briefing, DayIndex } from '../src/shared/types.ts';
 import { SCHEMA_VERSION } from '../src/shared/types.ts';
 
 const DAY = /^(\d{4}-\d{2}-\d{2})\.json$/;
@@ -26,11 +26,20 @@ export function listDays(out: string): string[] {
 export function writeIndex(out: string, updated: string): DayIndex {
   const days = listDays(out).map(date => {
     const b = readJSON<Briefing>(dayPath(out, date));
-    return { date, count: b?.stories.length ?? 0, top: b?.stories[0]?.headline ?? '' };
+    return { date, count: b?.stories.length ?? 0, top: b?.stories[0]?.headline ?? '', ...(b?.episode ? { episode: b.episode } : {}), ...(b?.audio ? { dur: b.audio.dur } : {}) };
   }).filter(d => d.count > 0);
   const idx: DayIndex = { schema: SCHEMA_VERSION, updated, days };
   writeJSON(join(out, 'index.json'), idx);
   return idx;
+}
+
+/** Nummer der Folge für `date`: dieselbe wie bei einem früheren Lauf am selben Tag, sonst die höchste bisherige plus eins. */
+export function nextEpisode(out: string, date: string): number {
+  const same = readJSON<Briefing>(dayPath(out, date));
+  if (same?.episode) return same.episode;
+  let max = 0;
+  for (const d of listDays(out)) if (d < date) max = Math.max(max, readJSON<Briefing>(dayPath(out, d))?.episode ?? 0);
+  return max + 1;
 }
 
 /** Überschriften des letzten Updates vor `date`, damit sich Meldungen nicht wiederholen. */
@@ -40,13 +49,8 @@ export function previousHeadlines(out: string, date: string): string[] {
   return b?.stories.map(s => s.headline.replace(/[[\]]/g, '')) ?? [];
 }
 
-/** Alle Zeilen eines Tages (Begrüßung, Meldungen, Märkte, Schluss). */
-export function allLines(b: Briefing): Line[] {
-  return [b.intro.morning, b.intro.day, b.intro.evening, ...b.stories.flatMap(s => [s.opener, ...s.lines]), ...(b.markets ? [b.markets.opener, ...b.markets.lines] : []), ...b.outro];
-}
-
 /**
- * Audio älter als `keepDays` löschen. Die Texte bleiben im Archiv; die Verweise auf die MP3s werden
+ * Audio älter als `keepDays` löschen. Die Texte bleiben im Archiv; die Verweise auf die Audiodatei werden
  * entfernt, damit die App bei alten Tagen gleich die Systemstimme nimmt.
  */
 export function pruneAudio(out: string, today: string, keepDays: number): string[] {
@@ -60,7 +64,8 @@ export function pruneAudio(out: string, today: string, keepDays: number): string
       removed.push(d);
       const b = readJSON<Briefing>(dayPath(out, d));
       if (b) {
-        for (const l of allLines(b)) delete l.audio;
+        delete b.audio;
+        for (const l of b.script ?? []) delete l.audio;
         writeJSON(dayPath(out, d), b);
       }
     }

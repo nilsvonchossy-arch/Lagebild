@@ -54,7 +54,7 @@ function move(name: string, c: number, inverted = false): string {
   return inverted ? `${verb} ${name} ${rest}` : `${name} ${verb} ${rest}`;
 }
 
-/** Gesprochene Zeilen aus den Zahlen: eine für den DAX, eine für New York. */
+/** Gesprochene Zeilen (LAGE) aus den Zahlen: eine für den DAX, eine für New York. Die Frage davor setzt assemble.ts. */
 export function marketLines(items: MarketItem[]): Line[] {
   const get = (id: string): MarketItem | undefined => items.find(i => i.id === id);
   const dax = get('dax');
@@ -63,26 +63,23 @@ export function marketLines(items: MarketItem[]): Line[] {
   if (dax) {
     const wd = dateParts(dax.date).weekday;
     const c = dax.changePct;
-    lines.push({ role: 'LAGE', text: `Der DAX schloss am ${wd} bei ${de(dax.value, 0)} Punkten, ${Math.abs(c) < 0.05 ? 'nahezu unverändert' : `${c > 0 ? 'plus' : 'minus'} ${pct(c)} Prozent`}.` });
+    lines.push({ role: 'LAGE', story: 'maerkte', kind: 'fakt', text: `Der DAX schloss am ${wd} bei ${de(dax.value, 0)} Punkten, ${Math.abs(c) < 0.05 ? 'nahezu unverändert' : `${c > 0 ? 'plus' : 'minus'} ${pct(c)} Prozent`}.` });
   }
   if (us.length) {
     const text = `In New York ${us.map((u, i) => move(`der ${u.name}`, u.changePct, i === 0)).join(', ')}.`;
-    lines.push({ role: 'LAGE', text, ...(text.includes('S&P') ? { say: text.replace(/S&P 500/g, 'S und P 500') } : {}) });
+    lines.push({ role: 'LAGE', story: 'maerkte', kind: 'fakt', text, ...(text.includes('S&P') ? { say: text.replace(/S&P 500/g, 'S und P 500') } : {}) });
   }
   return lines;
 }
 
-export async function fetchMarkets(): Promise<Markets | null> {
+export async function fetchMarkets(): Promise<{ markets: Markets; lines: Line[] } | null> {
   const items = (await pool(SYMBOLS, 3, quote)).filter((x): x is MarketItem => x !== null);
   if (items.length < 3) { log(`Marktdaten unvollständig (${items.length} Werte), Kachel entfällt`); return null; }
   const lines = marketLines(items);
   if (!lines.length) return null;
   const asOf = items.map(i => i.date).sort().reverse()[0]!;
   return {
-    asOf,
-    source: { name: 'Yahoo Finance', url: 'https://finance.yahoo.com/markets/', date: asOf },
-    items,
-    opener: { role: 'BRIEFING', text: 'Und die Märkte?' },
+    markets: { asOf, source: { name: 'Yahoo Finance', url: 'https://finance.yahoo.com/markets/', date: asOf }, items },
     lines
   };
 }

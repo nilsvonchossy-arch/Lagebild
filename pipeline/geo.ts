@@ -43,13 +43,13 @@ function radiusOf(p: Feature<Polygon>, center: [number, number]): number {
   return r;
 }
 
-export interface Place { lon: number; lat: number; zoom: number; country: string; flag: string; moved: boolean }
+export interface ResolvedPlace { lon: number; lat: number; zoom: number; country: string; flag: string; moved: boolean }
 
 /**
  * Prüft die von Claude genannten Koordinaten: Liegen sie im Land (oder nah dran, z. B. Küstenstädte)?
  * Sonst Mittelpunkt der größten Landfläche. Zoom: die größte Landfläche soll gut ins Bild passen.
  */
-export function resolvePlace(iso3: string, lon: number, lat: number): Place | null {
+export function resolvePlace(iso3: string, lon: number, lat: number): ResolvedPlace | null {
   const iso = iso3.toUpperCase();
   const polys = polygons(iso);
   if (!polys.length) return null;
@@ -70,4 +70,12 @@ export function resolvePlace(iso3: string, lon: number, lat: number): Place | nu
   const r = radiusOf(main, geoCentroid(main) as [number, number]);
   const zoom = Math.min(10, Math.max(2.6, 0.45 / Math.sin(Math.max(r, 0.01))));
   return { lon: +at[0].toFixed(2), lat: +at[1].toFixed(2), zoom: +zoom.toFixed(1), country: iso, flag: flagEmoji(iso), moved };
+}
+
+/** Weiterer Ort einer Meldung (eigener Pin): gleiche Prüfung wie beim Hauptort, ohne Zoom. */
+export function resolveExtraPlace(p: { label: string; country_iso3: string; lon: number; lat: number; route: boolean }): { label: string; lon: number; lat: number; route?: boolean } | null {
+  const r = resolvePlace(p.country_iso3, p.lon, p.lat);
+  const label = p.label.trim();
+  if (!r || !label || label.length > 30) return null;
+  return { label, lon: r.lon, lat: r.lat, ...(p.route ? { route: true } : {}) };
 }

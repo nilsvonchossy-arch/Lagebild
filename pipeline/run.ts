@@ -1,4 +1,5 @@
-// Tages-Update erzeugen: Recherche → Auswahl → Volltext → Schreiben → Faktencheck → (Stimme) → Ablage.
+// Tages-Update erzeugen: Recherche → Auswahl → Volltext → Fakten → Faktencheck → Plan → Drehbuch →
+// Drehbuch-Prüfung → (Stimme und Mischung) → Ablage.
 //
 //   node pipeline/run.ts --out daten               normales Update für heute
 //   node pipeline/run.ts --gate                     nur, wenn es in Berlin nach 6:30 ist und heute noch nichts da ist
@@ -11,19 +12,21 @@ import Anthropic from '@anthropic-ai/sdk';
 import pipelineCfg from '../config/pipeline.json' with { type: 'json' };
 import quellenJson from '../config/quellen.json' with { type: 'json' };
 import themenJson from '../config/themen.json' with { type: 'json' };
-import { validateConfig } from '../src/shared/config.ts';
-import type { ThemenConfig } from '../src/shared/config.ts';
-import type { Briefing } from '../src/shared/types.ts';
+import { migrateConfig, validateConfig } from '../src/shared/config.ts';
+import type { Briefing, Line, Markets, Role, Story } from '../src/shared/types.ts';
 import { dateParts } from '../src/util.ts';
-import { buildBriefing, type Built } from './assemble.ts';
+import { buildBriefing, KEYS, toScriptStory, toStory, type Built } from './assemble.ts';
 import { Claude, RefusalError } from './claude.ts';
+import { writeScript } from './drehbuch.ts';
 import { selectStories, verifyStory, writeStory, type Selection } from './editorial.ts';
 import { fetchArticle, type Article } from './extract.ts';
-import { resolvePlace } from './geo.ts';
+import { resolveExtraPlace, resolvePlace } from './geo.ts';
 import { fetchMarkets } from './markets.ts';
+import { mixEpisode, type Clip } from './mix.ts';
+import { planEpisode, wantedStories } from './plan.ts';
 import { fetchFeeds, matchTopics, mergeCandidates, parseFeed, searchGdelt, type Candidate, type Quellen } from './sources.ts';
-import { dayPath, previousHeadlines, pruneAudio, writeIndex, writeJSON } from './store.ts';
-import { synthesize } from './tts.ts';
+import { dayPath, nextEpisode, previousHeadlines, pruneAudio, writeIndex, writeJSON } from './store.ts';
+import { synthesizeLines, type VoiceSpec } from './tts.ts';
 import { berlinISO, berlinNow, log, pool } from './util.ts';
 
 const { values: args } = parseArgs({
@@ -40,7 +43,7 @@ const { values: args } = parseArgs({
   }
 });
 
-const cfg = themenJson as unknown as ThemenConfig;
+const cfg = migrateConfig(themenJson);
 const quellen = quellenJson as unknown as Quellen;
 const OUT = args.out!;
 
@@ -110,10 +113,11 @@ async function buildOne(claude: Claude, sel: Selection, cands: Map<number, Candi
       const place = resolvePlace(checked.draft.place.country_iso3, checked.draft.place.lon, checked.draft.place.lat);
       if (!place) { slog.attempts.push({ url: c.url, result: `unbekanntes Land ${checked.draft.place.country_iso3}` }); continue; }
       if (place.moved) slog.issues.push(`Ort korrigiert: ${checked.draft.place.label} liegt nicht in ${place.country}`);
+      const places = checked.draft.places.map(resolveExtraPlace).filter((p): p is NonNullable<typeof p> => p !== null);
       slog.attempts.push({ url: c.url, result: 'ok' });
       slog.result = 'ok';
       const sourceName = a.siteName && a.siteName.length <= 40 ? a.siteName : c.source;
-      return { sel, topic, article: a, sourceName, published: c.published, draft: checked.draft, place };
+      return { sel, topic, article: a, sourceName, published: c.published, draft: checked.draft, place, places };
     } catch (e) {
       // Falscher Schlüssel oder fehlendes Guthaben: sofort abbrechen; alles andere kostet nur diese Quelle
       if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) throw e;
@@ -126,17 +130,8 @@ async function buildOne(claude: Claude, sel: Selection, cands: Map<number, Candi
   return null;
 }
 
-/** Geschätzte Länge in Sekunden (Sprechtempo ~2,4 Wörter/s plus Animationen je Meldung). */
-function estimateSeconds(built: Built[]): number {
-  const words = (s: string): number => s.split(/\s+/).filter(Boolean).length;
-  let sec = 12;
-  for (const b of built) sec += 4 + (words(b.draft.opener.mid) + b.draft.lines.reduce((n, l) => n + words(l.text), 0)) / 2.4 + b.draft.lines.length * 0.25;
-  return sec;
-}
-
-async function produce(claude: Claude, selections: Selection[], cands: Candidate[], logs: StoryLog[]): Promise<Built[]> {
+async function produce(claude: Claude, selections: Selection[], cands: Candidate[], logs: StoryLog[], want: number): Promise<Built[]> {
   const byId = new Map(cands.map(c => [c.id, c]));
-  const want = cfg.stories.max;
   const perTopic = new Map<string, number>();
   const queue = selections.filter(s => {
     const n = perTopic.get(s.topic) ?? 0;
@@ -150,20 +145,43 @@ async function produce(claude: Claude, selections: Selection[], cands: Candidate
     return l;
   };
   // Erst die besten parallel, dann Reserven der Reihe nach, bis genug Meldungen da sind
-  const first = queue.slice(0, want);
-  results.push(...(await pool(first, 2, s => buildOne(claude, s, byId, mkLog(s)))));
+  results.push(...(await pool(queue.slice(0, want), 2, s => buildOne(claude, s, byId, mkLog(s)))));
   for (const s of queue.slice(want)) {
     if (results.filter(Boolean).length >= want) break;
     results.push(await buildOne(claude, s, byId, mkLog(s)));
   }
-  let built = results.filter((b): b is Built => b !== null);
-  // Länge begrenzen: unwichtigste Meldungen weglassen, solange mehr als das Minimum da ist
-  while (built.length > cfg.stories.min && estimateSeconds(built) > pipelineCfg.targetSeconds) {
-    const weakest = built.reduce((a, b) => (b.sel.relevance <= a.sel.relevance ? b : a));
-    built = built.filter(b => b !== weakest);
-    logs.find(l => l.title === weakest.sel.working_title)!.result = 'aus Zeitgründen weggelassen';
+  return results.filter((b): b is Built => b !== null);
+}
+
+/** Plan, Drehbuch und Montage: aus den geprüften Meldungen wird die Folge. */
+async function compose(claude: Claude, built: Built[], date: string, markets: { markets: Markets; lines: Line[] } | null, logs: StoryLog[], model: string): Promise<{ briefing: Briefing; scriptIssues: string[] }> {
+  const plan = planEpisode(
+    built.map(b => ({ relevance: b.sel.relevance, weight: b.topic.weight, facts: b.draft.facts.length, lon: b.place.lon, lat: b.place.lat, minPerDay: Boolean(b.topic.minPerDay) })),
+    cfg.episode.minutes,
+    Boolean(markets)
+  );
+  for (const i of plan.dropped) {
+    const l = logs.find(x => x.title === built[i]!.sel.working_title);
+    if (l) l.result = 'aus Zeitgründen weggelassen';
   }
-  return built;
+  const taken: string[] = [];
+  const stories: Story[] = plan.items.map((p, k) => {
+    const s = toStory(built[p.index]!, KEYS[k]!, p.format, date, taken);
+    taken.push(s.id);
+    return s;
+  });
+  const script = await writeScript(claude, stories.map((s, k) => toScriptStory(s, built[plan.items[k]!.index]!, KEYS[k]!, plan.items[k]!)), cfg.episode.tone);
+  const briefing = buildBriefing({
+    date,
+    generated: berlinISO(),
+    cfg,
+    episode: nextEpisode(OUT, date),
+    stories,
+    script: script.lines,
+    markets,
+    meta: { model, costUsd: 0, script: script.source }
+  });
+  return { briefing, scriptIssues: script.issues };
 }
 
 function dateLabel(date: string): string {
@@ -173,15 +191,16 @@ function dateLabel(date: string): string {
 
 /* ---------- Modellvergleich ---------- */
 
-async function compare(models: string[], date: string, cands: Candidate[]): Promise<void> {
+async function compare(models: string[], date: string, cands: Candidate[], markets: { markets: Markets; lines: Line[] } | null): Promise<void> {
   const dir = join(OUT, 'vergleich', date);
   const yesterday = previousHeadlines(OUT, date);
+  const want = wantedStories(cfg.episode.minutes);
   const report: Record<string, unknown> = { date, candidates: cands.length, models: {} };
   const ref = models[0]!;
   let refSelection: Selection[] = [];
   for (const m of models) {
     const claude = new Claude(m, pipelineCfg.effort as 'medium');
-    const sel = await selectStories(claude, cfg, cands, { dateLabel: dateLabel(date), yesterday, want: cfg.stories.max });
+    const sel = await selectStories(claude, cfg, cands, { dateLabel: dateLabel(date), yesterday, want, minutes: cfg.episode.minutes });
     if (m === ref) refSelection = sel;
     (report.models as Record<string, unknown>)[m] = { selection: sel.map(s => ({ title: s.working_title, topic: s.topic, relevance: s.relevance, reason: s.reason })) };
     log(`${m}: Auswahl ${sel.length} Meldungen`);
@@ -190,10 +209,11 @@ async function compare(models: string[], date: string, cands: Candidate[]): Prom
   for (const m of models) {
     const claude = new Claude(m, pipelineCfg.effort as 'medium');
     const logs: StoryLog[] = [];
-    const built = await produce(claude, refSelection, cands, logs);
-    const b = buildBriefing(date, berlinISO(), cfg, built, { model: m, costUsd: claude.usage.costUsd });
-    writeJSON(join(dir, `${m}.json`), b);
-    Object.assign((report.models as Record<string, Record<string, unknown>>)[m]!, { usage: claude.usage, stories: logs });
+    const built = await produce(claude, refSelection, cands, logs, want);
+    const { briefing, scriptIssues } = await compose(claude, built, date, markets, logs, m);
+    briefing.meta = { ...briefing.meta!, costUsd: +claude.usage.costUsd.toFixed(4) };
+    writeJSON(join(dir, `${m}.json`), briefing);
+    Object.assign((report.models as Record<string, Record<string, unknown>>)[m]!, { usage: claude.usage, stories: logs, script: scriptIssues });
     log(`${m}: ${built.length} Meldungen, ${claude.usage.costUsd.toFixed(3)} $`);
   }
   writeJSON(join(dir, 'bericht.json'), report);
@@ -226,8 +246,8 @@ async function main(): Promise<void> {
   const [{ candidates, report }, markets] = await Promise.all([research(), fetchMarkets()]);
   if (args['check-feeds']) {
     console.log(JSON.stringify(report, null, 2));
-    console.log('Märkte:', markets ? JSON.stringify(markets.items.map(i => `${i.name} ${i.value} (${i.changePct} %, ${i.date})`)) : 'nicht verfügbar');
-    if (markets) console.log('Satz:', markets.lines[0]?.text);
+    console.log('Märkte:', markets ? JSON.stringify(markets.markets.items.map(i => `${i.name} ${i.value} (${i.changePct} %, ${i.date})`)) : 'nicht verfügbar');
+    if (markets) console.log('Sätze:', markets.lines.map(l => l.text).join(' '));
     console.log(`${candidates.length} Kandidaten, z. B.:`);
     for (const c of candidates.slice(0, 15)) console.log(`  [${c.topics.join(',')}] ${c.source}: ${c.title}`);
     return;
@@ -235,32 +255,37 @@ async function main(): Promise<void> {
   if (candidates.length < 10) throw new Error(`Nur ${candidates.length} Kandidaten gefunden, Feeds prüfen.`);
 
   if (args.compare) {
-    await compare(args.compare.split(',').map(s => s.trim()).filter(Boolean), date, candidates);
+    await compare(args.compare.split(',').map(s => s.trim()).filter(Boolean), date, candidates, markets);
     return;
   }
 
   const model = args.model ?? process.env.LAGEBILD_MODEL ?? pipelineCfg.model;
   const claude = new Claude(model, pipelineCfg.effort as 'medium');
-  log(`Auswahl mit ${model} aus ${candidates.length} Kandidaten …`);
-  const selections = await selectStories(claude, cfg, candidates, { dateLabel: dateLabel(date), yesterday: previousHeadlines(OUT, date), want: cfg.stories.max });
+  const want = wantedStories(cfg.episode.minutes);
+  log(`Auswahl mit ${model} aus ${candidates.length} Kandidaten, Ziel ${want} Meldungen für ${cfg.episode.minutes} Minuten …`);
+  const selections = await selectStories(claude, cfg, candidates, { dateLabel: dateLabel(date), yesterday: previousHeadlines(OUT, date), want, minutes: cfg.episode.minutes });
   const storyLogs: StoryLog[] = [];
-  const built = await produce(claude, selections, candidates, storyLogs);
+  const built = await produce(claude, selections, candidates, storyLogs, want);
   if (!built.length) throw new Error('Keine Meldung hat den Faktencheck bestanden.');
-  if (built.length < cfg.stories.min) log(`Achtung: nur ${built.length} Meldungen.`);
 
-  const briefing: Briefing = buildBriefing(date, berlinISO(), cfg, built, { model, costUsd: 0 });
-  if (markets) briefing.markets = markets;
+  log(`Drehbuch für ${built.length} Meldungen …`);
+  const { briefing, scriptIssues } = await compose(claude, built, date, markets, storyLogs, model);
   let tts: Record<string, unknown> = { skipped: true };
   if (!args['no-tts'] && process.env.AZURE_SPEECH_KEY && process.env.AZURE_SPEECH_REGION) {
-    tts = await synthesize(briefing, OUT, { key: process.env.AZURE_SPEECH_KEY, region: process.env.AZURE_SPEECH_REGION, voices: pipelineCfg.voices });
+    const r = await synthesizeLines(briefing.script, { key: process.env.AZURE_SPEECH_KEY, region: process.env.AZURE_SPEECH_REGION, voices: pipelineCfg.voices as Record<Role, VoiceSpec> });
+    tts = r.report;
+    if (r.clips.every((c): c is Clip => c !== null)) {
+      briefing.audio = mixEpisode(briefing.script, r.clips, OUT, `audio/${date}`);
+      log(`Folge gemischt: ${briefing.audio.dur.toFixed(0)} s`);
+    } else log('Nicht alle Zeilen vertont, keine Audiodatei (die App spricht selbst).');
   }
-  briefing.meta = { model, costUsd: +claude.usage.costUsd.toFixed(4) };
+  briefing.meta = { ...briefing.meta!, costUsd: +claude.usage.costUsd.toFixed(4) };
 
   writeJSON(dayPath(OUT, date), briefing);
   writeIndex(OUT, briefing.generated);
   const pruned = pruneAudio(OUT, date, pipelineCfg.audioDays);
-  writeJSON(join(OUT, 'logs', `${date}.json`), { date, model, candidates: candidates.length, research: report, selections, stories: storyLogs, usage: claude.usage, tts, pruned });
-  log(`Fertig: ${built.length} Meldungen, Claude-Kosten ${claude.usage.costUsd.toFixed(3)} $ (${claude.usage.calls} Aufrufe).`);
+  writeJSON(join(OUT, 'logs', `${date}.json`), { date, model, candidates: candidates.length, research: report, selections, stories: storyLogs, script: { source: briefing.meta.script, issues: scriptIssues }, usage: claude.usage, tts, pruned });
+  log(`Fertig: Folge ${briefing.episode}, ${briefing.stories.length} Meldungen (${briefing.meta.script === 'claude' ? 'Drehbuch' : 'einfache Fassung'}), Claude-Kosten ${claude.usage.costUsd.toFixed(3)} $ (${claude.usage.calls} Aufrufe).`);
   output('changed', 'true');
 }
 
