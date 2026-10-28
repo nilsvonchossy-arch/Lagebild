@@ -1,0 +1,8 @@
+{
+  "israel": [{ "name": "Gadi Eisenkot", "art": "person", "suche": "Gadi Eisenkot" }],
+  "kundl": [
+    { "name": "Kundl", "art": "ort", "suche": "Kundl" },
+    { "name": "Sandoz", "art": "organisation", "suche": "Sandoz" }
+  ],
+  "wallstreet": [{ "name": "Wall Street", "art": "ort", "suche": "Wall Street" }]
+}

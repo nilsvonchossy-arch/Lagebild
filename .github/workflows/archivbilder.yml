@@ -1,0 +1,31 @@
+# Archivbilder für die Demo-Folge holen (Wikidata → Wikimedia Commons), mit demselben Code wie der
+# tägliche Lauf (pipeline/bilder.ts). Ergebnis im Branch "demo-bilder": bilder/*.jpg und bilder.json.
+name: Archivbilder (Demo)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bilder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Bilder holen
+        run: |
+          mkdir -p out
+          node pipeline/bilder.ts --motive scripts/demo-motive.json --out out --dir bilder
+          cat out/bilder.json
+      - name: Ergebnis in Branch schreiben
+        run: |
+          cd out
+          git init -q -b demo-bilder
+          git add -A
+          git -c user.name="Lagebild" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Archivbilder Demo $(date +%F)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" demo-bilder
