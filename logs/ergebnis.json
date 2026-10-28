@@ -1,0 +1,1339 @@
+{
+ "engine": "voxcpm2",
+ "sr": 48000,
+ "dtype": "float32",
+ "cpu": "AMD EPYC 9V74 80-Core Processor, bfloat16 nativ: nein",
+ "load_tts_s": 66.9,
+ "load_whisper_s": 11.5,
+ "calc_s": 1959.7,
+ "audio_s": 97.3,
+ "rtf": 20.15,
+ "retried": 0,
+ "failed": [],
+ "lines": [
+  {
+   "i": 0,
+   "ok": true,
+   "file": "zeile-000.wav",
+   "dur": 4.95,
+   "bounds": [
+    {
+     "end": 0.2,
+     "len": 5
+    },
+    {
+     "end": 0.6,
+     "len": 7
+    },
+    {
+     "end": 2.1,
+     "len": 5
+    },
+    {
+     "end": 2.36,
+     "len": 3
+    },
+    {
+     "end": 2.92,
+     "len": 9
+    },
+    {
+     "end": 3.44,
+     "len": 3
+    },
+    {
+     "end": 4.0,
+     "len": 3
+    },
+    {
+     "end": 4.86,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 1.8,
+   "problems": [],
+   "transcript": "Guten Morgen. Heute ist Dienstag, der 27. Oktober."
+  },
+  {
+   "i": 1,
+   "ok": true,
+   "file": "zeile-001.wav",
+   "dur": 8.9,
+   "bounds": [
+    {
+     "end": 0.14,
+     "len": 3
+    },
+    {
+     "end": 0.28,
+     "len": 3
+    },
+    {
+     "end": 0.4,
+     "len": 3
+    },
+    {
+     "end": 0.6,
+     "len": 3
+    },
+    {
+     "end": 1.06,
+     "len": 10
+    },
+    {
+     "end": 1.7,
+     "len": 12
+    },
+    {
+     "end": 3.06,
+     "len": 17
+    },
+    {
+     "end": 3.22,
+     "len": 2
+    },
+    {
+     "end": 3.66,
+     "len": 7
+    },
+    {
+     "end": 4.36,
+     "len": 5
+    },
+    {
+     "end": 4.58,
+     "len": 3
+    },
+    {
+     "end": 4.74,
+     "len": 3
+    },
+    {
+     "end": 5.62,
+     "len": 14
+    },
+    {
+     "end": 5.82,
+     "len": 2
+    },
+    {
+     "end": 6.2,
+     "len": 6
+    },
+    {
+     "end": 6.32,
+     "len": 3
+    },
+    {
+     "end": 6.94,
+     "len": 11
+    },
+    {
+     "end": 7.04,
+     "len": 2
+    },
+    {
+     "end": 7.16,
+     "len": 3
+    },
+    {
+     "end": 7.36,
+     "len": 4
+    },
+    {
+     "end": 7.66,
+     "len": 7
+    },
+    {
+     "end": 8.44,
+     "len": 3
+    },
+    {
+     "end": 8.84,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.8,
+   "problems": [],
+   "transcript": "Ich hab dir das Wichtigste rausgesucht. Rekordbeteiligung in Israel. Druck auf das Penicillinwerk in Kundel und Kursgewinne an der Wall Street. Los geht's."
+  },
+  {
+   "i": 2,
+   "ok": true,
+   "file": "zeile-002.wav",
+   "dur": 5.12,
+   "bounds": [
+    {
+     "end": 0.38,
+     "len": 6
+    },
+    {
+     "end": 0.86,
+     "len": 5
+    },
+    {
+     "end": 1.16,
+     "len": 3
+    },
+    {
+     "end": 1.36,
+     "len": 3
+    },
+    {
+     "end": 1.74,
+     "len": 2
+    },
+    {
+     "end": 2.02,
+     "len": 3
+    },
+    {
+     "end": 2.28,
+     "len": 5
+    },
+    {
+     "end": 2.48,
+     "len": 5
+    },
+    {
+     "end": 3.16,
+     "len": 2
+    },
+    {
+     "end": 3.94,
+     "len": 2
+    },
+    {
+     "end": 4.24,
+     "len": 7
+    },
+    {
+     "end": 4.98,
+     "len": 11
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Israel wählt und bis 16 Uhr haben schon 55,7 Prozent abgestimmt."
+  },
+  {
+   "i": 3,
+   "ok": true,
+   "file": "zeile-003.wav",
+   "dur": 0.62,
+   "bounds": [
+    {
+     "end": 0.14,
+     "len": 3
+    },
+    {
+     "end": 0.28,
+     "len": 3
+    },
+    {
+     "end": 0.54,
+     "len": 5
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Ist das viel?"
+  },
+  {
+   "i": 4,
+   "ok": true,
+   "file": "zeile-004.wav",
+   "dur": 3.22,
+   "bounds": [
+    {
+     "end": 0.4,
+     "len": 2
+    },
+    {
+     "end": 0.6,
+     "len": 5
+    },
+    {
+     "end": 0.74,
+     "len": 3
+    },
+    {
+     "end": 0.88,
+     "len": 4
+    },
+    {
+     "end": 1.04,
+     "len": 3
+    },
+    {
+     "end": 1.2,
+     "len": 2
+    },
+    {
+     "end": 1.42,
+     "len": 5
+    },
+    {
+     "end": 1.92,
+     "len": 7
+    },
+    {
+     "end": 2.18,
+     "len": 4
+    },
+    {
+     "end": 2.36,
+     "len": 3
+    },
+    {
+     "end": 3.14,
+     "len": 12
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "So viele wie noch nie um diese Uhrzeit sagt das Wahlkomitee,"
+  },
+  {
+   "i": 5,
+   "ok": true,
+   "file": "zeile-005.wav",
+   "dur": 4.8,
+   "bounds": [
+    {
+     "end": 1.42,
+     "len": 4
+    },
+    {
+     "end": 1.96,
+     "len": 5
+    },
+    {
+     "end": 2.06,
+     "len": 2
+    },
+    {
+     "end": 2.18,
+     "len": 3
+    },
+    {
+     "end": 2.5,
+     "len": 8
+    },
+    {
+     "end": 2.86,
+     "len": 4
+    },
+    {
+     "end": 3.46,
+     "len": 2
+    },
+    {
+     "end": 4.26,
+     "len": 2
+    },
+    {
+     "end": 4.52,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "2022 waren es zur gleichen Zeit 47,5 Prozent."
+  },
+  {
+   "i": 6,
+   "ok": true,
+   "file": "zeile-006.wav",
+   "dur": 0.94,
+   "bounds": [
+    {
+     "end": 0.18,
+     "len": 3
+    },
+    {
+     "end": 0.36,
+     "len": 3
+    },
+    {
+     "end": 0.58,
+     "len": 5
+    },
+    {
+     "end": 0.8,
+     "len": 3
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Und wer tritt an?"
+  },
+  {
+   "i": 7,
+   "ok": true,
+   "file": "zeile-007.wav",
+   "dur": 3.83,
+   "bounds": [
+    {
+     "end": 0.66,
+     "len": 10
+    },
+    {
+     "end": 1.02,
+     "len": 5
+    },
+    {
+     "end": 1.26,
+     "len": 5
+    },
+    {
+     "end": 1.74,
+     "len": 7
+    },
+    {
+     "end": 2.24,
+     "len": 3
+    },
+    {
+     "end": 2.6,
+     "len": 6
+    },
+    {
+     "end": 2.82,
+     "len": 3
+    },
+    {
+     "end": 3.1,
+     "len": 4
+    },
+    {
+     "end": 3.72,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 5.9,
+   "problems": [],
+   "transcript": "Netanyahus Likud gegen Yashar. Die Partei von Gadi Eisenkot."
+  },
+  {
+   "i": 8,
+   "ok": true,
+   "file": "zeile-008.wav",
+   "dur": 2.87,
+   "bounds": [
+    {
+     "end": 0.26,
+     "len": 3
+    },
+    {
+     "end": 1.12,
+     "len": 10
+    },
+    {
+     "end": 1.5,
+     "len": 9
+    },
+    {
+     "end": 1.76,
+     "len": 2
+    },
+    {
+     "end": 2.38,
+     "len": 2
+    },
+    {
+     "end": 2.74,
+     "len": 4
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Die Wahllokale schließen um 22 Uhr."
+  },
+  {
+   "i": 9,
+   "ok": true,
+   "file": "zeile-009.wav",
+   "dur": 1.53,
+   "bounds": [
+    {
+     "end": 0.36,
+     "len": 6
+    },
+    {
+     "end": 0.7,
+     "len": 6
+    },
+    {
+     "end": 0.9,
+     "len": 4
+    },
+    {
+     "end": 1.26,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Kurzer Sprung nach Europa."
+  },
+  {
+   "i": 10,
+   "ok": true,
+   "file": "zeile-010.wav",
+   "dur": 4.75,
+   "bounds": [
+    {
+     "end": 0.46,
+     "len": 2
+    },
+    {
+     "end": 0.82,
+     "len": 5
+    },
+    {
+     "end": 0.96,
+     "len": 2
+    },
+    {
+     "end": 1.34,
+     "len": 5
+    },
+    {
+     "end": 1.6,
+     "len": 5
+    },
+    {
+     "end": 2.22,
+     "len": 7
+    },
+    {
+     "end": 2.7,
+     "len": 7
+    },
+    {
+     "end": 3.02,
+     "len": 6
+    },
+    {
+     "end": 4.02,
+     "len": 14
+    },
+    {
+     "end": 4.3,
+     "len": 5
+    },
+    {
+     "end": 4.58,
+     "len": 6
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "In Kundl in Tirol steht Europas letztes großes Penicillinwerk unter Druck."
+  },
+  {
+   "i": 11,
+   "ok": true,
+   "file": "zeile-011.wav",
+   "dur": 0.92,
+   "bounds": [
+    {
+     "end": 0.12,
+     "len": 3
+    },
+    {
+     "end": 0.44,
+     "len": 5
+    },
+    {
+     "end": 0.58,
+     "len": 3
+    },
+    {
+     "end": 0.8,
+     "len": 4
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Wie ernst ist das?"
+  },
+  {
+   "i": 12,
+   "ok": true,
+   "file": "zeile-012.wav",
+   "dur": 4.09,
+   "bounds": [
+    {
+     "end": 1.14,
+     "len": 9
+    },
+    {
+     "end": 1.64,
+     "len": 6
+    },
+    {
+     "end": 1.92,
+     "len": 5
+    },
+    {
+     "end": 2.0,
+     "len": 3
+    },
+    {
+     "end": 2.52,
+     "len": 10
+    },
+    {
+     "end": 3.12,
+     "len": 14
+    },
+    {
+     "end": 3.34,
+     "len": 5
+    },
+    {
+     "end": 4.06,
+     "len": 10
+    }
+   ],
+   "attempts": 1,
+   "cer": 1.6,
+   "problems": [],
+   "transcript": "Betreiber Sandos nennt die Produktion wirtschaftlich nicht tragfähig,"
+  },
+  {
+   "i": 13,
+   "ok": true,
+   "file": "zeile-013.wav",
+   "dur": 2.71,
+   "bounds": [
+    {
+     "end": 0.46,
+     "len": 4
+    },
+    {
+     "end": 1.0,
+     "len": 11
+    },
+    {
+     "end": 1.24,
+     "len": 5
+    },
+    {
+     "end": 1.42,
+     "len": 4
+    },
+    {
+     "end": 1.62,
+     "len": 3
+    },
+    {
+     "end": 2.24,
+     "len": 10
+    },
+    {
+     "end": 2.58,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "wenn Regierungen nicht mehr für Penicillin zahlen."
+  },
+  {
+   "i": 14,
+   "ok": true,
+   "file": "zeile-014.wav",
+   "dur": 2.35,
+   "bounds": [
+    {
+     "end": 0.38,
+     "len": 5
+    },
+    {
+     "end": 0.58,
+     "len": 3
+    },
+    {
+     "end": 1.14,
+     "len": 10
+    },
+    {
+     "end": 1.76,
+     "len": 10
+    },
+    {
+     "end": 1.94,
+     "len": 3
+    },
+    {
+     "end": 2.22,
+     "len": 6
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Grund ist günstigere Konkurrenz aus China."
+  },
+  {
+   "i": 15,
+   "ok": true,
+   "file": "zeile-015.wav",
+   "dur": 3.08,
+   "bounds": [
+    {
+     "end": 0.42,
+     "len": 7
+    },
+    {
+     "end": 0.6,
+     "len": 3
+    },
+    {
+     "end": 0.74,
+     "len": 2
+    },
+    {
+     "end": 1.08,
+     "len": 7
+    },
+    {
+     "end": 1.34,
+     "len": 4
+    },
+    {
+     "end": 1.62,
+     "len": 4
+    },
+    {
+     "end": 1.94,
+     "len": 8
+    },
+    {
+     "end": 2.42,
+     "len": 11
+    },
+    {
+     "end": 2.96,
+     "len": 12
+    }
+   ],
+   "attempts": 1,
+   "cer": 1.9,
+   "problems": [],
+   "transcript": "Sandotz hat in Brüssel eine Anti-Dumping-Beschwerde eingereicht."
+  },
+  {
+   "i": 16,
+   "ok": true,
+   "file": "zeile-016.wav",
+   "dur": 1.09,
+   "bounds": [
+    {
+     "end": 0.1,
+     "len": 3
+    },
+    {
+     "end": 0.32,
+     "len": 5
+    },
+    {
+     "end": 0.72,
+     "len": 8
+    },
+    {
+     "end": 0.94,
+     "len": 5
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Wie viele arbeiten dort?"
+  },
+  {
+   "i": 17,
+   "ok": true,
+   "file": "zeile-017.wav",
+   "dur": 1.49,
+   "bounds": [
+    {
+     "end": 0.2,
+     "len": 4
+    },
+    {
+     "end": 0.38,
+     "len": 3
+    },
+    {
+     "end": 0.88,
+     "len": 4
+    },
+    {
+     "end": 1.28,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "mehr als 2000 Menschen."
+  },
+  {
+   "i": 18,
+   "ok": true,
+   "file": "zeile-018.wav",
+   "dur": 1.09,
+   "bounds": [
+    {
+     "end": 0.18,
+     "len": 3
+    },
+    {
+     "end": 0.3,
+     "len": 2
+    },
+    {
+     "end": 0.42,
+     "len": 3
+    },
+    {
+     "end": 0.64,
+     "len": 4
+    },
+    {
+     "end": 0.88,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "und an der Wall Street."
+  },
+  {
+   "i": 19,
+   "ok": true,
+   "file": "zeile-019.wav",
+   "dur": 4.7,
+   "bounds": [
+    {
+     "end": 0.36,
+     "len": 3
+    },
+    {
+     "end": 0.56,
+     "len": 4
+    },
+    {
+     "end": 0.86,
+     "len": 6
+    },
+    {
+     "end": 1.06,
+     "len": 3
+    },
+    {
+     "end": 1.2,
+     "len": 2
+    },
+    {
+     "end": 1.56,
+     "len": 6
+    },
+    {
+     "end": 2.16,
+     "len": 9
+    },
+    {
+     "end": 2.58,
+     "len": 3
+    },
+    {
+     "end": 3.14,
+     "len": 6
+    },
+    {
+     "end": 3.32,
+     "len": 2
+    },
+    {
+     "end": 3.56,
+     "len": 1
+    },
+    {
+     "end": 4.08,
+     "len": 2
+    },
+    {
+     "end": 4.36,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Die Wall Street hat am Montag zugelegt, der Nasdaq um 0,8 Prozent."
+  },
+  {
+   "i": 20,
+   "ok": true,
+   "file": "zeile-020.wav",
+   "dur": 6.13,
+   "bounds": [
+    {
+     "end": 0.9,
+     "len": 8
+    },
+    {
+     "end": 1.18,
+     "len": 3
+    },
+    {
+     "end": 1.6,
+     "len": 2
+    },
+    {
+     "end": 2.24,
+     "len": 13
+    },
+    {
+     "end": 3.2,
+     "len": 4
+    },
+    {
+     "end": 3.38,
+     "len": 4
+    },
+    {
+     "end": 3.9,
+     "len": 10
+    },
+    {
+     "end": 4.16,
+     "len": 3
+    },
+    {
+     "end": 4.64,
+     "len": 2
+    },
+    {
+     "end": 5.46,
+     "len": 14
+    },
+    {
+     "end": 6.0,
+     "len": 10
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Getragen von KI-Nachrichten. Meta will Milliarden für KI-Infrastruktur aufnehmen."
+  },
+  {
+   "i": 21,
+   "ok": true,
+   "file": "zeile-021.wav",
+   "dur": 2.41,
+   "bounds": [
+    {
+     "end": 0.22,
+     "len": 3
+    },
+    {
+     "end": 0.66,
+     "len": 9
+    },
+    {
+     "end": 0.86,
+     "len": 3
+    },
+    {
+     "end": 1.06,
+     "len": 3
+    },
+    {
+     "end": 1.68,
+     "len": 10
+    },
+    {
+     "end": 2.28,
+     "len": 10
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Und Anthropic hat den Börsengang beantragt."
+  },
+  {
+   "i": 22,
+   "ok": true,
+   "file": "zeile-022.wav",
+   "dur": 2.75,
+   "bounds": [
+    {
+     "end": 0.64,
+     "len": 7
+    },
+    {
+     "end": 1.0,
+     "len": 3
+    },
+    {
+     "end": 2.06,
+     "len": 3
+    },
+    {
+     "end": 2.3,
+     "len": 5
+    },
+    {
+     "end": 2.6,
+     "len": 6
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Apropos KI. Was macht Apple?"
+  },
+  {
+   "i": 23,
+   "ok": true,
+   "file": "zeile-023.wav",
+   "dur": 4.07,
+   "bounds": [
+    {
+     "end": 0.76,
+     "len": 4
+    },
+    {
+     "end": 1.08,
+     "len": 4
+    },
+    {
+     "end": 1.26,
+     "len": 3
+    },
+    {
+     "end": 1.76,
+     "len": 2
+    },
+    {
+     "end": 2.16,
+     "len": 6
+    },
+    {
+     "end": 2.9,
+     "len": 12
+    },
+    {
+     "end": 3.08,
+     "len": 2
+    },
+    {
+     "end": 3.36,
+     "len": 2
+    },
+    {
+     "end": 3.68,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Neue Macs mit M6-Chip, ausgeliefert ab 6. November."
+  },
+  {
+   "i": 24,
+   "ok": true,
+   "file": "zeile-024.wav",
+   "dur": 4.25,
+   "bounds": [
+    {
+     "end": 0.22,
+     "len": 3
+    },
+    {
+     "end": 0.5,
+     "len": 6
+    },
+    {
+     "end": 0.76,
+     "len": 6
+    },
+    {
+     "end": 1.08,
+     "len": 4
+    },
+    {
+     "end": 1.34,
+     "len": 4
+    },
+    {
+     "end": 1.6,
+     "len": 5
+    },
+    {
+     "end": 1.9,
+     "len": 1
+    },
+    {
+     "end": 2.46,
+     "len": 2
+    },
+    {
+     "end": 2.66,
+     "len": 3
+    },
+    {
+     "end": 2.84,
+     "len": 2
+    },
+    {
+     "end": 3.1,
+     "len": 7
+    },
+    {
+     "end": 3.3,
+     "len": 4
+    },
+    {
+     "end": 3.44,
+     "len": 3
+    },
+    {
+     "end": 3.64,
+     "len": 4
+    },
+    {
+     "end": 4.02,
+     "len": 3
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Die Neural Engine soll laut Apple 1,9 mal so schnell sein wie beim M5."
+  },
+  {
+   "i": 25,
+   "ok": true,
+   "file": "zeile-025.wav",
+   "dur": 0.69,
+   "bounds": [
+    {
+     "end": 0.16,
+     "len": 3
+    },
+    {
+     "end": 0.34,
+     "len": 4
+    },
+    {
+     "end": 0.44,
+     "len": 2
+    },
+    {
+     "end": 0.6,
+     "len": 5
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Was hast du noch?"
+  },
+  {
+   "i": 26,
+   "ok": true,
+   "file": "zeile-026.wav",
+   "dur": 4.76,
+   "bounds": [
+    {
+     "end": 0.56,
+     "len": 10
+    },
+    {
+     "end": 0.72,
+     "len": 4
+    },
+    {
+     "end": 0.84,
+     "len": 3
+    },
+    {
+     "end": 1.6,
+     "len": 15
+    },
+    {
+     "end": 1.82,
+     "len": 2
+    },
+    {
+     "end": 2.4,
+     "len": 12
+    },
+    {
+     "end": 2.92,
+     "len": 9
+    },
+    {
+     "end": 3.1,
+     "len": 3
+    },
+    {
+     "end": 3.62,
+     "len": 2
+    },
+    {
+     "end": 4.26,
+     "len": 8
+    },
+    {
+     "end": 4.6,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Frankreich will die Eingangsklassen an öffentlichen Gymnasien bei 28 Schülern deckeln."
+  },
+  {
+   "i": 27,
+   "ok": true,
+   "file": "zeile-027.wav",
+   "dur": 5.41,
+   "bounds": [
+    {
+     "end": 0.66,
+     "len": 3
+    },
+    {
+     "end": 1.92,
+     "len": 21
+    },
+    {
+     "end": 2.66,
+     "len": 10
+    },
+    {
+     "end": 2.86,
+     "len": 4
+    },
+    {
+     "end": 3.06,
+     "len": 3
+    },
+    {
+     "end": 4.3,
+     "len": 4
+    },
+    {
+     "end": 5.02,
+     "len": 11
+    },
+    {
+     "end": 5.28,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Die Studienplatzplattform Parcoursup soll bis 2028 abgeschafft werden."
+  },
+  {
+   "i": 28,
+   "ok": true,
+   "file": "zeile-028.wav",
+   "dur": 3.01,
+   "bounds": [
+    {
+     "end": 0.18,
+     "len": 3
+    },
+    {
+     "end": 0.44,
+     "len": 5
+    },
+    {
+     "end": 0.58,
+     "len": 3
+    },
+    {
+     "end": 0.86,
+     "len": 6
+    },
+    {
+     "end": 1.66,
+     "len": 3
+    },
+    {
+     "end": 1.92,
+     "len": 5
+    },
+    {
+     "end": 2.08,
+     "len": 4
+    },
+    {
+     "end": 2.24,
+     "len": 3
+    },
+    {
+     "end": 2.4,
+     "len": 3
+    },
+    {
+     "end": 2.82,
+     "len": 10
+    }
+   ],
+   "attempts": 1,
+   "cer": 2.4,
+   "problems": [],
+   "transcript": "Das war's für heute. Ich halte dich auf dem Laufenden."
+  },
+  {
+   "i": 29,
+   "ok": true,
+   "file": "zeile-029.wav",
+   "dur": 0.72,
+   "bounds": [
+    {
+     "end": 0.18,
+     "len": 3
+    },
+    {
+     "end": 0.54,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Bis morgen."
+  }
+ ]
+}

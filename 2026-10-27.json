@@ -1,0 +1,1737 @@
+{
+ "schema": 2,
+ "date": "2026-10-27",
+ "generated": "2026-10-27T17:40:00+01:00",
+ "note": "Demo-Folge mit den Meldungen vom 27.10.2026, aus den verlinkten Quellen. Ohne Audiodatei spricht die Systemstimme des Geräts. Die täglichen Folgen kommen, sobald die Pipeline läuft.",
+ "episode": 1,
+ "tone": "assistent",
+ "categories": [
+  {
+   "id": "welt",
+   "name": "Weltpolitik",
+   "color": "#ff7a3d"
+  },
+  {
+   "id": "boerse",
+   "name": "Wirtschaft & Börse",
+   "color": "#f2bf45"
+  },
+  {
+   "id": "tech",
+   "name": "Tech & KI",
+   "color": "#4cc9ff"
+  },
+  {
+   "id": "oesterreich",
+   "name": "Österreich",
+   "color": "#ff4d5e"
+  },
+  {
+   "id": "europa",
+   "name": "Europa",
+   "color": "#8f9cff"
+  }
+ ],
+ "stories": [
+  {
+   "id": "israel",
+   "category": "welt",
+   "topic": "Weltpolitik",
+   "country": "ISR",
+   "label": "ISRAEL",
+   "flag": "🇮🇱",
+   "lon": 35.21,
+   "lat": 31.77,
+   "zoom": 10,
+   "headline": "[Israel] wählt mit [Rekord]beteiligung",
+   "brief": "Bis 16 Uhr Ortszeit gaben 55,7 % ihre Stimme ab, so viele wie nie zuvor zu dieser Uhrzeit (2022: 47,5 %). Netanjahus Likud tritt gegen Gadi Eisenkots Partei Yashar an. Die Wahllokale schließen um 22 Uhr.",
+   "source": {
+    "name": "Times of Israel",
+    "url": "https://timesofisrael.com/liveblog-october-27-2026",
+    "date": "2026-10-27"
+   },
+   "short": "Rekordbeteiligung in Israel",
+   "format": "aufmacher",
+   "figure": {
+    "value": 55.7,
+    "dec": 1,
+    "suffix": " %",
+    "label": "Wahlbeteiligung um 16 Uhr"
+   },
+   "facts": [
+    {
+     "id": "A1",
+     "text": "Israel wählt ein neues Parlament, die Knesset."
+    },
+    {
+     "id": "A2",
+     "text": "Bis 16 Uhr Ortszeit lag die Wahlbeteiligung bei 55,7 Prozent."
+    },
+    {
+     "id": "A3",
+     "text": "Laut Wahlkomitee ist das der höchste Wert zu dieser Uhrzeit seit Beginn der Messungen 1973."
+    },
+    {
+     "id": "A4",
+     "text": "2022 lag die Wahlbeteiligung zur gleichen Zeit bei 47,5 Prozent."
+    },
+    {
+     "id": "A5",
+     "text": "Netanjahus Likud tritt gegen Gadi Eisenkots Partei Yashar an; Eisenkot ist der Hauptherausforderer."
+    },
+    {
+     "id": "A6",
+     "text": "Die Wahllokale schließen um 22 Uhr."
+    }
+   ],
+   "symbol": "wahl",
+   "comparison": {
+    "label": "Wahlbeteiligung bis 16 Uhr",
+    "unit": " %",
+    "dec": 1,
+    "items": [
+     {
+      "label": "jetzt",
+      "value": 55.7
+     },
+     {
+      "label": "2022",
+      "value": 47.5
+     }
+    ],
+    "facts": [
+     "A2",
+     "A4"
+    ]
+   },
+   "deadline": {
+    "time": "22:00",
+    "label": "Wahllokale schließen",
+    "facts": [
+     "A6"
+    ]
+   },
+   "images": [
+    {
+     "src": "bilder/a50e41d40bf4.jpg",
+     "w": 960,
+     "h": 1073,
+     "motif": "Gadi Eisenkot",
+     "match": "Eisenkot",
+     "author": "יהב טרודלר (Yahav Trudler - Yahav Studio)",
+     "license": "CC BY-SA 3.0",
+     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Gadi_Eisenkot_2_(cropped_-_WD).jpg"
+    }
+   ]
+  },
+  {
+   "id": "kundl",
+   "category": "oesterreich",
+   "topic": "Österreich",
+   "country": "AUT",
+   "label": "KUNDL · TIROL",
+   "flag": "🇦🇹",
+   "lon": 11.99,
+   "lat": 47.47,
+   "zoom": 10,
+   "headline": "Europas letztes [Penicillin]-Werk unter [Druck]",
+   "brief": "Sandoz nennt die Produktion in Kundl „wirtschaftlich nicht tragfähig“, wenn Regierungen nicht mehr für Penicillin zahlen. Grund ist günstigere Konkurrenz aus China; Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht. Am Standort arbeiten mehr als 2.000 Menschen.",
+   "source": {
+    "name": "APA/Reuters",
+    "url": "https://www.vienna.at/europas-letztes-penicillin-werk-unter-druck/10571465",
+    "date": "2026-10-21"
+   },
+   "short": "Druck auf das Penicillin-Werk in Kundl",
+   "format": "meldung",
+   "figure": {
+    "value": 2000,
+    "dec": 0,
+    "suffix": "+",
+    "label": "Beschäftigte in Kundl"
+   },
+   "facts": [
+    {
+     "id": "B1",
+     "text": "In Kundl in Tirol steht Europas letztes großes Penicillin-Werk unter Druck."
+    },
+    {
+     "id": "B2",
+     "text": "Betreiber Sandoz nennt die Produktion wirtschaftlich nicht tragfähig, wenn Regierungen nicht mehr für Penicillin zahlen."
+    },
+    {
+     "id": "B3",
+     "text": "Grund ist günstigere Konkurrenz aus China."
+    },
+    {
+     "id": "B4",
+     "text": "Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht."
+    },
+    {
+     "id": "B5",
+     "text": "Am Standort arbeiten mehr als 2.000 Menschen."
+    }
+   ],
+   "symbol": "medizin",
+   "images": [
+    {
+     "src": "bilder/3803c6bc5e95.jpg",
+     "w": 960,
+     "h": 720,
+     "motif": "Kundl",
+     "match": "Kundl",
+     "author": "Sabs14",
+     "license": "CC BY-SA 3.0",
+     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+     "page": "https://commons.wikimedia.org/wiki/File:Kundl_view_from_hahntax.JPG"
+    }
+   ]
+  },
+  {
+   "id": "wallstreet",
+   "category": "boerse",
+   "topic": "Wirtschaft & Börse",
+   "country": "USA",
+   "label": "NEW YORK",
+   "flag": "🇺🇸",
+   "lon": -74.01,
+   "lat": 40.71,
+   "zoom": 2.6,
+   "headline": "[KI]-Meldungen treiben die [Wall Street]",
+   "brief": "Am Montag stieg der Nasdaq um 0,8 % auf 26.169 Punkte, der S&P 500 um 0,7 %. Technologiewerte legten 1,7 % zu. Auslöser waren KI-Nachrichten: Meta will 95 Mrd. Dollar für KI-Infrastruktur aufnehmen, Anthropic hat den Börsengang beantragt.",
+   "source": {
+    "name": "Zacks via Yahoo Finance",
+    "url": "https://finance.yahoo.com/markets/stocks/articles/stock-market-news-oct-27-072700640.html",
+    "date": "2026-10-27"
+   },
+   "short": "Kursgewinne an der Wall Street",
+   "format": "meldung",
+   "figure": {
+    "value": 0.8,
+    "dec": 1,
+    "prefix": "+",
+    "suffix": " %",
+    "label": "Nasdaq am Montag"
+   },
+   "facts": [
+    {
+     "id": "C1",
+     "text": "Die Wall Street hat am Montag zugelegt."
+    },
+    {
+     "id": "C2",
+     "text": "Der Nasdaq stieg um 0,8 Prozent auf 26.169 Punkte."
+    },
+    {
+     "id": "C3",
+     "text": "Der S&P 500 stieg um 0,7 Prozent, Technologiewerte legten um 1,7 Prozent zu."
+    },
+    {
+     "id": "C4",
+     "text": "Auslöser waren KI-Nachrichten: Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen."
+    },
+    {
+     "id": "C5",
+     "text": "Anthropic hat den Börsengang beantragt."
+    }
+   ],
+   "symbol": "boerse",
+   "comparison": {
+    "label": "Kursplus am Montag",
+    "unit": " %",
+    "dec": 1,
+    "items": [
+     {
+      "label": "Nasdaq",
+      "value": 0.8
+     },
+     {
+      "label": "S&P 500",
+      "value": 0.7
+     },
+     {
+      "label": "Technologiewerte",
+      "value": 1.7
+     }
+    ],
+    "facts": [
+     "C2",
+     "C3"
+    ]
+   }
+  },
+  {
+   "id": "apple",
+   "category": "tech",
+   "topic": "Tech & KI",
+   "country": "USA",
+   "label": "CUPERTINO",
+   "flag": "🇺🇸",
+   "lon": -122.03,
+   "lat": 37.32,
+   "zoom": 2.6,
+   "headline": "[Apple] bringt Macs mit [M6]-Chip",
+   "brief": "Der neue iMac kostet ab 1.499 Dollar, das 14-Zoll-MacBook-Pro ab 1.999 Dollar. Ausgeliefert wird ab 6. November. Die Neural Engine soll laut Apple 1,9-mal so schnell sein wie beim M5.",
+   "source": {
+    "name": "Apple via AI Weekly",
+    "url": "https://aiweekly.co/ai-news-today",
+    "date": "2026-10-27"
+   },
+   "short": "neue Macs von Apple",
+   "format": "meldung",
+   "figure": {
+    "value": 1.9,
+    "dec": 1,
+    "suffix": "×",
+    "label": "Neural Engine vs. M5, Apple-Angabe"
+   },
+   "facts": [
+    {
+     "id": "D1",
+     "text": "Apple bringt neue Macs mit M6-Chip: einen iMac ab 1.499 Dollar und ein 14-Zoll-MacBook-Pro ab 1.999 Dollar."
+    },
+    {
+     "id": "D2",
+     "text": "Ausgeliefert wird ab 6. November."
+    },
+    {
+     "id": "D3",
+     "text": "Die Neural Engine für KI-Aufgaben soll laut Apple 1,9-mal so schnell sein wie beim M5."
+    }
+   ],
+   "symbol": "chip",
+   "deadline": {
+    "date": "2026-11-06",
+    "label": "Auslieferung der neuen Macs",
+    "facts": [
+     "D2"
+    ]
+   }
+  },
+  {
+   "id": "frankreich",
+   "category": "europa",
+   "topic": "Europa",
+   "country": "FRA",
+   "label": "FRANKREICH",
+   "flag": "🇫🇷",
+   "lon": 2.35,
+   "lat": 48.86,
+   "zoom": 6,
+   "headline": "[Frankreich] deckelt Klassen bei [28] Schülern",
+   "brief": "Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an. Eingangsklassen an öffentlichen Gymnasien sollen höchstens 28 Schüler haben. Die Vergabeplattform Parcoursup soll bis 2028 abgeschafft werden.",
+   "source": {
+    "name": "WSJ/AP via Just Security",
+    "url": "https://www.justsecurity.org/162113/early-edition-october-27-2026/",
+    "date": "2026-10-27"
+   },
+   "short": "kleinere Klassen in Frankreich",
+   "format": "kurz",
+   "figure": {
+    "value": 28,
+    "dec": 0,
+    "label": "Schüler pro Eingangsklasse, maximal"
+   },
+   "facts": [
+    {
+     "id": "E1",
+     "text": "Eingangsklassen an öffentlichen Gymnasien in Frankreich sollen höchstens 28 Schüler haben."
+    },
+    {
+     "id": "E2",
+     "text": "Die Vergabeplattform für Studienplätze, Parcoursup, soll bis 2028 abgeschafft werden."
+    },
+    {
+     "id": "E3",
+     "text": "Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an."
+    }
+   ],
+   "symbol": "bildung"
+  }
+ ],
+ "script": [
+  {
+   "role": "LEITUNG",
+   "text": "Guten Morgen! Heute ist Dienstag, der 27. Oktober.",
+   "kind": "begruessung",
+   "audio": {
+    "at": 0.8,
+    "dur": 4.954,
+    "words": [
+     [
+      0.2,
+      0.116
+     ],
+     [
+      0.6,
+      0.279
+     ],
+     [
+      2.1,
+      0.395
+     ],
+     [
+      2.36,
+      0.465
+     ],
+     [
+      2.92,
+      0.674
+     ],
+     [
+      3.44,
+      0.744
+     ],
+     [
+      4,
+      0.814
+     ],
+     [
+      4.86,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Ich hab dir das Wichtigste rausgesucht: Rekordbeteiligung in Israel, Druck auf das Penicillin-Werk in Kundl und Kursgewinne an der Wall Street. Los geht's.",
+   "kind": "begruessung",
+   "audio": {
+    "at": 6.104,
+    "dur": 8.9,
+    "words": [
+     [
+      0.14,
+      0.023
+     ],
+     [
+      0.28,
+      0.045
+     ],
+     [
+      0.4,
+      0.068
+     ],
+     [
+      0.6,
+      0.09
+     ],
+     [
+      1.06,
+      0.165
+     ],
+     [
+      1.7,
+      0.256
+     ],
+     [
+      3.06,
+      0.383
+     ],
+     [
+      3.22,
+      0.398
+     ],
+     [
+      3.66,
+      0.451
+     ],
+     [
+      4.36,
+      0.489
+     ],
+     [
+      4.58,
+      0.511
+     ],
+     [
+      4.74,
+      0.534
+     ],
+     [
+      5.62,
+      0.639
+     ],
+     [
+      5.82,
+      0.654
+     ],
+     [
+      6.2,
+      0.699
+     ],
+     [
+      6.32,
+      0.722
+     ],
+     [
+      6.94,
+      0.805
+     ],
+     [
+      7.04,
+      0.82
+     ],
+     [
+      7.16,
+      0.842
+     ],
+     [
+      7.36,
+      0.872
+     ],
+     [
+      7.66,
+      0.925
+     ],
+     [
+      8.44,
+      0.947
+     ],
+     [
+      8.84,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "Israel wählt – und bis 16 Uhr haben schon 55,7 Prozent abgestimmt.",
+   "story": "israel",
+   "kind": "fakt",
+   "facts": [
+    "A1",
+    "A2"
+   ],
+   "audio": {
+    "at": 15.904,
+    "dur": 5.124,
+    "words": [
+     [
+      0.38,
+      0.111
+     ],
+     [
+      0.86,
+      0.204
+     ],
+     [
+      1.16,
+      0.259
+     ],
+     [
+      1.36,
+      0.315
+     ],
+     [
+      1.74,
+      0.352
+     ],
+     [
+      2.02,
+      0.407
+     ],
+     [
+      2.28,
+      0.5
+     ],
+     [
+      2.48,
+      0.593
+     ],
+     [
+      3.16,
+      0.63
+     ],
+     [
+      3.94,
+      0.667
+     ],
+     [
+      4.24,
+      0.796
+     ],
+     [
+      4.98,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Ist das viel?",
+   "story": "israel",
+   "kind": "frage",
+   "audio": {
+    "at": 21.528,
+    "dur": 0.624,
+    "words": [
+     [
+      0.14,
+      0.273
+     ],
+     [
+      0.28,
+      0.545
+     ],
+     [
+      0.54,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "So viele wie noch nie um diese Uhrzeit, sagt das Wahlkomitee.",
+   "story": "israel",
+   "kind": "fakt",
+   "facts": [
+    "A3"
+   ],
+   "audio": {
+    "at": 22.453,
+    "dur": 3.216,
+    "words": [
+     [
+      0.4,
+      0.04
+     ],
+     [
+      0.6,
+      0.14
+     ],
+     [
+      0.74,
+      0.2
+     ],
+     [
+      0.88,
+      0.28
+     ],
+     [
+      1.04,
+      0.34
+     ],
+     [
+      1.2,
+      0.38
+     ],
+     [
+      1.42,
+      0.48
+     ],
+     [
+      1.92,
+      0.62
+     ],
+     [
+      2.18,
+      0.7
+     ],
+     [
+      2.36,
+      0.76
+     ],
+     [
+      3.14,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "2022 waren es zur gleichen Zeit 47,5 Prozent.",
+   "story": "israel",
+   "kind": "fakt",
+   "facts": [
+    "A4"
+   ],
+   "audio": {
+    "at": 26.019,
+    "dur": 4.8,
+    "words": [
+     [
+      1.42,
+      0.105
+     ],
+     [
+      1.96,
+      0.237
+     ],
+     [
+      2.06,
+      0.289
+     ],
+     [
+      2.18,
+      0.368
+     ],
+     [
+      2.5,
+      0.579
+     ],
+     [
+      2.86,
+      0.684
+     ],
+     [
+      3.46,
+      0.737
+     ],
+     [
+      4.26,
+      0.789
+     ],
+     [
+      4.52,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Und wer tritt an?",
+   "story": "israel",
+   "kind": "frage",
+   "audio": {
+    "at": 31.319,
+    "dur": 0.937,
+    "words": [
+     [
+      0.18,
+      0.214
+     ],
+     [
+      0.36,
+      0.429
+     ],
+     [
+      0.58,
+      0.786
+     ],
+     [
+      0.8,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "Netanjahus Likud gegen Yashar, die Partei von Gadi Eisenkot.",
+   "say": "Netanjahus Likud gegen Jaschar, die Partei von Gadi Eisenkot.",
+   "story": "israel",
+   "kind": "fakt",
+   "facts": [
+    "A5"
+   ],
+   "audio": {
+    "at": 32.556,
+    "dur": 3.829,
+    "words": [
+     [
+      0.66,
+      0.192
+     ],
+     [
+      1.02,
+      0.288
+     ],
+     [
+      1.26,
+      0.385
+     ],
+     [
+      1.74,
+      0.519
+     ],
+     [
+      2.24,
+      0.577
+     ],
+     [
+      2.6,
+      0.692
+     ],
+     [
+      2.82,
+      0.75
+     ],
+     [
+      3.1,
+      0.827
+     ],
+     [
+      3.72,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Die Wahllokale schließen um 22 Uhr.",
+   "story": "israel",
+   "kind": "fakt",
+   "facts": [
+    "A6"
+   ],
+   "audio": {
+    "at": 36.885,
+    "dur": 2.866,
+    "words": [
+     [
+      0.26,
+      0.1
+     ],
+     [
+      1.12,
+      0.433
+     ],
+     [
+      1.5,
+      0.733
+     ],
+     [
+      1.76,
+      0.8
+     ],
+     [
+      2.38,
+      0.867
+     ],
+     [
+      2.74,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Kurzer Sprung nach Europa?",
+   "story": "kundl",
+   "kind": "frage",
+   "audio": {
+    "at": 40.651,
+    "dur": 1.534,
+    "words": [
+     [
+      0.36,
+      0.261
+     ],
+     [
+      0.7,
+      0.522
+     ],
+     [
+      0.9,
+      0.696
+     ],
+     [
+      1.26,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "In Kundl in Tirol steht Europas letztes großes Penicillin-Werk unter Druck.",
+   "story": "kundl",
+   "kind": "fakt",
+   "facts": [
+    "B1"
+   ],
+   "audio": {
+    "at": 42.485,
+    "dur": 4.746,
+    "words": [
+     [
+      0.46,
+      0.031
+     ],
+     [
+      0.82,
+      0.109
+     ],
+     [
+      0.96,
+      0.141
+     ],
+     [
+      1.34,
+      0.219
+     ],
+     [
+      1.6,
+      0.297
+     ],
+     [
+      2.22,
+      0.406
+     ],
+     [
+      2.7,
+      0.516
+     ],
+     [
+      3.02,
+      0.609
+     ],
+     [
+      4.02,
+      0.828
+     ],
+     [
+      4.3,
+      0.906
+     ],
+     [
+      4.58,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Wie ernst ist das?",
+   "story": "kundl",
+   "kind": "frage",
+   "audio": {
+    "at": 47.731,
+    "dur": 0.917,
+    "words": [
+     [
+      0.12,
+      0.2
+     ],
+     [
+      0.44,
+      0.533
+     ],
+     [
+      0.58,
+      0.733
+     ],
+     [
+      0.8,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "Betreiber Sandoz nennt die Produktion wirtschaftlich nicht tragfähig,",
+   "story": "kundl",
+   "kind": "fakt",
+   "facts": [
+    "B2"
+   ],
+   "audio": {
+    "at": 48.948,
+    "dur": 4.091,
+    "words": [
+     [
+      1.14,
+      0.145
+     ],
+     [
+      1.64,
+      0.242
+     ],
+     [
+      1.92,
+      0.323
+     ],
+     [
+      2,
+      0.371
+     ],
+     [
+      2.52,
+      0.532
+     ],
+     [
+      3.12,
+      0.758
+     ],
+     [
+      3.34,
+      0.839
+     ],
+     [
+      4.06,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "wenn Regierungen nicht mehr für Penicillin zahlen.",
+   "story": "kundl",
+   "kind": "fakt",
+   "facts": [
+    "B2"
+   ],
+   "audio": {
+    "at": 53.159,
+    "dur": 2.713,
+    "words": [
+     [
+      0.46,
+      0.091
+     ],
+     [
+      1,
+      0.341
+     ],
+     [
+      1.24,
+      0.455
+     ],
+     [
+      1.42,
+      0.545
+     ],
+     [
+      1.62,
+      0.614
+     ],
+     [
+      2.24,
+      0.841
+     ],
+     [
+      2.58,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Grund ist günstigere Konkurrenz aus China.",
+   "story": "kundl",
+   "kind": "fakt",
+   "facts": [
+    "B3"
+   ],
+   "audio": {
+    "at": 56.371,
+    "dur": 2.353,
+    "words": [
+     [
+      0.38,
+      0.135
+     ],
+     [
+      0.58,
+      0.216
+     ],
+     [
+      1.14,
+      0.486
+     ],
+     [
+      1.76,
+      0.757
+     ],
+     [
+      1.94,
+      0.838
+     ],
+     [
+      2.22,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht.",
+   "story": "kundl",
+   "kind": "fakt",
+   "facts": [
+    "B4"
+   ],
+   "audio": {
+    "at": 59.074,
+    "dur": 3.077,
+    "words": [
+     [
+      0.42,
+      0.121
+     ],
+     [
+      0.6,
+      0.172
+     ],
+     [
+      0.74,
+      0.207
+     ],
+     [
+      1.08,
+      0.328
+     ],
+     [
+      1.34,
+      0.397
+     ],
+     [
+      1.62,
+      0.466
+     ],
+     [
+      1.94,
+      0.603
+     ],
+     [
+      2.42,
+      0.793
+     ],
+     [
+      2.96,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Wie viele arbeiten dort?",
+   "story": "kundl",
+   "kind": "frage",
+   "audio": {
+    "at": 62.651,
+    "dur": 1.095,
+    "words": [
+     [
+      0.1,
+      0.143
+     ],
+     [
+      0.32,
+      0.381
+     ],
+     [
+      0.72,
+      0.762
+     ],
+     [
+      0.94,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Mehr als 2.000 Menschen.",
+   "story": "kundl",
+   "kind": "fakt",
+   "facts": [
+    "B5"
+   ],
+   "audio": {
+    "at": 64.046,
+    "dur": 1.491,
+    "words": [
+     [
+      0.2,
+      0.2
+     ],
+     [
+      0.38,
+      0.35
+     ],
+     [
+      0.88,
+      0.55
+     ],
+     [
+      1.28,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Und an der Wall Street?",
+   "story": "wallstreet",
+   "kind": "frage",
+   "audio": {
+    "at": 66.437,
+    "dur": 1.089,
+    "words": [
+     [
+      0.18,
+      0.158
+     ],
+     [
+      0.3,
+      0.263
+     ],
+     [
+      0.42,
+      0.421
+     ],
+     [
+      0.64,
+      0.632
+     ],
+     [
+      0.88,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "Die Wall Street hat am Montag zugelegt, der Nasdaq um 0,8 Prozent.",
+   "story": "wallstreet",
+   "kind": "fakt",
+   "facts": [
+    "C1",
+    "C2"
+   ],
+   "audio": {
+    "at": 67.826,
+    "dur": 4.701,
+    "words": [
+     [
+      0.36,
+      0.055
+     ],
+     [
+      0.56,
+      0.127
+     ],
+     [
+      0.86,
+      0.236
+     ],
+     [
+      1.06,
+      0.291
+     ],
+     [
+      1.2,
+      0.327
+     ],
+     [
+      1.56,
+      0.436
+     ],
+     [
+      2.16,
+      0.6
+     ],
+     [
+      2.58,
+      0.655
+     ],
+     [
+      3.14,
+      0.764
+     ],
+     [
+      3.32,
+      0.8
+     ],
+     [
+      3.56,
+      0.818
+     ],
+     [
+      4.08,
+      0.855
+     ],
+     [
+      4.36,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Getragen von KI-Nachrichten: Meta will Milliarden für KI-Infrastruktur aufnehmen,",
+   "story": "wallstreet",
+   "kind": "fakt",
+   "facts": [
+    "C4"
+   ],
+   "audio": {
+    "at": 73.027,
+    "dur": 6.13,
+    "words": [
+     [
+      0.9,
+      0.11
+     ],
+     [
+      1.18,
+      0.151
+     ],
+     [
+      1.6,
+      0.178
+     ],
+     [
+      2.24,
+      0.356
+     ],
+     [
+      3.2,
+      0.411
+     ],
+     [
+      3.38,
+      0.466
+     ],
+     [
+      3.9,
+      0.603
+     ],
+     [
+      4.16,
+      0.644
+     ],
+     [
+      4.64,
+      0.671
+     ],
+     [
+      5.46,
+      0.863
+     ],
+     [
+      6,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "und Anthropic hat den Börsengang beantragt.",
+   "story": "wallstreet",
+   "kind": "fakt",
+   "facts": [
+    "C5"
+   ],
+   "audio": {
+    "at": 79.277,
+    "dur": 2.411,
+    "words": [
+     [
+      0.22,
+      0.079
+     ],
+     [
+      0.66,
+      0.316
+     ],
+     [
+      0.86,
+      0.395
+     ],
+     [
+      1.06,
+      0.474
+     ],
+     [
+      1.68,
+      0.737
+     ],
+     [
+      2.28,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Apropos KI – was macht Apple?",
+   "story": "apple",
+   "kind": "frage",
+   "audio": {
+    "at": 82.588,
+    "dur": 2.753,
+    "words": [
+     [
+      0.64,
+      0.292
+     ],
+     [
+      1,
+      0.417
+     ],
+     [
+      2.06,
+      0.542
+     ],
+     [
+      2.3,
+      0.75
+     ],
+     [
+      2.6,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "Neue Macs mit M6-Chip, ausgeliefert ab 6. November.",
+   "story": "apple",
+   "kind": "fakt",
+   "facts": [
+    "D1",
+    "D2"
+   ],
+   "audio": {
+    "at": 85.641,
+    "dur": 4.075,
+    "words": [
+     [
+      0.76,
+      0.091
+     ],
+     [
+      1.08,
+      0.182
+     ],
+     [
+      1.26,
+      0.25
+     ],
+     [
+      1.76,
+      0.295
+     ],
+     [
+      2.16,
+      0.432
+     ],
+     [
+      2.9,
+      0.705
+     ],
+     [
+      3.08,
+      0.75
+     ],
+     [
+      3.36,
+      0.795
+     ],
+     [
+      3.68,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Die Neural Engine soll laut Apple 1,9-mal so schnell sein wie beim M5.",
+   "story": "apple",
+   "kind": "fakt",
+   "facts": [
+    "D3"
+   ],
+   "audio": {
+    "at": 90.216,
+    "dur": 4.254,
+    "words": [
+     [
+      0.22,
+      0.053
+     ],
+     [
+      0.5,
+      0.158
+     ],
+     [
+      0.76,
+      0.263
+     ],
+     [
+      1.08,
+      0.333
+     ],
+     [
+      1.34,
+      0.404
+     ],
+     [
+      1.6,
+      0.491
+     ],
+     [
+      1.9,
+      0.509
+     ],
+     [
+      2.46,
+      0.544
+     ],
+     [
+      2.66,
+      0.596
+     ],
+     [
+      2.84,
+      0.632
+     ],
+     [
+      3.1,
+      0.754
+     ],
+     [
+      3.3,
+      0.825
+     ],
+     [
+      3.44,
+      0.877
+     ],
+     [
+      3.64,
+      0.947
+     ],
+     [
+      4.02,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Was hast du noch?",
+   "story": "frankreich",
+   "kind": "frage",
+   "audio": {
+    "at": 95.369,
+    "dur": 0.688,
+    "words": [
+     [
+      0.16,
+      0.214
+     ],
+     [
+      0.34,
+      0.5
+     ],
+     [
+      0.44,
+      0.643
+     ],
+     [
+      0.6,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "Frankreich will die Eingangsklassen an öffentlichen Gymnasien bei 28 Schülern deckeln.",
+   "story": "frankreich",
+   "kind": "fakt",
+   "facts": [
+    "E1"
+   ],
+   "audio": {
+    "at": 96.357,
+    "dur": 4.76,
+    "words": [
+     [
+      0.56,
+      0.132
+     ],
+     [
+      0.72,
+      0.184
+     ],
+     [
+      0.84,
+      0.224
+     ],
+     [
+      1.6,
+      0.421
+     ],
+     [
+      1.82,
+      0.447
+     ],
+     [
+      2.4,
+      0.605
+     ],
+     [
+      2.92,
+      0.724
+     ],
+     [
+      3.1,
+      0.763
+     ],
+     [
+      3.62,
+      0.789
+     ],
+     [
+      4.26,
+      0.895
+     ],
+     [
+      4.6,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Die Studienplatz-Plattform Parcoursup soll bis 2028 abgeschafft werden.",
+   "story": "frankreich",
+   "kind": "fakt",
+   "facts": [
+    "E2"
+   ],
+   "audio": {
+    "at": 101.618,
+    "dur": 5.409,
+    "words": [
+     [
+      0.66,
+      0.048
+     ],
+     [
+      1.92,
+      0.381
+     ],
+     [
+      2.66,
+      0.54
+     ],
+     [
+      2.86,
+      0.603
+     ],
+     [
+      3.06,
+      0.651
+     ],
+     [
+      4.3,
+      0.714
+     ],
+     [
+      5.02,
+      0.889
+     ],
+     [
+      5.28,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Das war's für heute. Ich halt dich auf dem Laufenden.",
+   "kind": "abschluss",
+   "audio": {
+    "at": 107.627,
+    "dur": 3.005,
+    "words": [
+     [
+      0.18,
+      0.067
+     ],
+     [
+      0.44,
+      0.178
+     ],
+     [
+      0.58,
+      0.244
+     ],
+     [
+      0.86,
+      0.378
+     ],
+     [
+      1.66,
+      0.444
+     ],
+     [
+      1.92,
+      0.556
+     ],
+     [
+      2.08,
+      0.644
+     ],
+     [
+      2.24,
+      0.711
+     ],
+     [
+      2.4,
+      0.778
+     ],
+     [
+      2.82,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "role": "LAGE",
+   "text": "Bis morgen!",
+   "kind": "abschluss",
+   "audio": {
+    "at": 110.982,
+    "dur": 0.717,
+    "words": [
+     [
+      0.18,
+      0.3
+     ],
+     [
+      0.54,
+      1
+     ]
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "src": "audio/2026-10-27/folge.mp3",
+  "voice": "audio/2026-10-27/folge-stimme.mp3",
+  "dur": 113.5
+ }
+}

@@ -1,0 +1,14 @@
+{
+ "engine": "voxcpm2",
+ "sr": 48000,
+ "dtype": "float32",
+ "cpu": "AMD EPYC 9V74 80-Core Processor, bfloat16 nativ: nein",
+ "load_tts_s": 66.9,
+ "load_whisper_s": 11.5,
+ "calc_s": 1959.7,
+ "audio_s": 97.3,
+ "rtf": 20.15,
+ "retried": 0,
+ "failed": [],
+ "problems": []
+}
