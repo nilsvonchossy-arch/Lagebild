@@ -38,7 +38,7 @@
     "seed": 7,
     "dtype": "float32",
     "maxMinutes": 190,
-    "mode": "fortsetzung",
+    "mode": "steuerbar",
     "moods": {
       "neutral": "natural, conversational",
       "neugierig": "curious, engaged",
