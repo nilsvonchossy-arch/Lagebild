@@ -53,8 +53,8 @@ export default defineConfig({
             options: { cacheName: 'lagebild-daten', networkTimeoutSeconds: 4, expiration: { maxEntries: 60 } }
           },
           {
-            // Sprachaufnahmen ändern sich nie; Range-Anfragen von Safari aus dem Cache bedienen
-            urlPattern: ({ url }) => url.pathname.includes('/data/audio/'),
+            // Sprachaufnahmen ändern sich nie (Demo: Prüfsumme im Dateinamen); Range-Anfragen von Safari aus dem Cache bedienen
+            urlPattern: ({ url }) => /\/(data|demo)\/audio\//.test(url.pathname),
             handler: 'CacheFirst',
             options: {
               cacheName: 'lagebild-audio',

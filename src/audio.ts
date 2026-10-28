@@ -1,5 +1,5 @@
 // Ton: Die Folge kommt als eine Audiodatei (Stimmen, Pausen und Musikbett schon gemischt), damit sie
-// gleichmäßig klingt und bei gesperrtem iPad weiterläuft. Ohne Datei (Demo, altes Archiv) spricht die
+// gleichmäßig klingt und bei gesperrtem iPad weiterläuft. Ohne Datei (Archiv älter als 14 Tage) spricht die
 // Systemstimme Zeile für Zeile; dann liefert WebAudio den Bass-Teppich.
 import type { Line, Role } from './shared/types';
 

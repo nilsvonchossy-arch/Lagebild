@@ -195,7 +195,7 @@ function renderVoices(): void {
   sel.innerHTML = '<option value="">Automatisch (beste deutsche Stimme)</option>' +
     sys.voices.map(v => `<option value="${esc(v.voiceURI)}">${esc(v.name)} · ${esc(v.lang)}</option>`).join('');
   sel.value = sys.voices.some(v => v.voiceURI === S.systemVoice) ? S.systemVoice : '';
-  note.textContent = 'Wird nur benutzt, wenn es für einen Tag keine Audiodatei gibt (Demo, Archiv älter als 14 Tage). Bessere Systemstimmen am iPad: Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.';
+  note.textContent = 'Wird nur benutzt, wenn es für einen Tag keine Audiodatei gibt (Archiv älter als 14 Tage, Tag ohne fertige Vertonung). Bessere Systemstimmen am iPad: Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.';
 }
 
 function setVoiceBtn(): void {
