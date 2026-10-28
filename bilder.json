@@ -1,0 +1,35 @@
+{
+ "images": {
+  "israel": [
+   {
+    "src": "bilder/a50e41d40bf4.jpg",
+    "w": 960,
+    "h": 1073,
+    "motif": "Gadi Eisenkot",
+    "match": "Eisenkot",
+    "author": "יהב טרודלר (Yahav Trudler - Yahav Studio)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Gadi_Eisenkot_2_(cropped_-_WD).jpg"
+   }
+  ],
+  "kundl": [
+   {
+    "src": "bilder/3803c6bc5e95.jpg",
+    "w": 960,
+    "h": 720,
+    "motif": "Kundl",
+    "match": "Kundl",
+    "author": "Sabs14",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Kundl_view_from_hahntax.JPG"
+   }
+  ],
+  "wallstreet": []
+ },
+ "issues": [
+  "Archivbild: kein Wikidata-Eintrag mit Bild für „Sandoz“",
+  "Archivbild: ohne Urheberangabe: Photos NewYork1 032.jpg"
+ ]
+}
