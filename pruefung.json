@@ -1,0 +1,126 @@
+{
+ "modell": "large-v3-turbo",
+ "laden_s": 15.2,
+ "aufnahmen": {
+  "omnivoice": {
+   "zeichenfehler_pct": 0.9,
+   "abweichungen": 6,
+   "unterschiede": [
+    {
+     "gesagt": "jaschar",
+     "verstanden": "jascha"
+    },
+    {
+     "gesagt": "sandoz",
+     "verstanden": "sandotz"
+    },
+    {
+     "gesagt": "sandoz",
+     "verstanden": "sandotz"
+    },
+    {
+     "gesagt": "nasdaq",
+     "verstanden": "nasek"
+    },
+    {
+     "gesagt": "apple",
+     "verstanden": ""
+    },
+    {
+     "gesagt": "imac",
+     "verstanden": "emac"
+    }
+   ],
+   "mitschrift": "Israel wählt und bis 16 Uhr haben schon 55,7 Prozent abgestimmt. Ist das viel? So viel wie noch nie um diese Uhrzeit, sagt das Wahlkomitee. 2022 waren es 47,5 Prozent. Wer tritt an? Netanjahus Likud gegen Jascha, die Partei von Gadi Eisenkot. Die Wahllokale schließen um 22 Uhr Ortszeit. Und in Europa? In Kundl in Tirol steht Europas letztes großes Penicillinwerk unter Druck. Wie ernst ist das? Betreiber Sandotz sagt, so ist die Produktion wirtschaftlich nicht tragfähig. Außer Regierungen zahlen mehr für Penicillin. Der Grund ist günstigere Konkurrenz aus China. Sandotz hat in Brüssel eine Anti-Dumping-Beschwerde eingereicht. Wie viele arbeiten dort? Mehr als 2000 Menschen. Kurz noch Frankreich. Die Regierung will die Eingangsklassen an öffentlichen Gymnasien bei 28 Schülern deckeln. Und die Studienplatzplattform Parcoursup soll bis 2028 abgeschafft werden. Okay, was machen die Märkte? Die Wall Street hat am Montag zugelegt. Nasek plus 0,8 S und P 500 plus 0,7 Prozent. Getragen von KI-Nachrichten. Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen. Und Anthropic hat den Börsengang beantragt. Apropos KI. Neue Macs mit M6-Chip ausgeliefert ab dem 6. November. Der eMac kostet ab 1499 Dollar. Die Neural Engine soll laut Apple 1,9 mal so schnell sein wie beim M5. Also, Rekordbeteiligung in Israel, Druck auf das Penicillinwerk in Tirol. KI-Nachrichten treiben die Wall Street. Bis morgen. Wir bleiben dran.",
+   "rechenzeit_s": 88.4
+  },
+  "supertonic": {
+   "zeichenfehler_pct": 0.8,
+   "abweichungen": 6,
+   "unterschiede": [
+    {
+     "gesagt": "jaschar",
+     "verstanden": "yashar"
+    },
+    {
+     "gesagt": "eisenkot",
+     "verstanden": "eisenkoth"
+    },
+    {
+     "gesagt": "sandoz",
+     "verstanden": "sandotz"
+    },
+    {
+     "gesagt": "sandoz",
+     "verstanden": "sandotz"
+    },
+    {
+     "gesagt": "anthropic",
+     "verstanden": "antropisch"
+    },
+    {
+     "gesagt": "imac",
+     "verstanden": "emark"
+    }
+   ],
+   "mitschrift": "Israel wählt und bis 16 Uhr haben schon 55,7 Prozent abgestimmt. Ist das viel? So viel wie noch nie um diese Uhrzeit, sagt das Wahlkomitee. 2022 waren es 47,5 Prozent. Wer tritt an? Netanjahus Likud gegen Yashar, die Partei von Gadi Eisenkoth. Die Wahllokale schließen um 22 Uhr Ortszeit. Und in Europa? In Kundl in Tirol steht Europas letztes großes Penicillin-Werk unter Druck. Wie ernst ist das? Betreiber Sandotz sagt, so ist die Produktion wirtschaftlich nicht tragfähig, außer Regierungen zahlen mehr für Penicillin. Der Grund ist günstigere Konkurrenz aus China. Sandotz hat in Brüssel eine Anti-Dumping-Beschwerde eingereicht. Wie viele arbeiten dort? Mehr als 2000 Menschen. Kurz noch Frankreich. Die Regierung will die Eingangsklassen an öffentlichen Gymnasien bei 28 Schülern deckeln. Und die Studienplatz-Plattform Parcoursup soll bis 2028 abgeschafft werden. Okay. Was machen die Märkte? Die Wall Street hat am Montag zugelegt. Nasdaq plus 0,8 S und P500 plus 0,7 Prozent. Getragen von KI-Nachrichten. Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen. Und Antropisch hat den Börsengang beantragt. Apropos KI-Apple. Neue Macs mit M6-Chip. Ausgeliefert ab dem 6. November. Der E-Mark kostet ab 1499 Dollar. Die Neural Engine soll laut Apple 1,9 Mal so schnell sein wie beim M5. Also, Rekordbeteiligung in Israel, Druck auf das Penicillin-Werk in Tirol. KI-Nachrichten treiben die Wall Street. Bis morgen. Wir bleiben dran.",
+   "rechenzeit_s": 75.6
+  },
+  "voxcpm2": {
+   "zeichenfehler_pct": 0.9,
+   "abweichungen": 5,
+   "unterschiede": [
+    {
+     "gesagt": "jaschar",
+     "verstanden": "jascha"
+    },
+    {
+     "gesagt": "kundl",
+     "verstanden": "kundle"
+    },
+    {
+     "gesagt": "sandoz",
+     "verstanden": "sandorz"
+    },
+    {
+     "gesagt": "außer",
+     "verstanden": "punkt aoussa"
+    },
+    {
+     "gesagt": "sandoz",
+     "verstanden": "sandorz"
+    }
+   ],
+   "mitschrift": "Israel wählt und bis 16 Uhr haben schon 55,7 Prozent abgestimmt. Ist das viel? So viel wie noch nie um diese Uhrzeit, sagt das Wahlkomitee. 2022 waren es 47,5 Prozent. Wer tritt an? Netanjahus Likud gegen Jascha, die Partei von Gadi Eisenkot. Die Wahllokale schließen um 22 Uhr Ortszeit. Und in Europa? In Kundle in Tirol steht Europas letztes großes Penicillinwerk unter Druck. Wie ernst ist das? Betreiber Sandorz sagt, so ist die Produktion wirtschaftlich nicht tragfähig. Punkt Aoussa, Regierungen zahlen mehr für Penicillin. Der Grund ist günstigere Konkurrenz aus China. Sandorz hat in Brüssel eine Anti-Dumping-Beschwerde eingereicht. Wie viele arbeiten dort? Mehr als 2000 Menschen. Kurz noch Frankreich. Die Regierung will die Eingangsklassen an öffentlichen Gymnasien bei 28 Schülern deckeln. Und die Studienplatzplattform Parcoursup soll bis 2028 abgeschafft werden. Okay. Was machen die Märkte? Die Wall Street hat am Montag zugelegt. Nasdaq plus 0,8 S und P500 plus 0,7 Prozent. Getragen von KI-Nachrichten. Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen. Und Anthropic hat den Börsengang beantragt. Apropos KI. Apple. Neue Macs mit M6-Chip. Ausgeliefert ab dem 6. November. Der iMac kostet ab 1499 Dollar. Die Neural Engine soll laut Apple 1,9 mal so schnell sein wie beim M5. Also. Rekordbeteiligung in Israel. Druck auf das Penicillinwerk in Tirol. KI-Nachrichten treiben die Wall Street. Bis morgen. Wir bleiben dran.",
+   "rechenzeit_s": 64.1
+  },
+  "voxcpm2-ruhig": {
+   "zeichenfehler_pct": 4.7,
+   "abweichungen": 5,
+   "unterschiede": [
+    {
+     "gesagt": "jaschar",
+     "verstanden": "jascha"
+    },
+    {
+     "gesagt": "sandoz",
+     "verstanden": "sandorz"
+    },
+    {
+     "gesagt": "",
+     "verstanden": "punkt"
+    },
+    {
+     "gesagt": "sandoz",
+     "verstanden": "sandorz"
+    },
+    {
+     "gesagt": "",
+     "verstanden": "rekordbeteiligung in tirol kinachrichten treiben die wall street"
+    }
+   ],
+   "mitschrift": "Israel wählt und bis 16 Uhr haben schon 55,7 Prozent abgestimmt. Ist das viel? So viel wie noch nie um diese Uhrzeit, sagt das Wahlkomitee. 2022 waren es 47,5 Prozent. Wer tritt an? Netanjahus Likud gegen Jascha, die Partei von Gadi Eisenkot. Die Wahllokale schließen um 22 Uhr Ortszeit. Und in Europa? In Kundl in Tirol steht Europas letztes großes Penicillinwerk unter Druck. Wie ernst ist das? Betreiber Sandorz sagt, so ist die Produktion wirtschaftlich nicht tragfähig. Punkt außer, Regierungen zahlen mehr für Penicillin. Der Grund ist günstigere Konkurrenz aus China. Sandorz hat in Brüssel eine Anti-Dumping-Beschwerde eingereicht. Wie viele arbeiten dort? Mehr als 2000 Menschen. Kurz noch Frankreich. Die Regierung will die Eingangsklassen an öffentlichen Gymnasien bei 28 Schülern deckeln. Und die Studienplatz-Plattform Parcoursup soll bis 2028 abgeschafft werden. Okay. Was machen die Märkte? Die Wall Street hat am Montag zugelegt. Nasdaq plus 0,8. S&P 500 plus 0,7 Prozent. Getragen von KI-Nachrichten. Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen. Und Anthropic hat den Börsengang beantragt. Apropos KI. Apple. Neue Macs mit M6-Chip. Ausgeliefert ab dem 6. November. Der iMac kostet ab 1499 Dollar. Die Neural Engine soll laut Apple 1,9 mal so schnell sein wie beim M5. Also. Rekordbeteiligung in Israel, Druck auf das Penicillinwerk in Tirol, KI-Nachrichten treiben die Wall Street. Bis morgen. Wir bleiben dran. Rekordbeteiligung in Tirol, KI-Nachrichten treiben die Wall Street.",
+   "rechenzeit_s": 89.4
+  }
+ }
+}
