@@ -149,20 +149,25 @@ def cmd_omnivoice(out):
     sr = 24000
     os.makedirs(os.path.join(out, "omnivoice"), exist_ok=True)
     refs = {r: os.path.join(out, "stimmen", f"{r}.wav") for r in DIALOG["stimmen"]}
-    have_refs = all(os.path.exists(p) for p in refs.values())
-    design = {"LEITUNG": "male, middle-aged, low pitch", "LAGE": "female, young adult, moderate pitch", "EINORDNUNG": "male, elderly, low pitch"}
+    own = not all(os.path.exists(p) for p in refs.values())
+    if own:
+        # Ohne Entwürfe von VoxCPM2: Stimmen mit OmniVoice entwerfen und danach immer dieselbe Probe klonen
+        design = {"LEITUNG": "male, middle-aged, low pitch", "LAGE": "female, young adult, high pitch", "EINORDNUNG": "male, elderly, very low pitch"}
+        os.makedirs(os.path.join(out, "stimmen"), exist_ok=True)
+        torch.manual_seed(7)
+        for r, v in DIALOG["stimmen"].items():
+            audio = m.generate(text=v["probe"], instruct=design[r])
+            sf.write(refs[r], trim(np.asarray(audio[0], dtype=np.float32), sr), sr)
+            print("Stimme entworfen:", r, flush=True)
     chunks, t0 = [], time.time()
     for i, l in enumerate(DIALOG["zeilen"]):
         r = l["role"]
-        if have_refs:
-            audio = m.generate(text=say(l), ref_audio=refs[r], ref_text=DIALOG["stimmen"][r]["probe"])
-        else:
-            audio = m.generate(text=say(l), instruct=design[r])
+        audio = m.generate(text=say(l), ref_audio=refs[r], ref_text=DIALOG["stimmen"][r]["probe"])
         chunks.append((l, np.asarray(audio[0], dtype=np.float32)))
         print(f"{i + 1}/{len(DIALOG['zeilen'])} {r}: {l['text']}", flush=True)
     calc = time.time() - t0
     dur = assemble(chunks, sr, os.path.join(out, "omnivoice", "dialog.mp3"))
-    report(out, "omnivoice", {"laden_s": round(load, 1), "rechenzeit_s": round(calc, 1), "audio_s": round(dur, 1), "rtf": round(calc / dur, 2), "stimmen": "VoxCPM2-Entwurf" if have_refs else "OmniVoice-Entwurf"})
+    report(out, "omnivoice", {"laden_s": round(load, 1), "rechenzeit_s": round(calc, 1), "audio_s": round(dur, 1), "rtf": round(calc / dur, 2), "stimmen": "OmniVoice-Entwurf" if own else "VoxCPM2-Entwurf"})
 
 
 if __name__ == "__main__":
