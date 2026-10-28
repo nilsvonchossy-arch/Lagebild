@@ -35,7 +35,8 @@
     "steps": 10,
     "attempts": 3,
     "whisper": "large-v3-turbo",
-    "seed": 7
+    "seed": 7,
+    "dtype": "float32"
   },
   "audioDays": 14,
   "candidates": {

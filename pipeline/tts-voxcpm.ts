@@ -18,6 +18,8 @@ export interface VoxcpmConfig {
   attempts: number;
   whisper: string;
   seed?: number;
+  /** Rechenformat auf der CPU; float32, weil die meisten Server-CPUs bfloat16 nur umgerechnet können */
+  dtype?: 'float32' | 'bfloat16';
 }
 
 export interface JobLine { i: number; role: Role; say: string; ref: string }

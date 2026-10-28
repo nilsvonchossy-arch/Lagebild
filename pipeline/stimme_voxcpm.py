@@ -3,7 +3,7 @@
   python pipeline/stimme_voxcpm.py auftrag.json ausgabe/
 
 auftrag.json: {"lines": [{"i", "role", "say", "ref"}], "voices": {ROLLE: {"ref", "text"}}, "cfg", "steps",
-               "attempts", "whisper", "seed"}
+               "attempts", "whisper", "seed", "dtype"}
   say  Sprechtext (Zahlen und Abkürzungen ausgeschrieben, src/shared/sprechtext.ts)
   ref  derselbe Text ohne buchstabierte Abkürzungen, zum Vergleich mit der Whisper-Mitschrift
 
@@ -11,6 +11,9 @@ Jede Rolle klont eine feste Referenzstimme (config/stimmen/voxcpm2); die Stimmpr
 Whisper schreibt jede Zeile mit: Weicht sie ab (verschluckte Verneinung, wiederholte oder fehlende
 Satzteile, zu viele falsche Zeichen), wird sie mit anderem Zufall neu erzeugt. Die Wortzeiten aus
 Whisper ergeben die Untertitel-Zeitmarken.
+
+Auf der CPU rechnet das Modell in float32 (Voreinstellung "dtype"): Das Checkpoint-Format bfloat16
+können die meisten Server-CPUs nicht direkt und rechnen es um, das kostet ein Vielfaches an Zeit.
 
 Ergebnis: ausgabe/zeile-NNN.wav (16 Bit) und ausgabe/ergebnis.json mit Wortzeiten, Prüfung und Rechenzeiten.
 """
@@ -45,15 +48,31 @@ def trim(wav, sr, db=-42.0, pad=0.03):
     return wav[a:b]
 
 
+def cpu_info():
+    try:
+        info = open("/proc/cpuinfo", encoding="utf-8").read()
+    except OSError:
+        return "unbekannt"
+    name = next((l.split(":", 1)[1].strip() for l in info.splitlines() if l.startswith("model name")), "unbekannt")
+    flags = next((l.split(":", 1)[1].split() for l in info.splitlines() if l.startswith("flags")), [])
+    native = [f for f in ("avx512_bf16", "amx_bf16") if f in flags]
+    return f"{name}, bfloat16 nativ: {', '.join(native) or 'nein'}"
+
+
 def main():
     job = json.load(open(sys.argv[1], encoding="utf-8"))
     out = sys.argv[2]
     os.makedirs(out, exist_ok=True)
     import torch
     from faster_whisper import WhisperModel
+    import voxcpm.model.voxcpm2 as voxcpm2
     from voxcpm import VoxCPM
 
+    dtype = job.get("dtype", "float32")
+    pick = voxcpm2.pick_runtime_dtype
+    voxcpm2.pick_runtime_dtype = lambda device, configured: dtype if device == "cpu" else pick(device, configured)
     torch.set_num_threads(os.cpu_count() or 2)
+    log(f"CPU: {cpu_info()}, {torch.get_num_threads()} Threads, Rechenformat {dtype}")
     t0 = time.time()
     model = VoxCPM.from_pretrained("openbmb/VoxCPM2", load_denoiser=False)
     tts = model.tts_model
@@ -108,7 +127,7 @@ def main():
     calc = time.time() - t_gen
     audio_s = sum(r["dur"] for r in results)
     report = {
-        "engine": "voxcpm2", "sr": sr, "load_tts_s": round(load_tts, 1), "load_whisper_s": round(load_whisper, 1),
+        "engine": "voxcpm2", "sr": sr, "dtype": dtype, "cpu": cpu_info(), "load_tts_s": round(load_tts, 1), "load_whisper_s": round(load_whisper, 1),
         "calc_s": round(calc, 1), "audio_s": round(audio_s, 1), "rtf": round(calc / max(audio_s, 0.1), 2),
         "retried": sum(1 for r in results if r["attempts"] > 1), "failed": [r["i"] for r in results if not r["ok"]],
         "lines": results,
