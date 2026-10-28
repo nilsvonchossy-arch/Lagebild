@@ -2,7 +2,7 @@
 // Drehbuch-Prüfung → (Stimme und Mischung) → Ablage.
 //
 //   node pipeline/run.ts --out daten               normales Update für heute
-//   node pipeline/run.ts --gate                     nur, wenn es in Berlin nach 6:30 ist und heute noch nichts da ist
+//   node pipeline/run.ts --gate                     nur, wenn es in Berlin nach 5:30 ist und heute noch nichts da ist
 //   node pipeline/run.ts --check-feeds              nur Feeds und Suche prüfen, ohne Claude
 //   node pipeline/run.ts --compare claude-opus-5-5,claude-sonnet-5-5,claude-haiku-5-5
 //   node pipeline/run.ts --vertonen public/demo/2026-10-27.json --out demo-out   fertige Folge nur vertonen
@@ -268,7 +268,7 @@ async function main(): Promise<void> {
   output('changed', 'false');
 
   if (args.gate && !args.force) {
-    if (now.time < '06:30') { log(`Zu früh (${now.time} Uhr in Berlin), nichts zu tun.`); return; }
+    if (now.time < '05:30') { log(`Zu früh (${now.time} Uhr in Berlin), nichts zu tun.`); return; }
     if (existsSync(dayPath(OUT, date))) { log(`Update für ${date} existiert schon.`); return; }
   }
 

@@ -1,13 +1,13 @@
 # Tages-Update: recherchiert, schreibt, prüft und vertont die Meldungen und veröffentlicht sie.
-# Läuft morgens gegen 6:45 Uhr (Berlin) mit Wiederholungen bis 8:45 Uhr, falls ein Lauf ausfällt.
-# Die Zeitpläne sind in UTC; die Pipeline prüft selbst die Berliner Uhrzeit (--gate),
-# deshalb passt es im Sommer wie im Winter.
+# Läuft morgens ab 5:45 Uhr (Berlin), weil die offene Stimme (VoxCPM2) auf der CPU rund eine Stunde
+# rechnet; Wiederholungen bis 8:45 Uhr, falls ein Lauf ausfällt. Die Zeitpläne sind in UTC; die
+# Pipeline prüft selbst die Berliner Uhrzeit (--gate), deshalb passt es im Sommer wie im Winter.
 name: Tages-Update
 
 on:
   schedule:
-    - cron: '45 4,5,6 * * *'
-    - cron: '17 5,6 * * *'
+    - cron: '45 3,4,5,6 * * *'
+    - cron: '17 4,5,6 * * *'
   workflow_dispatch:
     inputs:
       mode:
@@ -41,7 +41,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 180
     outputs:
       changed: ${{ steps.run.outputs.changed }}
     steps:
@@ -53,6 +53,12 @@ jobs:
       - run: npm ci
       - name: ffmpeg für die Mischung der Folge
         run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+      - name: Welche Stimme?
+        id: engine
+        run: echo "voice=$(node -p "require('./config/themen.json').episode.voice ?? 'voxcpm2'")" >> "$GITHUB_OUTPUT"
+      - name: Umgebung für die offene Stimme
+        if: steps.engine.outputs.voice == 'voxcpm2' && (inputs.mode == '' || inputs.mode == null || inputs.mode == 'update')
+        uses: ./.github/actions/stimme
       - name: Bisherige Daten aus Branch "daten" holen
         run: |
           mkdir -p daten

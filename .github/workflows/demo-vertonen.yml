@@ -1,0 +1,47 @@
+# Messlauf und Demo: die Demo-Folge mit der Stimme der Pipeline vertonen (wie im Tageslauf, ohne Claude).
+# Ergebnis im Branch "demo-audio": JJJJ-MM-TT.json mit Zeitmarken, audio/…/folge.mp3, Protokoll der Stimme.
+name: Demo vertonen
+
+on:
+  workflow_dispatch:
+    inputs:
+      stimme:
+        description: 'voxcpm2 oder azure'
+        type: choice
+        options: [voxcpm2, azure]
+        default: voxcpm2
+
+permissions:
+  contents: write
+
+jobs:
+  vertonen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: ffmpeg
+        run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+      - if: inputs.stimme == 'voxcpm2'
+        uses: ./.github/actions/stimme
+      - name: Vertonen
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+        run: node pipeline/run.ts --vertonen public/demo/2026-10-27.json --out vertont --stimme ${{ inputs.stimme }}
+      - name: Ergebnis in Branch schreiben
+        if: always()
+        run: |
+          mkdir -p vertont/logs
+          cp /tmp/lagebild-stimme/*/ergebnis.json vertont/logs/ 2>/dev/null || true
+          cd vertont
+          rm -f audio/*/mix.wav audio/*/stimme.wav
+          git init -q -b demo-audio
+          git add -A
+          git -c user.name="Lagebild" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Demo vertont $(date +%F)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" demo-audio

@@ -1,0 +1,28 @@
+# Umgebung für die offene Stimme (VoxCPM2) und die Whisper-Prüfung: Python, PyTorch nur für die CPU.
+# Auf kleinen Servern (private Repos: 2 Kerne, 7 GB) Platz schaffen und Auslagerungsspeicher anlegen;
+# öffentliche Repos haben 4 Kerne und 16 GB, dort ist das nicht nötig.
+name: Stimme vorbereiten
+description: Python mit PyTorch (CPU), VoxCPM2, faster-whisper und num2words
+runs:
+  using: composite
+  steps:
+    - name: Speicher prüfen
+      shell: bash
+      run: |
+        nproc; free -g; df -h / | tail -1
+        mem=$(awk '/MemTotal/ {print int($2/1048576)}' /proc/meminfo)
+        if [ "$mem" -lt 12 ]; then
+          echo "Nur ${mem} GB Arbeitsspeicher: Platz schaffen und 8 GB Auslagerungsspeicher anlegen"
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/share/swift || true
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /swapfile2 && sudo chmod 600 /swapfile2 && sudo mkswap /swapfile2 && sudo swapon /swapfile2
+          free -g; df -h / | tail -1
+        fi
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+    - name: Pakete
+      shell: bash
+      run: |
+        pip install --quiet --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install --quiet --no-cache-dir "voxcpm==2.0.3" faster-whisper num2words soundfile
