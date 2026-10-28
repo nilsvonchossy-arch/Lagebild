@@ -302,7 +302,8 @@ export class Globe {
         g.addColorStop(0, 'rgba(90,160,255,.38)');
         g.addColorStop(1, 'rgba(90,160,255,0)');
         ctx.fillStyle = g;
-        ctx.beginPath(); ctx.arc(cx, cy, R * 1.13, 0, 7); ctx.arc(cx, cy, R * 0.985, 0, 7, true); ctx.fill();
+        const TAU = 2 * Math.PI;
+        ctx.beginPath(); ctx.arc(cx, cy, R * 1.13, 0, TAU); ctx.moveTo(cx + R * 0.985, cy); ctx.arc(cx, cy, R * 0.985, TAU, 0, true); ctx.fill();
       }
     } else if (R < Math.max(W, H) * 2) {
       let g = ctx.createRadialGradient(cx, cy, R * 0.94, cx, cy, R * 1.24);
