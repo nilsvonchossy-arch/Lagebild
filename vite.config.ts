@@ -64,6 +64,12 @@ export default defineConfig({
             }
           },
           {
+            // Satellitenbilder für den Globus ändern sich selten
+            urlPattern: ({ url }) => url.pathname.includes('/earth/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'lagebild-earth', expiration: { maxEntries: 6 } }
+          },
+          {
             urlPattern: ({ request }) => request.destination === 'font',
             handler: 'CacheFirst',
             options: { cacheName: 'lagebild-fonts', expiration: { maxEntries: 60 } }

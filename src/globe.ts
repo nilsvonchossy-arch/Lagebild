@@ -8,6 +8,7 @@
 import { geoDistance, geoGraticule10, geoInterpolate, geoOrthographic, geoPath } from 'd3-geo';
 import type { GeoPath, GeoProjection } from 'd3-geo';
 import type { Feature, MultiPolygon } from 'geojson';
+import { EarthGL, type EarthTextures } from './earth';
 import { findCountry, type WorldLayer } from './geo/world';
 import { easeInOutCubic, hexA, lerp, reduceMotion, speed } from './util';
 
@@ -75,13 +76,20 @@ export class Globe {
   private pinA = 0;
   private pinT = 0;
 
+  /** Weitere Orte einer Meldung: eigener Punkt mit Beschriftung, auf Wunsch eine Linie zum Hauptort */
+  private markers: { at: [number, number]; label: string; route: boolean; t0: number }[] = [];
+
+  /** Satellitenbild darunter (WebGL); ohne WebGL oder vor dem Laden bleibt der Vektor-Globus */
+  private readonly earth: EarthGL | null = null;
+
   private glitchUntil = 0;
   private lastT = 0;
   private flight = 0;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
-    private readonly pinEl: HTMLElement
+    private readonly pinEl: HTMLElement,
+    private readonly earthCanvas?: HTMLCanvasElement
   ) {
     const ctx = canvas.getContext('2d');
     const bctx = this.base.getContext('2d');
@@ -92,7 +100,20 @@ export class Globe {
     this.proj = geoOrthographic().clipAngle(90).precision(0);
     this.path = geoPath(this.proj, ctx);
     this.basePath = geoPath(this.proj, bctx);
+    if (earthCanvas) {
+      this.earth = EarthGL.create(earthCanvas);
+      if (this.earth) this.earth.onLoad = () => { this.baseKey = ''; };
+    }
     requestAnimationFrame(this.frame);
+  }
+
+  /** Satellitenbilder laden (NASA Blue Marble, Black Marble, Wolken). */
+  loadEarth(urls: EarthTextures): void {
+    this.earth?.load(urls);
+  }
+
+  private get textured(): boolean {
+    return Boolean(this.earth?.ready);
   }
 
   setWorld(layer: WorldLayer, detail = false): void {
@@ -113,6 +134,7 @@ export class Globe {
         c.height = Math.round(l.height * dpr);
         x.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
+      this.earth?.resize(l.width, l.height, dpr);
       this.baseKey = '';
     }
   }
@@ -131,6 +153,16 @@ export class Globe {
     this.pinT = 1;
   }
 
+  /** Weiteren Ort einblenden (erscheint, sobald er genannt wird). */
+  addMarker(at: [number, number], label: string, route = false): void {
+    if (this.markers.some(m => m.label === label)) return;
+    this.markers.push({ at, label, route, t0: performance.now() });
+  }
+
+  clearMarkers(): void {
+    this.markers = [];
+  }
+
   glitch(ms: number): void {
     this.glitchUntil = performance.now() + ms / speed();
   }
@@ -143,6 +175,7 @@ export class Globe {
     this.hl = null;
     this.hlIso = null;
     this.pinAt = null;
+    this.markers = [];
     this.zoom = 1;
     this.idle = true;
   }
@@ -194,11 +227,13 @@ export class Globe {
     const path = this.basePath;
     ctx.clearRect(0, 0, W, H);
 
-    const sg = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.05, cx, cy, R * 1.05);
-    sg.addColorStop(0, '#13233a'); sg.addColorStop(0.6, '#0a1220'); sg.addColorStop(1, '#04070c');
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.fillStyle = sg; ctx.fill();
-
-    ctx.beginPath(); path(this.grat); ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(140,170,215,.07)'; ctx.stroke();
+    const textured = this.textured;
+    if (!textured) {
+      const sg = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.05, cx, cy, R * 1.05);
+      sg.addColorStop(0, '#13233a'); sg.addColorStop(0.6, '#0a1220'); sg.addColorStop(1, '#04070c');
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.fillStyle = sg; ctx.fill();
+      ctx.beginPath(); path(this.grat); ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(140,170,215,.07)'; ctx.stroke();
+    }
 
     const layer = view < DETAIL_VIEW && this.world50 ? this.world50 : this.world110;
     if (layer) {
@@ -207,9 +242,15 @@ export class Globe {
       for (const p of layer.parts) {
         if (geoDistance(center, p.center) - p.radius <= view) path(p.geometry);
       }
-      ctx.fillStyle = '#18212d'; ctx.fill();
-      ctx.lineWidth = 0.6; ctx.strokeStyle = 'rgba(155,180,215,.32)'; ctx.stroke();
+      if (textured) {
+        // auf dem Satellitenbild nur dünne, helle Grenzen
+        ctx.lineWidth = 0.55; ctx.strokeStyle = 'rgba(225,235,255,.26)'; ctx.stroke();
+      } else {
+        ctx.fillStyle = '#18212d'; ctx.fill();
+        ctx.lineWidth = 0.6; ctx.strokeStyle = 'rgba(155,180,215,.32)'; ctx.stroke();
+      }
     }
+    if (textured) return;
 
     // Rand mit Leuchten: zwei Striche statt shadowBlur
     const rg = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
@@ -246,14 +287,24 @@ export class Globe {
 
     // Sterne
     ctx.fillStyle = '#dfe8ff';
+    const textured = this.textured;
     for (const s of STARS) {
+      if (textured && Math.hypot(s.x * W - cx, s.y * H - cy) < R) continue;
       ctx.globalAlpha = 0.18 + 0.32 * (0.5 + 0.5 * Math.sin(t * 0.0012 * s.s + s.p));
       ctx.fillRect(s.x * W, s.y * H, s.s * 1.3, s.s * 1.3);
     }
     ctx.globalAlpha = 1;
 
-    // Atmosphäre
-    if (R < Math.max(W, H) * 2) {
+    // Atmosphäre: über dem Satellitenbild nur ein blauer Saum außen, sonst der Prototyp-Look
+    if (textured) {
+      if (R < Math.max(W, H) * 1.5) {
+        const g = ctx.createRadialGradient(cx, cy, R * 0.985, cx, cy, R * 1.13);
+        g.addColorStop(0, 'rgba(90,160,255,.38)');
+        g.addColorStop(1, 'rgba(90,160,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(cx, cy, R * 1.13, 0, 7); ctx.arc(cx, cy, R * 0.985, 0, 7, true); ctx.fill();
+      }
+    } else if (R < Math.max(W, H) * 2) {
       let g = ctx.createRadialGradient(cx, cy, R * 0.94, cx, cy, R * 1.24);
       g.addColorStop(0, 'rgba(70,140,255,.42)');
       g.addColorStop(1, 'rgba(70,140,255,0)');
@@ -271,9 +322,10 @@ export class Globe {
     const view = reach >= R ? Math.PI / 2 : Math.asin(reach / R);
     // Drehung auf ~½ Pixel am Äquator runden: beim langsamen Drehen im Menü reicht so etwa jedes zweite Bild
     const q = (0.5 / R) * (180 / Math.PI);
-    const key = `${cx.toFixed(2)}|${cy.toFixed(2)}|${R.toFixed(2)}|${Math.round(this.rot[0] / q)}|${Math.round(this.rot[1] / q)}|${this.worldVersion}|${W}x${H}@${this.dpr}`;
+    const key = `${cx.toFixed(2)}|${cy.toFixed(2)}|${R.toFixed(2)}|${Math.round(this.rot[0] / q)}|${Math.round(this.rot[1] / q)}|${this.worldVersion}|${W}x${H}@${this.dpr}|${textured}`;
     if (key !== this.baseKey) {
       this.drawBase(cx, cy, R, view);
+      if (textured) this.earth!.draw(cx, cy, R, this.rot[0], this.rot[1]);
       this.baseKey = key;
     }
     ctx.drawImage(this.base, 0, 0, W, H);
@@ -289,6 +341,7 @@ export class Globe {
       ctx.restore();
     }
 
+    this.drawMarkers(t);
     this.drawPin(t, R);
 
     // Glitch
@@ -301,6 +354,42 @@ export class Globe {
       }
     }
   };
+
+  private drawMarkers(t: number): void {
+    if (!this.markers.length) return;
+    const ctx = this.ctx;
+    const center: [number, number] = [-this.rot[0], -this.rot[1]];
+    for (const m of this.markers) {
+      const k = Math.min(1, (t - m.t0) / (1400 / speed()));
+      ctx.save();
+      if (m.route && this.pinAt) {
+        // Linie vom Ort zum Hauptort, zeichnet sich ein
+        const ip = geoInterpolate(m.at, this.pinAt);
+        const n = 48;
+        const pts: [number, number][] = [];
+        for (let i = 0; i <= n * easeInOutCubic(k); i++) pts.push(ip(i / n));
+        if (pts.length > 1) {
+          ctx.beginPath(); this.path({ type: 'LineString', coordinates: pts });
+          ctx.setLineDash([6, 5]); ctx.lineWidth = 1.8; ctx.strokeStyle = hexA(this.acc, 0.9); ctx.stroke();
+        }
+      }
+      if (geoDistance(m.at, center) < Math.PI / 2 - 0.03) {
+        const p = this.proj(m.at);
+        if (p) {
+          const a = Math.min(1, k * 2);
+          ctx.globalAlpha = a;
+          ctx.setLineDash([]);
+          ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+          ctx.beginPath(); ctx.arc(p[0], p[1], 7 + 4 * Math.sin(t / 300), 0, 7); ctx.strokeStyle = hexA(this.acc, 0.7); ctx.lineWidth = 1; ctx.stroke();
+          ctx.font = '400 9.5px Michroma, system-ui, sans-serif';
+          ctx.fillStyle = '#eef1f5';
+          ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
+          ctx.fillText(m.label.toUpperCase(), p[0] + 10, p[1] + 3.5);
+        }
+      }
+      ctx.restore();
+    }
+  }
 
   private drawPin(t: number, R: number): void {
     const pinEl = this.pinEl;

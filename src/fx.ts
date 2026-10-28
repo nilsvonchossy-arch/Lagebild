@@ -1,6 +1,7 @@
-// Text-Effekte: Entschlüsseln, Hochzählen, Untertitel mit Schreibmaschine.
+// Text-Effekte: Entschlüsseln, Hochzählen, Untertitel als Blöcke.
+import { subtitleBlocks, type Block } from './shared/script';
 import type { Figure, Role } from './shared/types';
-import { esc, reduceMotion, speed } from './util';
+import { reduceMotion, speed } from './util';
 
 const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&@0123456789';
 
@@ -23,10 +24,10 @@ export function scramble(el: HTMLElement, final: string, dur = 700): void {
 export const fmtNum = (v: number, f: Figure): string =>
   (f.prefix ?? '') + v.toLocaleString('de-DE', { minimumFractionDigits: f.dec, maximumFractionDigits: f.dec }) + (f.suffix ?? '');
 
-export function countUp(el: HTMLElement, f: Figure): void {
+export function countUp(el: HTMLElement, f: Figure, ms = 1100): void {
   if (reduceMotion()) { el.textContent = fmtNum(f.value, f); return; }
   const t0 = performance.now();
-  const D = 1300 / speed();
+  const D = ms / speed();
   const tick = (now: number): void => {
     const k = Math.min(1, (now - t0) / D);
     el.textContent = fmtNum(f.value * (1 - Math.pow(1 - k, 3)), f);
@@ -35,14 +36,15 @@ export function countUp(el: HTMLElement, f: Figure): void {
   tick(t0);
 }
 
+const ROLE_LABEL: Record<Role, string> = { LEITUNG: 'LEITUNG', LAGE: 'LAGE', EINORDNUNG: 'EINORDNUNG' };
+
 /**
- * Untertitel. Der noch nicht gesprochene Rest steht unsichtbar im Text, damit sich der Umbruch
- * beim Tippen nicht verschiebt. Fortschritt kommt von außen (Audio-Position) oder per Timer.
+ * Untertitel: Jede Zeile wird in Blöcke mit 6–10 Wörtern geteilt (an Atempausen). Ein Block erscheint
+ * als Ganzes, sobald die Stimme ihn erreicht; den Fortschritt liefert der Player (Anteil am Text).
  */
-export class Caption {
-  private text = '';
+export class Subtitle {
+  private blocks: Block[] = [];
   private shown = -1;
-  private timer = 0;
 
   constructor(
     private readonly box: HTMLElement,
@@ -51,48 +53,28 @@ export class Caption {
   ) {}
 
   show(role: Role, text: string): void {
-    this.stop();
     this.box.classList.remove('off');
     this.roleEl.dataset.role = role;
-    this.roleEl.textContent = role;
-    this.text = text;
+    this.roleEl.textContent = ROLE_LABEL[role];
+    this.blocks = subtitleBlocks(text);
     this.shown = -1;
-    this.reveal(reduceMotion() ? 1 : 0);
+    this.update(0);
   }
 
-  /** Anteil 0..1 des Textes sichtbar machen, auf Wortgrenzen gerundet. */
-  reveal(frac: number): void {
-    const len = this.text.length;
-    let n = Math.round(Math.max(0, Math.min(1, frac)) * len);
-    if (n < len && n > 0) {
-      const next = this.text.indexOf(' ', n);
-      n = next === -1 ? len : next;
-    }
-    if (n === this.shown) return;
-    this.shown = n;
-    this.textEl.innerHTML = esc(this.text.slice(0, n)) + '<span class="ghost">' + esc(this.text.slice(n)) + '</span>';
-  }
-
-  /** Ohne Zeitmarken: Text gleichmäßig über `ms` eintippen. */
-  typeOver(ms: number): void {
-    this.stop();
-    if (reduceMotion()) { this.reveal(1); return; }
-    const t0 = performance.now();
-    const D = Math.max(200, ms / speed());
-    const tick = (now: number): void => {
-      const k = Math.min(1, (now - t0) / D);
-      this.reveal(k);
-      if (k < 1) this.timer = requestAnimationFrame(tick);
-    };
-    this.timer = requestAnimationFrame(tick);
-  }
-
-  stop(): void {
-    cancelAnimationFrame(this.timer);
+  /** Anteil 0..1 des gesprochenen Textes; zeigt den Block, in dem die Stimme gerade ist. */
+  update(frac: number): void {
+    let k = this.blocks.findIndex(b => frac < b.to);
+    if (k === -1) k = this.blocks.length - 1;
+    if (k === this.shown || k < 0) return;
+    this.shown = k;
+    this.textEl.textContent = this.blocks[k]!.text;
+    this.textEl.classList.remove('in');
+    void this.textEl.offsetWidth;
+    this.textEl.classList.add('in');
   }
 
   hide(): void {
-    this.stop();
     this.box.classList.add('off');
+    this.shown = -1;
   }
 }

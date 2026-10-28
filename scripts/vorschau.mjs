@@ -22,7 +22,7 @@ const walk = dir => readdirSync(dir).flatMap(n => (statSync(join(dir, n)).isDire
 const files = {};
 for (const p of walk(out)) {
   const rel = relative(out, p).split('\\').join('/');
-  if (!/^(assets|demo)\//.test(rel)) continue;
+  if (!/^(assets|demo|earth)\//.test(rel)) continue;
   // nur woff2 in lateinischen Schnitten; die CSS fordert für deutsche Texte nichts anderes an
   if (rel.endsWith('.woff') || (rel.endsWith('.woff2') && !/-latin(-ext)?-\d+-normal/.test(rel))) continue;
   files[rel] = p;

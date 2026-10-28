@@ -1,20 +1,17 @@
 // Einstieg: Oberfläche verdrahten, Daten und Weltkarte laden.
 import '@fontsource/michroma/400.css';
-import '@fontsource/jetbrains-mono/400.css';
-import '@fontsource/jetbrains-mono/500.css';
-import '@fontsource/jetbrains-mono/700.css';
-import '@fontsource/jetbrains-mono/800.css';
 import './styles.css';
-import { Atmo, Voice, estimateMs } from './audio';
-import { Card, plainHeadline, relevanceHTML } from './card';
+import { Atmo, EpisodeAudio, SystemVoice } from './audio';
+import { Card, categoryColor, detailsHTML, formatLabel, marketsHTML, plainHeadline, relevanceHTML } from './card';
 import { DATA_BASE, loadDay, loadDemo, loadIndex } from './data';
-import { Caption } from './fx';
+import { Subtitle } from './fx';
 import { loadWorld110, loadWorld50 } from './geo/world';
 import { Globe } from './globe';
 import { Player } from './player';
+import { estimateScript } from './shared/script';
+import { SCHEMA_VERSION, type Briefing, type DayIndex } from './shared/types';
 import { bindTopics, openTopics } from './topics';
-import type { Briefing, DayIndex } from './shared/types';
-import { $, dateParts, esc, pad2, shortDate } from './util';
+import { $, dateParts, esc, pad2 } from './util';
 
 const ICON = {
   play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
@@ -28,22 +25,25 @@ const ICON = {
 };
 
 /* ---------- Einstellungen (nur auf diesem Gerät) ---------- */
-interface Settings { speak: boolean; atmo: boolean; rate: number; systemVoice: string }
-const DEFAULTS: Settings = { speak: true, atmo: true, rate: 1, systemVoice: '' };
+interface Settings { speak: boolean; music: boolean; rate: number; systemVoice: string }
+const DEFAULTS: Settings = { speak: true, music: true, rate: 1, systemVoice: '' };
 const KEY = 'lagebild.settings';
 const S: Settings = (() => {
-  try { return { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(KEY) ?? 'null') as Partial<Settings> | null) }; }
-  catch { return { ...DEFAULTS }; }
+  try {
+    const raw = (JSON.parse(localStorage.getItem(KEY) ?? 'null') ?? {}) as Partial<Settings> & { atmo?: boolean };
+    return { ...DEFAULTS, ...raw, music: raw.music ?? raw.atmo ?? true };
+  } catch { return { ...DEFAULTS }; }
 })();
 const save = (): void => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* privater Modus */ } };
 
 /* ---------- Bausteine ---------- */
-const globe = new Globe($<HTMLCanvasElement>('#globe'), $('#pin'));
+const globe = new Globe($<HTMLCanvasElement>('#globe'), $('#pin'), $<HTMLCanvasElement>('#earth'));
 const card = new Card();
-const caption = new Caption($('#caption'), $('#capRole'), $('#capText'));
+const sub = new Subtitle($('#caption'), $('#capRole'), $('#capText'));
 const atmo = new Atmo();
-atmo.enabled = S.atmo;
-const voice = new Voice(() => ({ speak: S.speak, rate: S.rate, systemVoice: S.systemVoice }), () => DATA_BASE);
+atmo.enabled = S.music;
+const episodeAudio = new EpisodeAudio();
+const sys = new SystemVoice();
 
 /** Hochformat: alles in einer Spalte. Querformat (iPad quer): Globus links, Text und Karte rechts. */
 function measure(): void {
@@ -75,12 +75,13 @@ function measure(): void {
   });
 }
 
-const player = new Player(globe, card, caption, voice, atmo, {
+const player = new Player(globe, card, sub, episodeAudio, sys, atmo, () => S, {
   progress: setProgress,
   state: updateControls,
   layout: measure,
   finished: () => { renderEnd(); $('#end').hidden = false; }
 });
+player.dataBase = DATA_BASE;
 
 /* ---------- Anzeige ---------- */
 let index: DayIndex | null = null;
@@ -103,35 +104,27 @@ function updateControls(): void {
   if (player.playing) { $('#start').hidden = true; $('#end').hidden = true; }
 }
 
-const catColor = (b: Briefing, id: string): string => b.categories.find(c => c.id === id)?.color ?? '#ff7a3d';
-const catName = (b: Briefing, id: string): string => b.categories.find(c => c.id === id)?.name ?? id;
-
-function durationMin(b: Briefing): number {
-  const lines = [b.intro.morning, ...b.outro, ...b.stories.flatMap(s => [s.opener, ...s.lines]), ...(b.markets ? [b.markets.opener, ...b.markets.lines] : [])];
-  const ms = lines.reduce((a, l) => a + (l.audio ? l.audio.dur * 1000 : estimateMs(l.say ?? l.text)) + 240, 0);
-  const visuals = b.stories.length * 4200;
-  return Math.max(1, Math.round((ms + visuals) / 60000));
-}
+const minutes = (b: Briefing): number => Math.max(1, Math.round((b.audio?.dur ?? estimateScript(b.script)) / 60));
 
 function renderStart(b: Briefing): void {
   const d = dateParts(b.date);
   const n = b.stories.length;
-  $('#metaDate').textContent = `${pad2(d.day)}//${d.short}//${d.year}`;
-  $('#progress').innerHTML = '<span class="seg"><i></i></span>'.repeat(b.stories.length + (b.markets ? 1 : 0));
-  $('#sKicker').textContent = isDemo ? 'LAGEBILD · DEMO' : 'LAGEBILD · TAGESUPDATE';
+  $('#metaDate').textContent = `${pad2(d.day)}/${pad2(d.month)}/${d.year}`;
+  $('#metaEp').textContent = `LAGEBILD · FOLGE ${b.episode}`;
+  $('#progress').innerHTML = '<span class="seg"><i></i></span>'.repeat(player.segments);
+  $('#sKicker').textContent = isDemo ? `LAGEBILD · DEMO-FOLGE` : `LAGEBILD · FOLGE ${b.episode}`;
   $('#sTitle').textContent = `${d.weekday}, ${d.day}. ${d.monthName}`;
-  const hasAudio = b.stories.some(s => s.lines.some(l => l.audio));
   $('#sSub').textContent = n
-    ? `${n} ${n === 1 ? 'Meldung' : 'Meldungen'} · ca. ${durationMin(b)} Min. · ${hasAudio ? 'Stimme' : 'Systemstimme'} und Untertitel`
+    ? `${n} ${n === 1 ? 'Meldung' : 'Meldungen'}${b.markets ? ' und Märkte' : ''} · ca. ${minutes(b)} Min. · ${b.audio ? 'Stimmen' : 'Systemstimme'} und Untertitel`
     : 'Heute keine Meldungen.';
   $('#sList').innerHTML = n
-    ? b.stories.map((s, i) => `<li style="--c:${catColor(b, s.category)}"><span class="p-num">${pad2(i + 1)}</span><span class="p-res">${esc(s.topic)}${relevanceHTML(s.relevance)}</span><span class="p-head">${esc(plainHeadline(s.headline))}</span></li>`).join('')
+    ? b.stories.map((s, i) => `<li style="--c:${categoryColor(b.categories, s.category)}"><span class="p-num">${pad2(i + 1)}</span><span class="p-res">${esc(s.topic)} · ${esc(formatLabel(s))}${relevanceHTML(s.relevance)}</span><span class="p-head">${esc(plainHeadline(s.headline))}</span></li>`).join('')
     : '<li class="empty">Für deine Themen gab es heute keine Meldung.</li>';
   const pb = $<HTMLButtonElement>('#playBtn');
-  pb.innerHTML = `${ICON.play} Update abspielen`;
+  pb.innerHTML = `${ICON.play} Folge abspielen`;
   pb.disabled = !n;
   const made = new Date(b.generated);
-  $('#sFine').textContent = b.note ?? `Erstellt am ${made.toLocaleDateString('de-DE')} um ${made.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr. Jede Meldung fasst nur die verlinkte Quelle zusammen.`;
+  $('#sFine').textContent = b.note ?? `Erstellt am ${made.toLocaleDateString('de-DE')} um ${made.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr. Jede Meldung beruht nur auf der verlinkten Quelle; Quellen am Ende und per Tippen auf die Karte.`;
   $('#archiveBtn').hidden = !index || index.days.length < 2;
   setProgress(0, 0);
 }
@@ -139,37 +132,58 @@ function renderStart(b: Briefing): void {
 function renderEnd(): void {
   const b = player.briefing;
   if (!b) return;
-  $('#eList').innerHTML = b.stories.map((s, i) => `<li style="--c:${catColor(b, s.category)}"><span class="p-num">${pad2(i + 1)}</span><span class="p-res">${esc(catName(b, s.category))}</span><span class="p-head"><a href="${esc(s.source.url)}" target="_blank" rel="noopener">${esc(plainHeadline(s.headline))}</a> <span class="p-src">· ${esc(s.source.name)}, ${shortDate(s.source.date)}</span></span></li>`).join('');
+  $('#eKicker').textContent = `FOLGE ${b.episode} BEENDET`;
+  $('#eList').innerHTML = b.stories.map(s => detailsHTML(s, b.categories)).join('') +
+    (b.markets ? `<article class="det" style="--acc:${categoryColor(b.categories, 'wirtschaft')}"><div class="det-top"><span class="tag">Märkte</span></div><div class="mkt">${marketsHTML(b.markets)}</div><a class="src" href="${esc(b.markets.source.url)}" target="_blank" rel="noopener">Quelle <span class="sep"></span> <b>${esc(b.markets.source.name)}</b> ↗</a></article>` : '');
   $('#againBtn').innerHTML = `${ICON.play} Nochmal abspielen`;
 }
 
 function show(b: Briefing): void {
-  player.stop();
-  player.briefing = b;
+  player.load(b);
   renderStart(b);
   $('#end').hidden = true;
   $('#start').hidden = false;
 }
+
+/** Nur Tage im aktuellen Format abspielen; ältere Formate gibt es (noch) nicht. */
+const usable = (b: Briefing | null): b is Briefing => Boolean(b && b.schema === SCHEMA_VERSION && Array.isArray(b.script));
 
 /* ---------- Archiv ---------- */
 function renderArchive(): void {
   const days = index?.days ?? [];
   $('#aList').innerHTML = days.map((d, i) => {
     const p = dateParts(d.date);
-    return `<li><span class="p-num">${pad2(i + 1)}</span><button class="day-btn" type="button" data-date="${esc(d.date)}"><span class="p-res" style="--c:var(--ink)">${p.weekday}, ${p.day}. ${p.monthName} · ${d.count} Meldungen</span><span class="p-head">${esc(plainHeadline(d.top))}</span></button></li>`;
+    return `<li><span class="p-num">${pad2(i + 1)}</span><button class="day-btn" type="button" data-date="${esc(d.date)}"><span class="p-res" style="--c:var(--ink)">${d.episode ? `Folge ${d.episode} · ` : ''}${p.weekday}, ${p.day}. ${p.monthName} · ${d.count} Meldungen</span><span class="p-head">${esc(plainHeadline(d.top))}</span></button></li>`;
   }).join('') || '<li class="empty">Noch kein Archiv.</li>';
 }
 
 async function openDay(date: string): Promise<void> {
   const b = await loadDay(date);
-  if (b) { isDemo = false; show(b); }
+  if (usable(b)) { isDemo = false; show(b); }
+}
+
+/* ---------- Details einer Meldung ---------- */
+let resumeAfterDetails = false;
+function openDetails(): void {
+  const b = player.briefing;
+  const s = card.story;
+  if (!b || !s) return;
+  $('#detailsBody').innerHTML = detailsHTML(s, b.categories);
+  resumeAfterDetails = player.playing && !player.paused;
+  if (resumeAfterDetails) player.togglePause();
+  openSheet('#details');
+}
+function closeDetails(): void {
+  closeSheet('#details');
+  if (resumeAfterDetails && player.playing && player.paused) player.togglePause();
+  resumeAfterDetails = false;
 }
 
 /* ---------- Einstellungen ---------- */
 function renderVoices(): void {
   const sel = $<HTMLSelectElement>('#voiceSel');
   const note = $('#voiceNote');
-  if (!voice.systemOk) {
+  if (!sys.ok) {
     sel.innerHTML = '<option>Nicht verfügbar</option>';
     sel.disabled = true;
     note.textContent = 'Dieser Browser bietet keine Systemstimme.';
@@ -177,9 +191,9 @@ function renderVoices(): void {
   }
   sel.disabled = false;
   sel.innerHTML = '<option value="">Automatisch (beste deutsche Stimme)</option>' +
-    voice.systemVoices.map(v => `<option value="${esc(v.voiceURI)}">${esc(v.name)} · ${esc(v.lang)}</option>`).join('');
-  sel.value = voice.systemVoices.some(v => v.voiceURI === S.systemVoice) ? S.systemVoice : '';
-  note.textContent = 'Wird nur benutzt, wenn für eine Meldung keine Audiodatei vorliegt. Bessere Systemstimmen am iPad: Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.';
+    sys.voices.map(v => `<option value="${esc(v.voiceURI)}">${esc(v.name)} · ${esc(v.lang)}</option>`).join('');
+  sel.value = sys.voices.some(v => v.voiceURI === S.systemVoice) ? S.systemVoice : '';
+  note.textContent = 'Wird nur benutzt, wenn es für einen Tag keine Audiodatei gibt (Demo, Archiv älter als 14 Tage). Bessere Systemstimmen am iPad: Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen.';
 }
 
 function setVoiceBtn(): void {
@@ -205,8 +219,7 @@ function bind(): void {
   $('#prevBtn').innerHTML = ICON.prev;
   $('#nextBtn').innerHTML = ICON.next;
   $('#setBtn').innerHTML = ICON.sliders;
-  $('#sheetClose').innerHTML = ICON.close;
-  $('#archiveClose').innerHTML = ICON.close;
+  for (const id of ['#sheetClose', '#archiveClose', '#detailsClose']) $(id).innerHTML = ICON.close;
   setVoiceBtn();
   updateControls();
   bindTopics();
@@ -215,15 +228,18 @@ function bind(): void {
   $('#againBtn').addEventListener('click', () => player.start());
   $('#menuBtn').addEventListener('click', () => { $('#end').hidden = true; $('#start').hidden = false; });
   $('#playPause').addEventListener('click', () => player.togglePause());
-  $('#nextBtn').addEventListener('click', () => player.jump(player.curIdx + 1));
-  $('#prevBtn').addEventListener('click', () => player.jump(player.lineK > 0 ? player.curIdx : player.curIdx - 1));
+  $('#nextBtn').addEventListener('click', () => player.nextScene());
+  $('#prevBtn').addEventListener('click', () => player.prevScene());
+  $('#card').addEventListener('click', openDetails);
+  $('#card').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetails(); } });
+  $('#detailsClose').addEventListener('click', closeDetails);
 
   for (const id of ['#setBtn', '#topicsBtn']) $(id).addEventListener('click', () => { openSheet('#sheet'); void openTopics(); });
   $('#sheetClose').addEventListener('click', () => closeSheet('#sheet'));
   $('#archiveBtn').addEventListener('click', () => { renderArchive(); openSheet('#archive'); });
   $('#archiveClose').addEventListener('click', () => closeSheet('#archive'));
-  for (const id of ['#sheet', '#archive']) {
-    $(id).addEventListener('click', e => { if (e.target === e.currentTarget) closeSheet(id); });
+  for (const id of ['#sheet', '#archive', '#details']) {
+    $(id).addEventListener('click', e => { if (e.target === e.currentTarget) (id === '#details' ? closeDetails() : closeSheet(id)); });
   }
   $('#aList').addEventListener('click', e => {
     const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-date]');
@@ -236,7 +252,7 @@ function bind(): void {
     S.speak = !S.speak;
     save();
     setVoiceBtn();
-    if (player.playing && !player.paused) voice.interrupt();
+    player.applySettings();
   });
   $<HTMLSelectElement>('#voiceSel').addEventListener('change', e => { S.systemVoice = (e.target as HTMLSelectElement).value; save(); });
   const rate = $<HTMLInputElement>('#rate');
@@ -244,28 +260,33 @@ function bind(): void {
   rate.value = String(S.rate);
   showRate();
   rate.addEventListener('input', () => { S.rate = parseFloat(rate.value); showRate(); save(); });
+  rate.addEventListener('change', () => player.applySettings());
   const sw = $('#atmoSw');
-  sw.setAttribute('aria-checked', String(S.atmo));
+  sw.setAttribute('aria-checked', String(S.music));
   sw.addEventListener('click', () => {
-    S.atmo = !S.atmo;
-    atmo.enabled = S.atmo;
+    S.music = !S.music;
+    atmo.enabled = S.music;
     save();
-    sw.setAttribute('aria-checked', String(S.atmo));
-    if (S.atmo && player.playing && !player.paused) { atmo.unlock(); atmo.on(); } else atmo.off();
+    sw.setAttribute('aria-checked', String(S.music));
+    atmo.unlock();
+    player.applySettings();
   });
 
   document.addEventListener('keydown', e => {
-    const open = ['#sheet', '#archive'].find(id => !$(id).hidden);
-    if (open) { if (e.key === 'Escape') closeSheet(open); return; }
-    if ((e.target as HTMLElement).closest?.('button,select,input,a')) return;
+    const open = ['#sheet', '#archive', '#details'].find(id => !$(id).hidden);
+    if (open) { if (e.key === 'Escape') (open === '#details' ? closeDetails() : closeSheet(open)); return; }
+    if ((e.target as HTMLElement).closest?.('button,select,input,a,[role="button"]')) return;
     if (e.key === ' ') { e.preventDefault(); player.togglePause(); }
-    if (e.key === 'ArrowRight') player.jump(player.curIdx + 1);
-    if (e.key === 'ArrowLeft') player.jump(player.curIdx - 1);
+    if (e.key === 'ArrowRight') player.nextScene();
+    if (e.key === 'ArrowLeft') player.prevScene();
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      if (player.playing && !player.paused) player.togglePause();
-    } else if (!player.playing && Date.now() - lastCheck > 20 * 60 * 1000) {
+      // Mit Audiodatei läuft die Folge im Hintergrund weiter; die Systemstimme kann das nicht
+      if (player.playing && !player.paused && !player.hasFile) player.togglePause();
+    } else if (player.playing) {
+      player.resync();
+    } else if (Date.now() - lastCheck > 20 * 60 * 1000) {
       // Die App bleibt auf dem iPad oft tagelang im Speicher: beim Zurückkehren nach neuem Update schauen
       void refresh();
     }
@@ -275,9 +296,9 @@ function bind(): void {
   new ResizeObserver(() => { if (card.visible) measure(); }).observe($('#card'));
   measure();
 
-  if (voice.systemOk) {
-    voice.loadSystemVoices();
-    speechSynthesis.addEventListener('voiceschanged', () => { voice.loadSystemVoices(); renderVoices(); });
+  if (sys.ok) {
+    sys.load();
+    speechSynthesis.addEventListener('voiceschanged', () => { sys.load(); renderVoices(); });
   }
   renderVoices();
 }
@@ -291,10 +312,11 @@ async function refresh(): Promise<void> {
   index = await loadIndex();
   const latest = index?.days[0]?.date;
   if (latest && latest === shownDate && !isDemo) return;
-  let b = latest ? await loadDay(latest) : null;
+  let b: Briefing | null = latest ? await loadDay(latest) : null;
+  if (!usable(b)) b = null;
   isDemo = !b;
   b ??= await loadDemo();
-  if (b && !player.playing) show(b);
+  if (usable(b) && !player.playing) show(b);
   else if (!b && !player.briefing) {
     $('#sTitle').textContent = 'Keine Daten';
     $('#sSub').textContent = 'Das Update konnte nicht geladen werden. Bitte später erneut versuchen.';
@@ -303,6 +325,8 @@ async function refresh(): Promise<void> {
 
 async function boot(): Promise<void> {
   bind();
+  const earth = `${import.meta.env.BASE_URL}earth/`;
+  globe.loadEarth({ day: `${earth}earth-day.jpg`, night: `${earth}earth-night.jpg`, clouds: `${earth}earth-clouds.jpg` });
   void loadWorld110()
     .then(w => {
       globe.setWorld(w);

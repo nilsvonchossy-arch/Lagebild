@@ -1,24 +1,29 @@
-// Ton: Bass-Teppich und Blip über WebAudio, Sprache über ein <audio>-Element (vorproduzierte MP3s)
-// mit Systemstimme (Web Speech API) als Rückfallebene und einem Timer-Modus ganz ohne Ton.
-import type { Caption } from './fx';
-import type { Line } from './shared/types';
-import { speed } from './util';
+// Ton: Die Folge kommt als eine Audiodatei (Stimmen, Pausen und Musikbett schon gemischt), damit sie
+// gleichmäßig klingt und bei gesperrtem iPad weiterläuft. Ohne Datei (Demo, altes Archiv) spricht die
+// Systemstimme Zeile für Zeile; dann liefert WebAudio den Bass-Teppich.
+import type { Line, Role } from './shared/types';
 
 type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext };
 type AudioSessionNavigator = Navigator & { audioSession?: { type: string } };
 
-/** Bass-Teppich und Blip. */
+/** iPad: Ton auch im Stumm-Modus und im Hintergrund abspielen (Safari 17+). */
+export function playbackSession(): void {
+  try {
+    const nav = navigator as AudioSessionNavigator;
+    if (nav.audioSession) nav.audioSession.type = 'playback';
+  } catch { /* ältere Geräte */ }
+}
+
+/** Bass-Teppich mit leichtem Puls und Blip über WebAudio, nur ohne Audiodatei. */
 export class Atmo {
   private ctx: AudioContext | null = null;
-  private drone: { g: GainNode; nodes: OscillatorNode[] } | null = null;
+  private drone: { g: GainNode; nodes: AudioScheduledSourceNode[]; timer: number } | null = null;
   enabled = true;
 
   /** Muss in einem Tipp-Ereignis aufgerufen werden (iOS). */
   unlock(): void {
+    playbackSession();
     try {
-      // iPad: Ton auch im Stumm-Modus abspielen (Safari 17+)
-      const nav = navigator as AudioSessionNavigator;
-      if (nav.audioSession) nav.audioSession.type = 'playback';
       const AC = window.AudioContext ?? (window as WebkitWindow).webkitAudioContext;
       if (!AC) return;
       this.ctx ??= new AC();
@@ -40,13 +45,29 @@ export class Atmo {
       const o1 = ac.createOscillator(), o2 = ac.createOscillator(), lfo = ac.createOscillator(), lg = ac.createGain();
       o1.type = o2.type = 'sawtooth';
       o1.frequency.value = 55;
-      o2.frequency.value = 55.5;
+      o2.frequency.value = 55.4;
       lfo.frequency.value = 0.07;
       lg.gain.value = 55;
       lfo.connect(lg); lg.connect(f.frequency); o1.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination);
       for (const o of [o1, o2, lfo]) o.start();
       g.gain.linearRampToValueAtTime(0.05, ac.currentTime + 2.5);
-      this.drone = { g, nodes: [o1, o2, lfo] };
+      // Puls bei 120 BPM: kurzer, fallender Ton auf jedem Schlag
+      const pulse = (): void => {
+        const t = ac.currentTime + 0.05;
+        for (let k = 0; k < 4; k++) {
+          const o = ac.createOscillator(), e = ac.createGain(), at = t + k * 0.5;
+          o.frequency.setValueAtTime(95, at);
+          o.frequency.exponentialRampToValueAtTime(48, at + 0.12);
+          e.gain.setValueAtTime(0.0001, at);
+          e.gain.exponentialRampToValueAtTime(0.09, at + 0.008);
+          e.gain.exponentialRampToValueAtTime(0.0001, at + 0.3);
+          o.connect(e); e.connect(g);
+          o.start(at); o.stop(at + 0.32);
+        }
+      };
+      pulse();
+      const timer = window.setInterval(pulse, 2000);
+      this.drone = { g, nodes: [o1, o2, lfo], timer };
     } catch { /* ohne Atmo weiter */ }
   }
 
@@ -54,6 +75,7 @@ export class Atmo {
     const ac = this.ctx, d = this.drone;
     if (!ac || !d) return;
     this.drone = null;
+    clearInterval(d.timer);
     d.g.gain.cancelScheduledValues(ac.currentTime);
     d.g.gain.setValueAtTime(d.g.gain.value, ac.currentTime);
     d.g.gain.linearRampToValueAtTime(0, ac.currentTime + 0.8);
@@ -77,178 +99,151 @@ export class Atmo {
   }
 }
 
-export type SpeakResult = 'done' | 'interrupted' | 'cancel';
-
-export interface VoiceSettings {
-  speak: boolean;
-  rate: number;
-  /** voiceURI der Systemstimme für die Rückfallebene, leer = automatisch */
-  systemVoice: string;
-}
-
 // Kurze stille WAV-Datei: wird beim ersten Tippen abgespielt, damit iOS das Element freigibt.
 const SILENCE = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 
-/** Vorlauf der Untertitel vor der Stimme in Sekunden */
-const LEAD = 0.15;
+/** Die gemischte Folge als ein <audio>-Element; die Zeit dieses Elements steuert Bild und Untertitel. */
+export class EpisodeAudio {
+  readonly el = new Audio();
+  private src = '';
 
-/** Geschätzte Sprechdauer in ms, wenn es keine Audiodatei gibt. */
-export const estimateMs = (text: string, rate = 1): number => (text.split(/\s+/).length * 360 + 700) / rate;
-
-export class Voice {
-  readonly systemOk = typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined';
-  systemVoices: SpeechSynthesisVoice[] = [];
-  private readonly el = new Audio();
-  private pending: ((r: SpeakResult) => void) | null = null;
-  private raf = 0;
-  private mode: 'clip' | 'system' | 'timer' | null = null;
-
-  constructor(
-    private readonly settings: () => VoiceSettings,
-    private readonly dataBase: () => string
-  ) {
+  constructor() {
     this.el.preload = 'auto';
   }
 
-  /** Im Tipp-Ereignis aufrufen: gibt das Audio-Element und die Systemstimme für spätere Wiedergabe frei. */
+  /** Im Tipp-Ereignis aufrufen, bevor eine Folge startet. */
   unlock(): void {
+    playbackSession();
+    if (this.src) return;
     this.el.src = SILENCE;
     void this.el.play().catch(() => undefined);
-    if (this.systemOk && this.settings().speak) {
-      try {
-        speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(' ');
-        u.volume = 0;
-        speechSynthesis.speak(u);
-      } catch { /* egal */ }
+  }
+
+  /** Quelle wechseln, ohne die Position zu verlieren (z. B. Musikbett an/aus). */
+  load(src: string, keepTime = false): void {
+    if (src === this.src) return;
+    const t = keepTime ? this.el.currentTime : 0;
+    const playing = keepTime && !this.el.paused;
+    this.src = src;
+    this.el.src = src;
+    if (keepTime) {
+      const go = (): void => { this.el.currentTime = t; if (playing) void this.el.play().catch(() => undefined); };
+      if (this.el.readyState >= 1) go(); else this.el.addEventListener('loadedmetadata', go, { once: true });
     }
   }
 
-  loadSystemVoices(): void {
-    if (!this.systemOk) return;
-    const score = (v: SpeechSynthesisVoice): number => {
-      const n = v.name.toLowerCase();
-      let s = 0;
-      if (/premium|enhanced|neural|natural|online/.test(n)) s += 5;
-      if (/google|microsoft/.test(n)) s += 2;
-      return s;
-    };
-    this.systemVoices = speechSynthesis
-      .getVoices()
-      .filter(v => /^de([-_]|$)/i.test(v.lang))
-      .sort((a, b) => score(b) - score(a));
+  get time(): number {
+    return this.el.currentTime;
   }
 
-  /** Audiodateien vorab laden, damit es zwischen den Zeilen keine Pausen gibt. */
-  prefetch(lines: Line[]): void {
-    for (const l of lines) if (l.audio) void fetch(this.dataBase() + l.audio.src).catch(() => undefined);
+  seek(t: number): void {
+    try { this.el.currentTime = Math.max(0, t); } catch { /* noch nicht geladen */ }
   }
 
-  speak(line: Line, caption: Caption): Promise<SpeakResult> {
-    const s = this.settings();
-    caption.show(line.role, line.text);
-    return new Promise<SpeakResult>(resolve => {
+  play(): Promise<void> {
+    return this.el.play();
+  }
+
+  pause(): void {
+    this.el.pause();
+  }
+
+  reset(): void {
+    this.el.pause();
+    this.src = '';
+  }
+}
+
+/** Geschätzte Sprechdauer der Systemstimme in ms */
+export const estimateMs = (text: string, rate = 1): number => (text.split(/\s+/).length * 360 + 500) / rate;
+
+/** Systemstimme (Web Speech API) als Rückfallebene, drei Rollen mit unterschiedlicher Stimme oder Tonhöhe. */
+export class SystemVoice {
+  readonly ok = typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined';
+  voices: SpeechSynthesisVoice[] = [];
+  private token = 0;
+
+  unlock(): void {
+    if (!this.ok) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      speechSynthesis.speak(u);
+    } catch { /* egal */ }
+  }
+
+  load(): void {
+    if (!this.ok) return;
+    const score = (v: SpeechSynthesisVoice): number => (/premium|enhanced|neural|natural|online/i.test(v.name) ? 5 : 0) + (/google|microsoft/i.test(v.name) ? 2 : 0);
+    this.voices = speechSynthesis.getVoices().filter(v => /^de([-_]|$)/i.test(v.lang)).sort((a, b) => score(b) - score(a));
+  }
+
+  /** Stimme und Tonhöhe je Rolle: LAGE nimmt die gewählte Stimme, die anderen Rollen andere, falls vorhanden. */
+  private pick(role: Role, preferred: string): { voice?: SpeechSynthesisVoice; pitch: number } {
+    const main = this.voices.find(v => v.voiceURI === preferred) ?? this.voices[0];
+    const others = this.voices.filter(v => v !== main);
+    if (role === 'LAGE') return { voice: main, pitch: 1.05 };
+    if (role === 'LEITUNG') return { voice: others[0] ?? main, pitch: others[0] ? 0.9 : 0.8 };
+    return { voice: others[1] ?? others[0] ?? main, pitch: others.length > 1 ? 0.95 : 0.88 };
+  }
+
+  /** Zeile sprechen; `progress` bekommt den gesprochenen Anteil (aus Wortgrenzen oder geschätzt). */
+  speak(line: Line, opts: { rate: number; preferred: string }, progress: (frac: number) => void): Promise<'done' | 'cancel'> {
+    const my = ++this.token;
+    const text = line.say ?? line.text;
+    const ms = estimateMs(text, opts.rate);
+    return new Promise(resolve => {
       let finished = false;
-      const done = (r: SpeakResult): void => {
+      const t0 = performance.now();
+      let boundary = false;
+      const done = (r: 'done' | 'cancel'): void => {
         if (finished) return;
         finished = true;
-        cancelAnimationFrame(this.raf);
-        this.pending = null;
-        this.mode = null;
-        if (r === 'done') caption.reveal(1);
+        cancelAnimationFrame(raf);
         resolve(r);
       };
-      this.pending = done;
-
-      if (s.speak && line.audio) this.playClip(line, caption, done, () => this.speakSystem(line, caption, done));
-      else if (s.speak && this.systemOk) this.speakSystem(line, caption, done);
-      else this.timer(line, caption, done);
+      const tick = (): void => {
+        if (my !== this.token) { done('cancel'); return; }
+        if (!boundary) progress(Math.min(0.98, (performance.now() - t0) / ms));
+        raf = requestAnimationFrame(tick);
+      };
+      let raf = requestAnimationFrame(tick);
+      if (!this.ok) { setTimeout(() => done(my === this.token ? 'done' : 'cancel'), ms); return; }
+      try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        const p = this.pick(line.role, opts.preferred);
+        if (p.voice) { u.voice = p.voice; u.lang = p.voice.lang; } else u.lang = 'de-DE';
+        u.rate = opts.rate;
+        u.pitch = p.pitch;
+        u.onboundary = e => { boundary = true; progress(Math.min(1, e.charIndex / Math.max(1, text.length))); };
+        u.onend = () => done(my === this.token ? 'done' : 'cancel');
+        u.onerror = e => done(e.error === 'interrupted' || e.error === 'canceled' ? 'cancel' : 'done');
+        speechSynthesis.speak(u);
+      } catch { /* Sicherheitsnetz unten */ }
+      // falls onend nie kommt (kommt auf manchen Geräten vor)
+      setTimeout(() => { if (my === this.token) done('done'); }, ms * 2.2 + 3000);
     });
   }
 
-  private playClip(line: Line, caption: Caption, done: (r: SpeakResult) => void, fallback: () => void): void {
-    const clip = line.audio!;
-    const el = this.el;
-    this.mode = 'clip';
-    const fail = (): void => {
-      if (this.mode !== 'clip' || this.pending !== done) return;
-      cancelAnimationFrame(this.raf);
-      el.onended = el.onerror = null;
-      fallback();
-    };
-    el.onended = () => done('done');
-    el.onerror = fail;
-    el.src = this.dataBase() + clip.src;
-    el.playbackRate = this.settings().rate * speed();
-    el.play().catch(fail);
-    const words = clip.words;
+  cancel(): void {
+    this.token++;
+    if (this.ok) try { speechSynthesis.cancel(); } catch { /* egal */ }
+  }
+}
+
+/** Ganz ohne Ton: Zeile dauert so lange, wie sie gesprochen ungefähr dauern würde. */
+export function silentLine(line: Line, rate: number, progress: (frac: number) => void, cancelled: () => boolean): Promise<'done' | 'cancel'> {
+  const ms = line.audio ? (line.audio.dur * 1000) / rate : estimateMs(line.say ?? line.text, rate);
+  const t0 = performance.now();
+  return new Promise(resolve => {
     const tick = (): void => {
-      const t = el.currentTime + LEAD;
-      let frac = clip.dur ? t / clip.dur : 0;
-      if (words?.length) {
-        // erstes Wortende, das noch nicht erreicht ist → bis dorthin anzeigen
-        const next = words.find(w => w[0] > t);
-        frac = next ? next[1] : 1;
-      }
-      caption.reveal(frac);
-      this.raf = requestAnimationFrame(tick);
+      if (cancelled()) { resolve('cancel'); return; }
+      const k = (performance.now() - t0) / ms;
+      progress(Math.min(1, k));
+      if (k >= 1) resolve('done'); else requestAnimationFrame(tick);
     };
-    this.raf = requestAnimationFrame(tick);
-  }
-
-  private speakSystem(line: Line, caption: Caption, done: (r: SpeakResult) => void): void {
-    const s = this.settings();
-    if (!this.systemOk) { this.timer(line, caption, done); return; }
-    this.mode = 'system';
-    const text = line.say ?? line.text;
-    const ms = estimateMs(text, s.rate);
-    caption.typeOver(ms * 0.8);
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      const main = this.systemVoices.find(v => v.voiceURI === s.systemVoice) ?? this.systemVoices[0];
-      // zweite Stimme für BRIEFING, falls vorhanden
-      const alt = line.role === 'BRIEFING' ? this.systemVoices.find(v => v !== main) : undefined;
-      const v = alt ?? main;
-      if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'de-DE';
-      u.rate = s.rate;
-      u.pitch = line.role === 'BRIEFING' && !alt ? 0.85 : 1;
-      u.onend = () => done('done');
-      u.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled') done('done'); };
-      speechSynthesis.speak(u);
-    } catch { /* Timer unten greift */ }
-    // Sicherheitsnetz, falls onend nie kommt (kommt auf manchen Geräten vor)
-    setTimeout(() => { if (this.mode === 'system') done('done'); }, ms * 2.2 + 3000);
-  }
-
-  private timer(line: Line, caption: Caption, done: (r: SpeakResult) => void): void {
-    this.mode = 'timer';
-    const ms = line.audio ? (line.audio.dur * 1000) / this.settings().rate : estimateMs(line.text, this.settings().rate);
-    caption.typeOver(ms * 0.8);
-    setTimeout(() => { if (this.mode === 'timer') done('done'); }, ms / speed());
-  }
-
-  /** Pause: Audiodatei hält an; Systemstimme und Timer brechen ab und die Zeile startet nach dem Fortsetzen neu. */
-  pause(): void {
-    if (this.mode === 'clip') { this.el.pause(); return; }
-    if (this.systemOk) try { speechSynthesis.cancel(); } catch { /* egal */ }
-    this.pending?.('interrupted');
-  }
-
-  resume(): void {
-    if (this.mode === 'clip') void this.el.play().catch(() => this.pending?.('done'));
-  }
-
-  /** Laufende Zeile abbrechen; sie startet sofort mit den aktuellen Einstellungen neu (z. B. Stimme aus). */
-  interrupt(): void {
-    this.el.pause();
-    if (this.systemOk) try { speechSynthesis.cancel(); } catch { /* egal */ }
-    this.pending?.('interrupted');
-  }
-
-  stop(): void {
-    this.el.pause();
-    if (this.systemOk) try { speechSynthesis.cancel(); } catch { /* egal */ }
-    this.pending?.('cancel');
-  }
+    requestAnimationFrame(tick);
+  });
 }

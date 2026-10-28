@@ -17,15 +17,18 @@
 </head>
 <body>
 <div id="app">
+  <canvas id="earth" aria-hidden="true"></canvas>
   <canvas id="globe" aria-hidden="true"></canvas>
-  <div class="fx scan"></div>
   <div class="fx vignette"></div>
-  <div id="pin" aria-hidden="true"><span class="flag" id="pinFlag"></span><span id="pinName"></span></div>
+  <div id="pin" aria-hidden="true">
+    <span class="pin-row"><span class="flag" id="pinFlag"></span><span id="pinName"></span></span>
+    <span class="pin-fig" id="pinFig"><b id="pinFigNum"></b><small id="pinFigLabel"></small></span>
+  </div>
 
   <header class="hud">
     <div class="progress" id="progress"></div>
     <div class="meta">
-      <div class="stamp-date"><span class="pix" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="metaDate"></span><span class="brand">LAGEBILD</span></div>
+      <div class="stamp-date"><span id="metaDate"></span><span class="brand" id="metaEp">LAGEBILD</span></div>
       <div class="tools">
         <button class="iconbtn" id="voiceBtn" type="button" aria-pressed="true" aria-label="Stimme an oder aus"></button>
         <button class="iconbtn" id="setBtn" type="button" aria-label="Einstellungen"></button>
@@ -43,13 +46,11 @@
   </div>
 
   <div class="hud cardwrap">
-    <article class="card" id="card" data-state="hidden" aria-live="polite">
-      <div class="card-top rv" style="--d:.25s"><span class="tag" id="cTag"></span><span class="count" id="cCount"></span></div>
-      <h2 class="headline" id="cHead"></h2>
-      <p class="brief rv" style="--d:.7s"><b>Kurz gesagt:</b> <span id="cBrief"></span></p>
-      <div class="figure rv" id="cFigure" style="--d:.85s"><span class="fig-num" id="cFig"></span><span class="fig-label" id="cFigLabel"></span></div>
-      <div class="mkt rv" id="cMarkets" style="--d:.6s" hidden></div>
-      <div class="card-foot rv" style="--d:1s"><a class="src" id="cSrc" target="_blank" rel="noopener">Quelle <span class="sep"></span> <b id="cSrcName"></b> <span class="src-date" id="cSrcDate"></span> ↗</a><span class="foot-mark" id="cMark"></span></div>
+    <article class="card" id="card" data-state="hidden" aria-live="polite" role="button" tabindex="0" aria-label="Details zur Meldung">
+      <div class="c-top"><span class="c-flag" id="cFlag"></span><span class="c-place" id="cPlace"></span><span class="c-count" id="cCount"></span></div>
+      <h2 class="c-line" id="cLine"></h2>
+      <div class="mkt" id="cMarkets" hidden></div>
+      <span class="c-more" aria-hidden="true">Details</span>
     </article>
   </div>
 
@@ -61,7 +62,7 @@
 
   <section class="overlay" id="start">
     <div class="panel">
-      <div class="kicker" id="sKicker">LAGEBILD · TAGESUPDATE</div>
+      <div class="kicker" id="sKicker">LAGEBILD</div>
       <h1 class="p-title" id="sTitle">Lade Lagebild …</h1>
       <p class="p-sub" id="sSub"></p>
       <ol class="p-list" id="sList"></ol>
@@ -76,13 +77,20 @@
 
   <section class="overlay" id="end" hidden>
     <div class="panel">
-      <div class="kicker">UPDATE BEENDET</div>
-      <h1 class="p-title">Das war dein Lagebild</h1>
-      <ol class="p-list" id="eList"></ol>
+      <div class="kicker" id="eKicker">FOLGE BEENDET</div>
+      <h1 class="p-title">Alle Meldungen mit Quellen</h1>
+      <div class="det-list" id="eList"></div>
       <div class="p-actions">
         <button class="btn primary" id="againBtn" type="button"></button>
         <button class="btn" id="menuBtn" type="button">Übersicht</button>
       </div>
+    </div>
+  </section>
+
+  <section id="details" class="sheet" hidden>
+    <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
+      <div class="sheet-head"><h2 id="detailsTitle">Meldung</h2><button class="iconbtn" id="detailsClose" type="button" aria-label="Schließen"></button></div>
+      <div id="detailsBody"></div>
     </div>
   </section>
 
@@ -91,18 +99,19 @@
       <div class="sheet-head"><h2 id="sheetTitle">Einstellungen</h2><button class="iconbtn" id="sheetClose" type="button" aria-label="Schließen"></button></div>
       <div class="grp" id="topicsBox"></div>
       <div class="grp">
-        <div class="row"><span>Atmo-Sound (Bass-Teppich)</span><button class="switch" id="atmoSw" type="button" role="switch" aria-checked="true" aria-label="Atmo-Sound"></button></div>
+        <div class="row"><span>Musikbett</span><button class="switch" id="atmoSw" type="button" role="switch" aria-checked="true" aria-label="Musikbett"></button></div>
       </div>
       <div class="grp">
         <label for="rate">Sprechtempo <span id="rateVal"></span></label>
         <input type="range" id="rate" min="0.8" max="1.3" step="0.05">
       </div>
       <div class="grp">
-        <label for="voiceSel">Systemstimme (nur ohne Audiodateien)</label>
+        <label for="voiceSel">Systemstimme (nur ohne Audiodatei)</label>
         <select id="voiceSel"></select>
         <p class="note" id="voiceNote"></p>
       </div>
       <div class="grp" id="ghBox"></div>
+      <p class="note">Globus: NASA Earth Observatory (Blue Marble, Black Marble), gemeinfrei. Grenzen: Natural Earth.</p>
     </div>
   </section>
 
