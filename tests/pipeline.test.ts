@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import themen from '../config/themen.json';
-import { buildBriefing, cleanHeadline, type Built } from '../pipeline/assemble';
+import { buildBriefing, cleanHeadline, summaryLine, toScriptStory, toStory, type Built } from '../pipeline/assemble';
+import { applyLineVerdicts, cleanDraft, fillGaps, normalizeLineVerdict, simpleLines, tidy, type ScriptStory } from '../pipeline/drehbuch';
 import { applyVerdicts, type Draft } from '../pipeline/editorial';
 import { extractArticle } from '../pipeline/extract';
-import { resolvePlace } from '../pipeline/geo';
+import { resolveExtraPlace, resolvePlace } from '../pipeline/geo';
+import { layoutLines, levelGain, musicBed, parseWav, trimBounds, wavBytes, type Clip } from '../pipeline/mix';
+import { planEpisode, targetSeconds, wantedStories, type PlanInput } from '../pipeline/plan';
 import { gdeltQuery, mergeCandidates, parseFeed, type Feed } from '../pipeline/sources';
 import { escapeXml, wordMarks } from '../pipeline/tts';
 import { berlinISO, berlinNow, normalizeUrl, plainText } from '../pipeline/util';
-import type { ThemenConfig } from '../src/shared/config';
+import { migrateConfig } from '../src/shared/config';
+import type { Line } from '../src/shared/types';
 
-const cfg = themen as unknown as ThemenConfig;
+const cfg = migrateConfig(themen);
 const feed: Feed = { id: 'x', name: 'Testquelle', url: 'https://example.org/feed', lang: 'de' };
 
 describe('Feeds', () => {
@@ -77,17 +81,17 @@ describe('Volltext', () => {
 
 const draft = (): Draft => ({
   usable: true,
+  facts: [
+    { text: 'Der Bundestag hat ein Gesetz beschlossen.', kind: 'kern' },
+    { text: 'Es gilt ab Januar.', kind: 'detail' },
+    { text: 'Das ist ein historischer Schritt.', kind: 'hintergrund' }
+  ],
   headline: '[Bundestag] beschließt Gesetz',
   brief: 'Der Bundestag hat ein Gesetz beschlossen.',
   figure: { value: 412, decimals: 0, prefix: '', suffix: '', label: 'Ja-Stimmen' },
-  lines: [
-    { role: 'LAGE', text: 'Der Bundestag hat ein Gesetz beschlossen.', say: null },
-    { role: 'LAGE', text: 'Es gilt ab Januar.', say: null },
-    { role: 'EINORDNUNG', text: 'Das ist ein historischer Schritt.', say: null }
-  ],
-  opener: { first: 'Wir starten in Berlin.', mid: 'Blick nach Berlin.', last: 'Zum Schluss nach Berlin.' },
   short: 'neues Gesetz in Berlin',
   place: { label: 'BERLIN', country_iso3: 'DEU', lon: 13.4, lat: 52.52 },
+  places: [],
   source_date: '2026-10-27'
 });
 
@@ -96,11 +100,11 @@ describe('Faktencheck', () => {
     const r = applyVerdicts(draft(), [
       { id: 'headline', verdict: 'belegt', problem: null, correction: null },
       { id: 'figure', verdict: 'nicht_belegt', problem: 'Zahl fehlt im Text', correction: null },
-      { id: 'line2', verdict: 'teilweise', problem: 'Datum falsch', correction: 'Es gilt ab Februar.' },
-      { id: 'line3', verdict: 'nicht_belegt', problem: 'Wertung', correction: null }
+      { id: 'f2', verdict: 'teilweise', problem: 'Datum falsch', correction: 'Es gilt ab Februar.' },
+      { id: 'f3', verdict: 'nicht_belegt', problem: 'Wertung', correction: null }
     ]);
     expect(r.draft?.figure).toBeNull();
-    expect(r.draft?.lines.map(l => l.text)).toEqual(['Der Bundestag hat ein Gesetz beschlossen.', 'Es gilt ab Februar.']);
+    expect(r.draft?.facts.map(f => f.text)).toEqual(['Der Bundestag hat ein Gesetz beschlossen.', 'Es gilt ab Februar.']);
     expect(r.issues).toHaveLength(3);
     expect(r.changed).toBe(true);
   });
@@ -109,9 +113,117 @@ describe('Faktencheck', () => {
     expect(applyVerdicts(draft(), [{ id: 'headline', verdict: 'nicht_belegt', problem: 'x', correction: null }]).draft).toBeNull();
   });
 
-  it('verwirft die Meldung bei weniger als zwei belegten Zeilen', () => {
-    const r = applyVerdicts(draft(), ['line1', 'line2'].map(id => ({ id, verdict: 'nicht_belegt' as const, problem: 'x', correction: null })));
+  it('verwirft die Meldung bei weniger als zwei belegten Fakten', () => {
+    const r = applyVerdicts(draft(), ['f1', 'f2'].map(id => ({ id, verdict: 'nicht_belegt' as const, problem: 'x', correction: null })));
     expect(r.draft).toBeNull();
+  });
+});
+
+describe('Plan der Folge', () => {
+  const item = (relevance: number, weight: PlanInput['weight'], facts: number, lon: number, lat: number): PlanInput => ({ relevance, weight, facts, lon, lat });
+
+  it('macht die wichtigste Meldung mit genug Stoff zum Aufmacher', () => {
+    const p = planEpisode([item(3, 'normal', 6, 13, 52), item(5, 'ausfuehrlich', 2, 35, 31), item(5, 'ausfuehrlich', 8, 35, 31)], 3, false);
+    expect(p.items[0]).toMatchObject({ index: 2, format: 'aufmacher' });
+    // zu wenig Fakten: nur kurz notiert
+    expect(p.items.find(x => x.index === 1)?.format).toBe('kurz');
+  });
+
+  it('setzt „nur kurz“-Themen ans Ende und verteilt die Zeit nach Länge', () => {
+    const input = [item(5, 'normal', 8, 35, 31), item(4, 'kurz', 6, 2, 49), item(4, 'normal', 5, 12, 47), item(3, 'normal', 5, -74, 41)];
+    const p = planEpisode(input, 3, true);
+    expect(p.items.map(x => x.format)).toEqual(['aufmacher', 'meldung', 'meldung', 'kurz']);
+    expect(p.items[p.items.length - 1]!.index).toBe(1);
+    const sum = p.items.reduce((n, x) => n + x.seconds, 0);
+    expect(sum).toBeLessThanOrEqual(180);
+  });
+
+  it('fährt eine Route statt hin und her zu springen', () => {
+    // Aufmacher Israel, dann Tirol, Paris, New York, Kalifornien (nicht nach Relevanz durcheinander)
+    const input = [item(5, 'ausfuehrlich', 8, 35, 31), item(3, 'normal', 5, -122, 37), item(3, 'normal', 5, 12, 47), item(3, 'normal', 5, -74, 41), item(3, 'normal', 5, 2, 49)];
+    const p = planEpisode(input, 8, false);
+    expect(p.items.map(x => x.index)).toEqual([0, 2, 4, 3, 1]);
+  });
+
+  it('lässt Meldungen weg, wenn die Zeit nicht reicht', () => {
+    const input = Array.from({ length: 12 }, (_, i) => item(3, 'normal', 6, i * 10, 0));
+    const p = planEpisode(input, 3, true);
+    expect(p.dropped.length).toBeGreaterThan(0);
+    expect(p.items.length + p.dropped.length).toBe(12);
+  });
+
+  it('kürzt, wenn die Quelle wenig hergibt', () => {
+    expect(targetSeconds('aufmacher', item(5, 'ausfuehrlich', 9, 0, 0))).toBe(45);
+    expect(targetSeconds('aufmacher', item(5, 'ausfuehrlich', 3, 0, 0))).toBeLessThan(30);
+    expect(targetSeconds('meldung', item(3, 'normal', 2, 0, 0))).toBeLessThan(20);
+    expect(wantedStories(3)).toBeLessThan(wantedStories(8));
+  });
+});
+
+const sstory = (key: string, format: ScriptStory['format'], n = 4): ScriptStory => ({
+  key, id: `s-${key.toLowerCase()}`, format, seconds: 20, topic: 'T', label: 'ORT', places: [], figure: null,
+  facts: Array.from({ length: n }, (_, i) => ({ id: `${key}${i + 1}`, text: `Fakt ${key}${i + 1}.`, kind: i === 0 ? 'kern' : i === 2 ? 'vorbehalt' : 'detail' }))
+});
+
+describe('Drehbuch', () => {
+  const stories = [sstory('A', 'aufmacher'), sstory('B', 'meldung'), sstory('C', 'kurz'), sstory('D', 'kurz')];
+
+  it('räumt die Antwort auf: Rollen, fremde Fakten, Reihenfolge, Begrüßung', () => {
+    const raw = [
+      { role: 'Leitung', story: 'A', text: 'Guten Morgen und willkommen!', say: null, facts: [] },
+      { role: 'LAGE', story: 'A', text: 'LAGE: Kernaussage A.', say: null, facts: ['A1', 'B2'] },
+      { role: 'leitung', story: 'C', text: 'Und sonst?', say: null, facts: [] },
+      { role: 'Lage', story: 'C', text: 'Kurz C.', say: 'Kurz C.', facts: ['c1'] },
+      { role: 'LEITUNG', story: 'B', text: 'Und dann?', say: null, facts: [] },
+      { role: 'Einordnung', story: 'B', text: 'Einordnung B.', say: null, facts: ['B3'] },
+      { role: 'LAGE', story: 'X', text: 'Unbekannt.', say: null, facts: [] }
+    ];
+    const r = cleanDraft(raw, stories);
+    expect(r.lines.map(l => `${l.key}:${l.role}:${l.text}`)).toEqual(['A:LAGE:Kernaussage A.', 'B:LEITUNG:Und dann?', 'B:EINORDNUNG:Einordnung B.', 'C:LEITUNG:Und sonst?', 'C:LAGE:Kurz C.']);
+    expect(r.lines[0]!.facts).toEqual(['A1']);
+    expect(r.lines[4]!.facts).toEqual(['C1']);
+    expect(r.lines[4]!.say).toBeNull();
+    expect(r.issues.some(i => i.includes('Begrüßung'))).toBe(true);
+    expect(r.issues.some(i => i.includes('Reihenfolge'))).toBe(true);
+  });
+
+  it('streicht Fragen ohne Antwort', () => {
+    const L = (key: string, role: 'LEITUNG' | 'LAGE', text: string) => ({ key, role, text, say: null, facts: role === 'LAGE' ? [`${key}1`] : [] });
+    expect(tidy([L('A', 'LEITUNG', 'Frage?'), L('A', 'LAGE', 'a'), L('A', 'LEITUNG', 'Wie viele?'), L('B', 'LEITUNG', 'Und?'), L('B', 'LAGE', 'b'), L('B', 'LEITUNG', 'Noch was?')]).map(l => l.text)).toEqual(['a', 'Und?', 'b']);
+  });
+
+  it('wendet die Prüfung an: korrigieren, streichen, ungeprüft', () => {
+    const lines = [0, 1, 2, 3].map(i => ({ role: 'LAGE' as const, key: 'A', text: `Zeile ${i}`, say: 'x', facts: ['A1'] }));
+    const r = applyLineVerdicts(lines, [
+      { nr: 1, verdict: 'ok', problem: null, correction: null },
+      { nr: 2, verdict: 'korrigieren', problem: 'Ortszeit ergänzt', correction: 'Zeile 1 neu' },
+      { nr: 3, verdict: 'streichen', problem: 'Wertung', correction: null }
+    ]);
+    expect(r.lines.map(l => l.text)).toEqual(['Zeile 0', 'Zeile 1 neu', 'Zeile 3']);
+    expect(r.lines[1]!.say).toBeNull();
+    // korrigierte und ungeprüfte Zeilen kommen in die zweite Runde
+    expect([...r.touched].sort()).toEqual([1, 2]);
+    const second = applyLineVerdicts(r.lines, [{ nr: 2, verdict: 'korrigieren', problem: 'noch falsch', correction: 'nochmal' }], r.touched);
+    expect(second.lines.map(l => l.text)).toEqual(['Zeile 0']);
+    expect(normalizeLineVerdict('OK')).toBe('ok');
+    expect(normalizeLineVerdict('Korrigieren')).toBe('korrigieren');
+    expect(normalizeLineVerdict('???')).toBe('streichen');
+  });
+
+  it('baut eine einfache Fassung nur aus geprüften Fakten', () => {
+    const lines = simpleLines(stories, 'lagezentrum');
+    expect(lines[0]).toMatchObject({ role: 'LAGE', key: 'A', text: 'Fakt A1.' });
+    expect(lines.filter(l => l.role !== 'LEITUNG').every(l => l.facts.length === 1 && l.text === `Fakt ${l.facts[0]}.`)).toBe(true);
+    // Vorbehalte spricht EINORDNUNG, „Kurz notiert“ bekommt eine einzige Frage
+    expect(lines.find(l => l.text === 'Fakt A3.')?.role).toBe('EINORDNUNG');
+    expect(lines.filter(l => l.role === 'LEITUNG').map(l => `${l.key}:${l.text}`)).toEqual(['B:Weiter.', 'C:Was noch?']);
+  });
+
+  it('ersetzt fehlende Meldungen durch die einfache Fassung', () => {
+    const only = simpleLines(stories, 'podcast').filter(l => l.key !== 'B');
+    const r = fillGaps(only, stories, 'podcast');
+    expect(r.filled).toEqual(['B']);
+    expect(r.lines.map(l => l.key)).toEqual([...r.lines.map(l => l.key)].sort());
   });
 });
 
@@ -123,7 +235,7 @@ describe('Montage', () => {
     expect(cleanHeadline('Ohne ] Klammer')).toBe('Ohne Klammer');
   });
 
-  it('baut ein Tages-Update im App-Schema', () => {
+  it('baut eine Folge im App-Schema', () => {
     const topic = cfg.topics.find(t => t.id === 'deutschland')!;
     const mk = (rel: number, short: string): Built => ({
       sel: { topic: 'deutschland', articles: [1], relevance: rel, reason: 'Grund', working_title: short },
@@ -132,17 +244,79 @@ describe('Montage', () => {
       sourceName: 'tagesschau',
       published: '2026-10-27T10:00:00Z',
       draft: { ...draft(), short },
-      place: resolvePlace('DEU', 13.4, 52.52)!
+      place: resolvePlace('DEU', 13.4, 52.52)!,
+      places: []
     });
-    const b = buildBriefing('2026-10-28', '2026-10-28T07:00:00+01:00', cfg, [mk(3, 'b-meldung'), mk(5, 'a-meldung'), mk(4, 'c-meldung')], { model: 'test', costUsd: 0 });
-    expect(b.stories.map(s => s.relevance)).toEqual([5, 4, 3]);
-    expect(b.stories[0]!.opener.text).toBe('Wir starten in Berlin.');
-    expect(b.stories[2]!.opener.text).toBe('Zum Schluss nach Berlin.');
-    expect(b.intro.morning.text).toBe('Guten Morgen. Hier ist dein Lagebild für Mittwoch, den 28. Oktober. Heute: drei Meldungen.');
-    expect(b.outro[0]!.text).toBe('Das war dein Update: a-meldung, c-meldung und b-meldung.');
-    expect(b.categories.map(c => c.id)).toEqual(['deutschland']);
-    expect(new Set(b.stories.map(s => s.id)).size).toBe(3);
-    expect(b.stories[0]!.source).toMatchObject({ name: 'tagesschau', date: '2026-10-27' });
+    const built = [mk(5, 'a-meldung'), mk(4, 'b-meldung'), mk(3, 'c-meldung')];
+    const taken: string[] = [];
+    const stories = built.map((b, i) => { const s = toStory(b, 'ABC'[i]!, i ? 'meldung' : 'aufmacher', '2026-10-28', taken); taken.push(s.id); return s; });
+    expect(stories[0]!.facts.map(f => f.id)).toEqual(['A1', 'A2', 'A3']);
+    expect(new Set(stories.map(s => s.id)).size).toBe(3);
+    const ss = toScriptStory(stories[0]!, built[0]!, 'A', { index: 0, format: 'aufmacher', seconds: 38 });
+    expect(ss.figure).toBe('412 (Ja-Stimmen)');
+    expect(ss.facts[0]).toEqual({ id: 'A1', text: 'Der Bundestag hat ein Gesetz beschlossen.', kind: 'kern' });
+    const script: Line[] = [{ role: 'LAGE', text: 'x', story: stories[0]!.id, kind: 'fakt', facts: ['A1'] }];
+    const markets = { markets: { asOf: '2026-10-27', source: { name: 'Y', url: 'https://y', date: '2026-10-27' }, items: [] }, lines: [{ role: 'LAGE' as const, text: 'DAX.', story: 'maerkte', kind: 'fakt' as const }] };
+    const b = buildBriefing({ date: '2026-10-28', generated: 'jetzt', cfg, episode: 7, stories, script, markets, meta: { model: 'test', costUsd: 0, script: 'claude' } });
+    expect(b.schema).toBe(2);
+    expect(b.episode).toBe(7);
+    expect(b.script.map(l => l.kind)).toEqual(['fakt', 'frage', 'fakt', 'zusammenfassung', 'abschluss', 'abschluss']);
+    expect(b.script[3]!.text).toBe('Also: a-meldung, b-meldung und c-meldung.');
+    expect(b.categories.map(c => c.id).sort()).toEqual(['deutschland', 'wirtschaft']);
+    expect(summaryLine([], 'lagezentrum')).toBeNull();
+  });
+
+  it('prüft weitere Orte wie den Hauptort', () => {
+    expect(resolveExtraPlace({ label: 'Nordkorea', country_iso3: 'PRK', lon: 125.75, lat: 39.03, route: false })).toEqual({ label: 'Nordkorea', lon: 125.75, lat: 39.03 });
+    expect(resolveExtraPlace({ label: 'X', country_iso3: 'XYZ', lon: 0, lat: 0, route: true })).toBeNull();
+  });
+});
+
+describe('Mischung', () => {
+  const tone = (sec: number, sr: number, lead = 0.2, tail = 0.3): Float32Array => {
+    const pcm = new Float32Array(Math.round((lead + sec + tail) * sr));
+    for (let i = Math.round(lead * sr); i < Math.round((lead + sec) * sr); i++) pcm[i] = 0.3 * Math.sin(i / 5);
+    return pcm;
+  };
+
+  it('liest und schreibt WAV', () => {
+    const pcm = tone(0.1, 24000);
+    const back = parseWav(wavBytes(pcm, 24000));
+    expect(back.sr).toBe(24000);
+    expect(back.pcm.length).toBe(pcm.length);
+    expect(Math.abs(back.pcm[5000]! - pcm[5000]!)).toBeLessThan(1e-3);
+  });
+
+  it('schneidet Stille ab und gleicht die Lautstärke an', () => {
+    const sr = 24000;
+    const [a, b] = trimBounds(tone(1, sr), sr);
+    expect(a / sr).toBeCloseTo(0.2 - 0.03, 2);
+    expect(b / sr).toBeCloseTo(1.2 + 0.03, 2);
+    const quiet = tone(1, sr).map(v => v * 0.1);
+    expect(levelGain(quiet)).toBeGreaterThan(levelGain(tone(1, sr)));
+  });
+
+  it('legt die Zeilen mit den Pausenregeln an', () => {
+    const sr = 8000;
+    const clip = (sec: number): Clip => ({ pcm: tone(sec, sr), sr, words: [] });
+    const lines: Line[] = [
+      { role: 'LAGE', text: 'A.', story: 'x', kind: 'fakt' },
+      { role: 'LEITUNG', text: 'Ist das viel?', story: 'x', kind: 'frage' },
+      { role: 'EINORDNUNG', text: 'Ja.', story: 'x', kind: 'fakt' }
+    ];
+    const lay = layoutLines(lines, [clip(1), clip(0.5), clip(1)]);
+    expect(lay.at[0]).toBeCloseTo(0.8, 2);
+    expect(lay.at[1]! - lay.at[0]!).toBeCloseTo(1.06 + 0.5, 1);
+    expect(lay.at[2]! - lay.at[1]!).toBeCloseTo(0.56 + 0.3, 1);
+    expect(lay.total).toBeGreaterThan(lay.at[2]! + 1);
+  });
+
+  it('erzeugt ein leises Musikbett', () => {
+    const bed = musicBed(2, 8000);
+    expect(bed.length).toBe(16000);
+    const rms = Math.sqrt(bed.reduce((a, v) => a + v * v, 0) / bed.length);
+    expect(20 * Math.log10(rms)).toBeCloseTo(-30, 0);
+    expect(Math.abs(bed[0]!)).toBeLessThan(1e-3);
   });
 });
 
@@ -174,7 +348,7 @@ describe('Suchbegriffe', () => {
     expect(termPattern('AI Act').test('EU AI Act enters force')).toBe(true);
     expect(termPattern('S&P 500').test('Der S&P 500 steigt')).toBe(true);
     const items = matchTopics([{ title: 'Elektrolyse in Leuna', teaser: '', url: 'https://e.org/1', source: 'Q', domain: 'e.org', published: null, lang: 'de', topic: 'wissen', via: 'rss' }],
-      { ...cfg, topics: [...cfg.topics, { id: 'h2', name: 'Wasserstoff', category: 'wissen', priority: 3, active: true, search: ['Elektrolyse'], feeds: [] }] });
+      { ...cfg, topics: [...cfg.topics, { id: 'h2', name: 'Wasserstoff', category: 'wissen', weight: 'ausfuehrlich', search: ['Elektrolyse'], feeds: [] }] });
     expect(items.map(i => i.topic)).toEqual(['wissen', 'h2']);
   });
 });
@@ -189,40 +363,48 @@ describe('Marktdaten', () => {
       'In New York gab der S&P 500 um 0,7 Prozent nach, der Nasdaq blieb nahezu unverändert.'
     ]);
     expect(lines[1]!.say).toContain('S und P 500');
+    expect(lines.every(l => l.story === 'maerkte' && l.kind === 'fakt')).toBe(true);
   });
 });
 
 describe('Normalisierung', () => {
   it('vereinheitlicht Rollen und Prüfergebnisse', async () => {
-    const { normalizeRole, normalizeVerdict } = await import('../pipeline/editorial');
+    const { normalizeVerdict, normalizeKind } = await import('../pipeline/editorial');
+    const { normalizeRole } = await import('../pipeline/drehbuch');
     expect(normalizeRole('Einordnung')).toBe('EINORDNUNG');
     expect(normalizeRole('LAGE:')).toBe('LAGE');
+    expect(normalizeRole('Leitung')).toBe('LEITUNG');
+    expect(normalizeRole('BRIEFING')).toBe('LEITUNG');
     expect(normalizeVerdict('Belegt')).toBe('belegt');
     expect(normalizeVerdict('nicht belegt')).toBe('nicht_belegt');
     expect(normalizeVerdict('teilweise belegt')).toBe('teilweise');
     expect(normalizeVerdict('???')).toBe('nicht_belegt');
+    expect(normalizeKind('Vorbehalt')).toBe('vorbehalt');
+    expect(normalizeKind('irgendwas')).toBe('detail');
   });
 });
 
 describe('Ablage', () => {
-  it('schreibt den Index und räumt altes Audio samt Verweisen auf', async () => {
+  it('schreibt den Index, zählt Folgen und räumt altes Audio samt Verweisen auf', async () => {
     const { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
     const { tmpdir } = await import('node:os');
-    const { pruneAudio, writeIndex, previousHeadlines, writeJSON } = await import('../pipeline/store');
+    const { pruneAudio, writeIndex, previousHeadlines, writeJSON, nextEpisode } = await import('../pipeline/store');
     const out = mkdtempSync(join(tmpdir(), 'lagebild-'));
-    const line = (src: string) => ({ role: 'LAGE' as const, text: 't', audio: { src, dur: 1 } });
-    const day = (date: string, headline: string) => ({
-      schema: 1, date, generated: `${date}T07:00:00+01:00`, categories: [],
-      intro: { morning: line('a'), day: line('b'), evening: line('c') }, outro: [line('d')],
-      stories: [{ id: 'x', category: 'k', topic: 'T', country: 'DEU', label: 'B', flag: '', lon: 0, lat: 0, zoom: 2, headline, brief: 'b', source: { name: 'Q', url: 'https://q.de', date }, short: 's', opener: line('e'), lines: [line('f')] }]
+    const day = (date: string, headline: string, episode: number) => ({
+      schema: 2, date, generated: `${date}T07:00:00+01:00`, episode, tone: 'lagezentrum', categories: [],
+      stories: [{ id: 'x', category: 'k', topic: 'T', format: 'aufmacher', country: 'DEU', label: 'B', flag: '', lon: 0, lat: 0, zoom: 2, headline, brief: 'b', source: { name: 'Q', url: 'https://q.de', date }, short: 's', facts: [] }],
+      script: [{ role: 'LAGE', text: 't', story: 'x', kind: 'fakt', audio: { at: 0.8, dur: 1 } }],
+      audio: { src: `audio/${date}/folge.mp3`, voice: `audio/${date}/folge-stimme.mp3`, dur: 3 }
     });
-    writeJSON(join(out, '2026-10-01.json'), day('2026-10-01', '[Alt] Meldung'));
-    writeJSON(join(out, '2026-10-27.json'), day('2026-10-27', '[Gestern] Meldung'));
-    for (const d of ['2026-10-01', '2026-10-27']) { mkdirSync(join(out, 'audio', d), { recursive: true }); writeFileSync(join(out, 'audio', d, 'x.mp3'), ''); }
+    writeJSON(join(out, '2026-10-01.json'), day('2026-10-01', '[Alt] Meldung', 1));
+    writeJSON(join(out, '2026-10-27.json'), day('2026-10-27', '[Gestern] Meldung', 2));
+    for (const d of ['2026-10-01', '2026-10-27']) { mkdirSync(join(out, 'audio', d), { recursive: true }); writeFileSync(join(out, 'audio', d, 'folge.mp3'), ''); }
     const idx = writeIndex(out, 'jetzt');
-    expect(idx.days.map(d => d.date)).toEqual(['2026-10-27', '2026-10-01']);
+    expect(idx.days.map(d => [d.date, d.episode, d.dur])).toEqual([['2026-10-27', 2, 3], ['2026-10-01', 1, 3]]);
     expect(previousHeadlines(out, '2026-10-28')).toEqual(['Gestern Meldung']);
+    expect(nextEpisode(out, '2026-10-28')).toBe(3);
+    expect(nextEpisode(out, '2026-10-27')).toBe(2);
     expect(pruneAudio(out, '2026-10-28', 14)).toEqual(['2026-10-01']);
     expect(existsSync(join(out, 'audio', '2026-10-01'))).toBe(false);
     expect(existsSync(join(out, 'audio', '2026-10-27'))).toBe(true);
