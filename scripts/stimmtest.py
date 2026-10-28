@@ -104,6 +104,13 @@ def say(l):
     return l.get("say") or l["text"]
 
 
+def seed(n):
+    """VoxCPM hat keinen seed-Parameter; feste Zufallszahlen über torch/numpy."""
+    import torch
+    torch.manual_seed(n)
+    np.random.seed(n)
+
+
 def load_voxcpm():
     from voxcpm import VoxCPM
     t = time.time()
@@ -119,7 +126,8 @@ def cmd_design(out):
     info = {"laden_s": round(load, 1), "stimmen": {}}
     for role, v in DIALOG["stimmen"].items():
         t = time.time()
-        wav = m.generate(text=f"({v['beschreibung']}){v['probe']}", cfg_value=2.0, inference_timesteps=10, seed=SEEDS[role])
+        seed(SEEDS[role])
+        wav = m.generate(text=f"({v['beschreibung']}){v['probe']}", cfg_value=2.0, inference_timesteps=10)
         wav = trim(np.asarray(wav, dtype=np.float32), sr)
         sf.write(os.path.join(out, "stimmen", f"{role}.wav"), wav, sr)
         info["stimmen"][role] = {"rechenzeit_s": round(time.time() - t, 1), "dauer_s": round(len(wav) / sr, 2)}
@@ -135,7 +143,8 @@ def cmd_voxcpm2(out):
     chunks, t0 = [], time.time()
     for i, l in enumerate(DIALOG["zeilen"]):
         r = l["role"]
-        wav = m.generate(text=say(l), prompt_wav_path=refs[r], prompt_text=DIALOG["stimmen"][r]["probe"], reference_wav_path=refs[r], cfg_value=2.0, inference_timesteps=10, seed=SEEDS[r])
+        seed(SEEDS[r])
+        wav = m.generate(text=say(l), prompt_wav_path=refs[r], prompt_text=DIALOG["stimmen"][r]["probe"], reference_wav_path=refs[r], cfg_value=2.0, inference_timesteps=10)
         chunks.append((l, np.asarray(wav, dtype=np.float32)))
         print(f"{i + 1}/{len(DIALOG['zeilen'])} {r}: {l['text']}", flush=True)
     calc = time.time() - t0
