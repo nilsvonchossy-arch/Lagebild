@@ -11,6 +11,7 @@ import type { Briefing, Story } from './shared/types';
 import { $, dateParts, pad2, sleep, speed } from './util';
 
 const CANCEL = Symbol('cancel');
+const MEDIA = Symbol('media');
 const FRANKFURT: [number, number] = [8.68, 50.11];
 /** Untertitel erscheinen so viele Sekunden vor der Stimme */
 const LEAD = 0.12;
@@ -62,6 +63,8 @@ export class Player {
   sceneIdx = -1;
   private sceneOfLine: number[] = [];
   private mode: 'file' | 'speech' = 'speech';
+  /** Audiodatei ließ sich nicht abspielen: für diese Folge die Systemstimme nehmen */
+  private fileBroken = false;
   private gen = 0;
   private lock: WakeLockSentinel | null = null;
   private cues: Cue[] = [];
@@ -88,6 +91,7 @@ export class Player {
   load(b: Briefing): void {
     this.stop();
     this.briefing = b;
+    this.fileBroken = false;
     this.scenes = scenesOf(b);
     this.sceneOfLine = [];
     this.scenes.forEach((s, k) => { for (let i = s.first; i <= s.last; i++) this.sceneOfLine[i] = k; });
@@ -99,7 +103,7 @@ export class Player {
   }
 
   get hasFile(): boolean {
-    return Boolean(this.briefing?.audio);
+    return Boolean(this.briefing?.audio) && !this.fileBroken;
   }
 
   private fileSrc(): string {
@@ -199,9 +203,10 @@ export class Player {
     const el = this.audio.el;
     return new Promise((resolve, reject) => {
       let raf = 0;
-      const cleanup = (): void => { cancelAnimationFrame(raf); el.removeEventListener('timeupdate', test); el.removeEventListener('ended', test); };
+      const cleanup = (): void => { cancelAnimationFrame(raf); el.removeEventListener('timeupdate', test); el.removeEventListener('ended', test); el.removeEventListener('error', test); };
       const test = (): boolean => {
         if (my !== this.gen) { cleanup(); reject(CANCEL); return true; }
+        if (el.error) { cleanup(); reject(MEDIA); return true; }
         frame?.(el.currentTime);
         if (el.currentTime >= t || el.ended) { cleanup(); resolve(); return true; }
         return false;
@@ -210,6 +215,7 @@ export class Player {
       // timeupdate hält den Ablauf auch dann in Gang, wenn im Hintergrund keine Bilder gezeichnet werden
       el.addEventListener('timeupdate', test);
       el.addEventListener('ended', test);
+      el.addEventListener('error', test);
       tick();
     });
   }
@@ -226,7 +232,7 @@ export class Player {
     this.paused = false;
     this.sceneIdx = -1;
     this.globe.mode = 'brief';
-    this.mode = b.audio ? 'file' : 'speech';
+    this.mode = this.hasFile ? 'file' : 'speech';
     this.hooks.state();
     void this.wakeLock();
     this.mediaSession();
@@ -239,7 +245,9 @@ export class Player {
         if (seek) this.audio.seek(from === 0 ? 0 : Math.max(0, (lines[from]!.audio?.at ?? 0) - 0.25));
         await this.audio.play().catch(() => {
           // Datei nicht abspielbar (offline, gelöscht): mit der Systemstimme weiter
+          this.fileBroken = true;
           this.mode = 'speech';
+          this.audio.pause();
         });
         this.check(my);
       }
@@ -263,7 +271,12 @@ export class Player {
       else await this.wait(my, 1200);
       this.finish(true);
     } catch (e) {
-      if (e !== CANCEL) { console.error(e); this.finish(false); }
+      if (e === MEDIA && my === this.gen) {
+        // Datei bricht mitten in der Folge ab: ab der aktuellen Zeile mit der Systemstimme weiter
+        this.fileBroken = true;
+        this.audio.pause();
+        void this.run(Math.max(0, this.lineIdx), true, false);
+      } else if (e !== CANCEL) { console.error(e); this.finish(false); }
     }
   }
 
