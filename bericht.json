@@ -1,0 +1,25 @@
+{
+ "design": {
+  "laden_s": 270.4,
+  "stimmen": {
+   "LEITUNG": {
+    "rechenzeit_s": 451.9,
+    "dauer_s": 6.62
+   },
+   "LAGE": {
+    "rechenzeit_s": 395.3,
+    "dauer_s": 5.74
+   },
+   "EINORDNUNG": {
+    "rechenzeit_s": 409.8,
+    "dauer_s": 5.99
+   }
+  }
+ },
+ "voxcpm2-ruhig": {
+  "laden_s": 232.4,
+  "rechenzeit_s": 9658.0,
+  "audio_s": 113.1,
+  "rtf": 85.39
+ }
+}
