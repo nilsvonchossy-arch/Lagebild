@@ -1,0 +1,35 @@
+# Lädt die Satellitenbilder für den Globus direkt bei der NASA (gemeinfrei) und verkleinert sie.
+# Ergebnis im Branch "texturen": earth-day.jpg, earth-night.jpg, earth-clouds.jpg, quellen.txt
+name: Texturen
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  texturen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Herunterladen und verkleinern
+        run: |
+          set -e
+          mkdir out && cd out
+          get() { curl -fsSL --retry 3 -A "Mozilla/5.0 (Lagebild)" -o "$1" "$2" && echo "$1 <- $2" >> quellen.txt; }
+          get day.jpg https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.jpg
+          get night.jpg https://eoimages.gsfc.nasa.gov/images/imagerecords/144000/144898/BlackMarble_2016_3km.jpg
+          get clouds.jpg https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57747/cloud_combined_2048.jpg
+          identify day.jpg night.jpg clouds.jpg | tee -a quellen.txt
+          convert day.jpg -resize 4096x2048! -quality 82 -interlace JPEG earth-day.jpg
+          convert night.jpg -resize 4096x2048! -quality 82 -interlace JPEG earth-night.jpg
+          convert clouds.jpg -resize 2048x1024! -colorspace Gray -quality 80 earth-clouds.jpg
+          rm day.jpg night.jpg clouds.jpg
+          ls -la
+      - name: In Branch "texturen" schreiben
+        run: |
+          cd out
+          git init -q -b texturen
+          git add -A
+          git -c user.name="Lagebild" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "NASA-Texturen $(date +%F)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" texturen
