@@ -10,7 +10,7 @@ import { layoutLines, levelGain, musicBed, parseWav, trimBounds, wavBytes, type 
 import { planEpisode, targetSeconds, wantedStories, type PlanInput } from '../pipeline/plan';
 import { gdeltQuery, mergeCandidates, parseFeed, type Feed } from '../pipeline/sources';
 import { escapeXml, wordMarks } from '../pipeline/tts';
-import { earliestStart, readClips, voxcpmJob, type VoxcpmConfig } from '../pipeline/tts-voxcpm';
+import { earliestStart, readClips, styleFor, voxcpmJob, type VoxcpmConfig } from '../pipeline/tts-voxcpm';
 import { berlinISO, berlinNow, normalizeUrl, plainText } from '../pipeline/util';
 import { migrateConfig } from '../src/shared/config';
 import { normalizeSymbol } from '../src/shared/symbols';
@@ -277,16 +277,17 @@ describe('Drehbuch', () => {
   it('räumt die Antwort auf: Rollen, fremde Fakten, Reihenfolge, Begrüßung', () => {
     const raw = [
       { role: 'Leitung', story: 'A', text: 'Guten Morgen und willkommen!', say: null, facts: [] },
-      { role: 'LAGE', story: 'A', text: 'LAGE: Kernaussage A.', say: null, facts: ['A1', 'B2'] },
+      { role: 'LAGE', story: 'A', text: 'LAGE: Kernaussage A.', say: null, facts: ['A1', 'B2'], mood: 'Überrascht' },
       { role: 'leitung', story: 'C', text: 'Und sonst?', say: null, facts: [] },
       { role: 'Lage', story: 'C', text: 'Kurz C.', say: 'Kurz C.', facts: ['c1'] },
       { role: 'LEITUNG', story: 'B', text: 'Und dann?', say: null, facts: [] },
       { role: 'Einordnung', story: 'B', text: 'Einordnung B.', say: null, facts: ['B3'] },
       { role: 'LAGE', story: 'X', text: 'Unbekannt.', say: null, facts: [] }
-    ];
+    ].map(l => ({ mood: 'wütend', ...l }));
     const r = cleanDraft(raw, stories);
     expect(r.lines.map(l => `${l.key}:${l.role}:${l.text}`)).toEqual(['A:LAGE:Kernaussage A.', 'B:LEITUNG:Und dann?', 'B:EINORDNUNG:Einordnung B.', 'C:LEITUNG:Und sonst?', 'C:LAGE:Kurz C.']);
     expect(r.lines[0]!.facts).toEqual(['A1']);
+    expect(r.lines.map(l => l.mood)).toEqual(['ueberrascht', 'neutral', 'neutral', 'neutral', 'neutral']);
     expect(r.lines[4]!.facts).toEqual(['C1']);
     expect(r.lines[4]!.say).toBeNull();
     expect(r.issues.some(i => i.includes('Begrüßung'))).toBe(true);
@@ -518,6 +519,15 @@ describe('Stimme VoxCPM2', () => {
     ]);
     expect(job.lines[2]!.ref).toBe('Und die KI?');
     expect(job.attempts).toBe(3);
+  });
+
+  it('gibt der Stimme nur im Modus „steuerbar“ eine Anweisung je Stimmung', () => {
+    const moods = { neutral: 'natural', ueberrascht: 'surprised' };
+    const l: Line = { role: 'LEITUNG', text: 'Oha.', kind: 'frage', mood: 'ueberrascht' };
+    expect(styleFor(l, { ...cfg, moods })).toBeUndefined();
+    expect(styleFor(l, { ...cfg, mode: 'steuerbar', moods })).toBe('surprised');
+    expect(styleFor({ ...l, mood: 'ernst' }, { ...cfg, mode: 'steuerbar', moods })).toBe('natural');
+    expect(voxcpmJob([l], { ...cfg, mode: 'steuerbar', moods }).lines[0]!.style).toBe('surprised');
   });
 
   it('startet eine 8-Minuten-Folge mit VoxCPM2 früher, damit sie bis 8 Uhr fertig ist', () => {

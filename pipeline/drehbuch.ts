@@ -5,8 +5,8 @@
 // Regeln: docs/video-analyse-conflictly.md, Abschnitte 10.2 und 10.5.
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import { TONE_TEXT } from '../src/shared/script.ts';
-import type { Format, Line, Role, Tone } from '../src/shared/types.ts';
+import { normalizeMood, TONE_TEXT } from '../src/shared/script.ts';
+import type { Format, Line, Mood, Role, Tone } from '../src/shared/types.ts';
 import type { Claude } from './claude.ts';
 
 export interface ScriptFact { id: string; text: string; kind: string }
@@ -35,21 +35,21 @@ const TONE_RULES: Record<Tone, string> = {
   lagezentrum: `TON: LAGEZENTRUM
 Sachlich und knapp wie ein Briefing im Lagezentrum, aber ohne Militärjargon. LEITUNG fragt in zwei bis fünf Wörtern, ohne Füllwörter: „Ist das viel?“, „Wer tritt an?“, „Wie ernst ist das?“, „Und in Europa?“, „Was noch?“. Höchstens ein gelegentliches „Okay.“ vor einem Themenwechsel, sonst keine Reaktionen.`,
   podcast: `TON: PODCAST
-Locker, aber genau. LEITUNG reagiert manchmal kurz („Okay.“, „Verstehe.“) und fragt, wie man im Gespräch nachfragt: „Und was heißt das?“, „Okay, was noch?“, „Moment – wie viele?“, „Und warum?“. Reaktionen bewerten nichts: „Wahnsinn“, „krass“, „zum Glück“ und Ähnliches sind verboten. LAGE darf locker einsteigen („Da geht es um …“).`,
+Locker, aber genau. LEITUNG reagiert manchmal kurz („Okay.“, „Verstehe.“) und fragt, wie man im Gespräch nachfragt: „Und was heißt das?“, „Okay, was noch?“, „Moment – wie viele?“, „Und warum?“. Reaktionen zeigen Staunen oder Neugier, aber bewerten nichts: „zum Glück“, „leider“, „Skandal“ und Ähnliches sind verboten. LAGE darf locker einsteigen („Da geht es um …“).`,
   assistent: `TON: ASSISTENT
-LEITUNG ist „Lagebild“, ein persönlicher KI-Assistent, der mit dem Zuhörer spricht wie ein guter Freund: warm, ruhig, aufmerksam, mit einem trockenen Augenzwinkern, so wie Jarvis, nur ohne „Sir“. LEITUNG duzt den Zuhörer und spricht in der Ich-Form: „Kurzer Sprung nach Tirol.“, „Da hab ich noch was aus der Tech-Welt.“, „Willst du die Zahl hören?“, „Was gibt's noch?“, „Und an den Börsen?“. LEITUNG fragt LAGE und EINORDNUNG wie Kollegen, mit denen er gemeinsam für dich zusammenfasst. LAGE und EINORDNUNG erzählen wie im Gespräch unter Freunden, mit Verkürzungen wie „gibt's“, „geht's“, „hat's“, aber genauso genau wie sonst.
-Persönlich heißt Anrede und Ton, nicht Inhalt: Verboten bleiben Wertungen der Nachrichten („leider“, „zum Glück“, „gute Nachricht“, „Wahnsinn“), Vermutungen über den Zuhörer („das betrifft dich“, „du wirst dich freuen“, „kennst du ja“) und Witze über Opfer, Krieg, Krankheit oder Leid. Bei ernsten Themen (Tote, Verletzte, Krieg, Katastrophen, Anschläge) kein Augenzwinkern, ruhig und respektvoll.
+LEITUNG ist „Lagebild“, ein persönlicher KI-Assistent, der mit dem Zuhörer spricht wie ein guter Freund: warm, aufmerksam, neugierig, mit einem trockenen Augenzwinkern, so wie Jarvis, nur ohne „Sir“. Die drei klingen wie Kollegen, die sich mögen und gern miteinander reden, nicht wie Sprecher, die abwechselnd vorlesen. LEITUNG duzt den Zuhörer und spricht in der Ich-Form: „Kurzer Sprung nach Tirol.“, „Da hab ich noch was aus der Tech-Welt.“, „Willst du die Zahl hören?“, „Was gibt's noch?“, „Und an den Börsen?“. LEITUNG fragt LAGE und EINORDNUNG wie Kollegen, mit denen er gemeinsam für dich zusammenfasst. LAGE und EINORDNUNG erzählen wie im Gespräch unter Freunden, mit Verkürzungen wie „gibt's“, „geht's“, „hat's“, aber genauso genau wie sonst.
+Persönlich heißt Anrede und Ton, nicht Inhalt: Verboten bleiben Wertungen der Nachrichten („leider“, „zum Glück“, „gute Nachricht“, „Skandal“), Vermutungen über den Zuhörer („das betrifft dich“, „du wirst dich freuen“, „kennst du ja“) und Witze über Opfer, Krieg, Krankheit oder Leid. Bei ernsten Themen (Tote, Verletzte, Krieg, Katastrophen, Anschläge) kein Augenzwinkern, ruhig und respektvoll.
 Beispiel für die Überleitungen: „Ist das viel?“ wird zu „Ist das viel?“ oder „Viel oder wenig?“, „Und in Europa?“ wird zu „Kurzer Sprung nach Europa?“, „Was noch?“ wird zu „Was hast du noch?“.`
 };
 
 const EXAMPLE = `BEISPIEL (Ausschnitt mit Fakten einer Demo-Meldung)
 Fakten: A1 Israel wählt ein neues Parlament, die Knesset. A2 Bis 16 Uhr Ortszeit lag die Wahlbeteiligung bei 55,7 Prozent. A3 Laut Wahlkomitee ist das der höchste Wert zu dieser Uhrzeit seit Beginn der Messungen 1973. A4 Netanjahus Likud tritt gegen Gadi Eisenkots Partei Yashar an. A5 Die Wahllokale schließen um 22 Uhr.
-LAGE: Israel wählt – und bis 16 Uhr haben schon 55,7 Prozent abgestimmt. [A1, A2]
-LEITUNG: Ist das viel?
-EINORDNUNG: So viele wie noch nie um diese Uhrzeit, sagt das Wahlkomitee. [A3]
-LEITUNG: Wer tritt an?
+LAGE: Israel wählt – und bis 16 Uhr haben schon 55,7 Prozent abgestimmt. [A1, A2] (neugierig)
+LEITUNG: Moment – ist das viel? (ueberrascht)
+EINORDNUNG: Ja, so viele wie noch nie um diese Uhrzeit, sagt das Wahlkomitee. [A3] (ueberrascht)
+LEITUNG: Oha. Und wer tritt an? (neugierig)
 LAGE: Netanjahus Likud gegen Yashar, die Partei von Gadi Eisenkot. [A4]
-EINORDNUNG: Die Wahllokale schließen um 22 Uhr. [A5]
+EINORDNUNG: Die Wahllokale schließen um 22 Uhr. [A5] (nachdenklich)
 (Nicht: „um 22 Uhr Ortszeit“, das steht nicht in A5.)`;
 
 export function drehbuchSystem(tone: Tone): string {
@@ -85,12 +85,19 @@ SPRACHE FÜRS OHR
 - Weitere Orte einer Meldung nennst du genau in der angegebenen Schreibweise, damit auf der Karte ein Pin erscheint.
 - Kein Militärjargon, kein Drama, keine Anrede wie „Sir“ oder „liebe Zuhörer“${tone === 'assistent' ? ', kein Name des Zuhörers (der steht schon in Begrüßung und Abschied)' : ''}.
 
+GEFÜHL IM GESPRÄCH
+Das Gespräch soll lebendig klingen, nicht vorgelesen. Gefühl entsteht durch Reaktionen und Stimmung, nie durch erfundene Inhalte:
+- LEITUNG reagiert auf Antworten, bevor es weitergeht: Staunen bei großen Zahlen oder Rekorden („Oha.“, „Wow – echt?“, „Moment, so viele?“), Neugier („Und warum?“, „Erzähl!“), Verstehen („Ah, okay.“, „Verstehe.“), Anteilnahme bei Leid („Oh je.“, „Puh.“). Etwa jede zweite Meldung bekommt so eine Reaktion; nicht jede Zeile.
+- LAGE und EINORDNUNG dürfen auf die Frage eingehen („Ja, wirklich:“, „Genau.“, „Gute Frage –“, „Und jetzt kommt's:“), den Bogen zueinander schlagen („Und da wird's interessant:“) und auch einmal zurückfragen, wenn die Antwort in den Fakten steht.
+- Keine Parteinahme: Staunen und Neugier ja, Urteil über Personen, Parteien, Länder oder Firmen nein. Bei Toten, Verletzten, Krieg, Katastrophen nur Anteilnahme und Ruhe, kein Staunen, kein Witz.
+- mood: Gib jeder Zeile eine Stimmung, mit der sie gesprochen wird: neutral, neugierig, ueberrascht, warm, ernst, nachdenklich oder heiter. Sie muss zum Inhalt passen: ernste Themen ernst, Rekorde und Kurioses ueberrascht oder heiter, Fragen meist neugierig, Zuschreibungen und Vorbehalte oft nachdenklich. Wechsle, damit es nicht gleichförmig klingt.
+
 ${TONE_RULES[tone]}
 
 ${EXAMPLE}
 
 AUSGABE
-lines: alle Zeilen in Sprechreihenfolge. role: LEITUNG, LAGE oder EINORDNUNG. story: Buchstabe der Meldung, zu der die Zeile gehört; eine Überleitungsfrage gehört zu der Meldung, zu der sie hinführt, die Frage vor „Kurz notiert“ zur ersten Meldung des Blocks. text: der Untertitel. say: abweichender Sprechtext oder null. facts: Fakten-IDs, bei LEITUNG eine leere Liste.`;
+lines: alle Zeilen in Sprechreihenfolge. role: LEITUNG, LAGE oder EINORDNUNG. story: Buchstabe der Meldung, zu der die Zeile gehört; eine Überleitungsfrage gehört zu der Meldung, zu der sie hinführt, die Frage vor „Kurz notiert“ zur ersten Meldung des Blocks. text: der Untertitel. say: abweichender Sprechtext oder null. facts: Fakten-IDs, bei LEITUNG eine leere Liste. mood: Stimmung der Zeile.`;
 }
 
 export function drehbuchPrompt(stories: ScriptStory[]): string {
@@ -111,7 +118,8 @@ export const DrehbuchSchema = z.object({
     story: z.string().describe('Buchstabe der Meldung'),
     text: z.string(),
     say: z.string().nullable(),
-    facts: z.array(z.string())
+    facts: z.array(z.string()),
+    mood: z.string().describe('neutral, neugierig, ueberrascht, warm, ernst, nachdenklich oder heiter')
   }))
 });
 type RawLine = z.infer<typeof DrehbuchSchema>['lines'][number];
@@ -122,7 +130,7 @@ export const normalizeRole = (r: string): Role => (/leit|brief|frag|mod/i.test(r
 const GREETING = /^(guten (morgen|tag|abend)|willkommen|hallo|hi\b|servus|moin\b)/i;
 
 /** Eine Zeile eines Entwurfs mit Buchstaben statt Meldungs-ID */
-export interface DraftLine { role: Role; key: string; text: string; say: string | null; facts: string[] }
+export interface DraftLine { role: Role; key: string; text: string; say: string | null; facts: string[]; mood?: Mood }
 
 /**
  * Antwort aufräumen: Rollen und Buchstaben vereinheitlichen, fremde Fakten-IDs entfernen,
@@ -140,7 +148,7 @@ export function cleanDraft(raw: RawLine[], stories: ScriptStory[]): { lines: Dra
     if (GREETING.test(text)) { issues.push(`Begrüßung gestrichen: ${text}`); continue; }
     const role = normalizeRole(r.role);
     const facts = role === 'LEITUNG' ? [] : r.facts.map(f => f.trim().toUpperCase()).filter(f => factIds.get(key)!.has(f));
-    out.push({ role, key, text, say: r.say?.trim() && r.say.trim() !== text ? r.say.trim() : null, facts });
+    out.push({ role, key, text, say: r.say?.trim() && r.say.trim() !== text ? r.say.trim() : null, facts, mood: normalizeMood(r.mood) });
   }
   // Reihenfolge der Meldungen erzwingen, innerhalb einer Meldung bleibt die Reihenfolge
   const rank = new Map(keys.map((k, i) => [k, i]));
@@ -164,7 +172,8 @@ export const PRUEF_SYSTEM = `Du prüfst das Drehbuch einer Folge von „Lagebild
 
 Für jede Zeile:
 - LAGE und EINORDNUNG (Faktzeilen): Jede Tatsachenbehauptung muss durch die Fakten derselben Meldung gedeckt sein, vor allem durch die genannten Fakten-IDs. Nicht erlaubt: hinzugefügte Details, auch kleine wie „Ortszeit“, Wochentage oder Titel; Ursachen oder Verknüpfungen („deshalb“, „damit“), die nicht im Fakt stehen; Wertungen; fehlende Zuschreibungen („laut X“ ist verloren gegangen); Anführungszeichen um etwas, das kein wörtliches Zitat im Fakt ist; Zahlen, die nicht stimmen. Erlaubt: Kürzen, Umstellen, gesprochene Sprache, Weglassen, Rundungen, die wahr bleiben („Milliarden“ für 95 Milliarden).
-- LEITUNG: Die Zeile darf keine Tatsache behaupten oder unterstellen. Erlaubt sind Fragen, kurze neutrale Reaktionen („Okay.“) und das Nennen von Thema oder Ort der nächsten Meldung. Nicht erlaubt: Fragen mit eingebauter Behauptung („Warum ist das Werk so teuer?“), Wertungen („Was für ein Rekord!“), Fragen, deren Antwort nicht in den Fakten steht.
+- LEITUNG: Die Zeile darf keine Tatsache behaupten oder unterstellen. Erlaubt sind Fragen, kurze Reaktionen mit Gefühl („Okay.“, „Oha.“, „Wow – echt?“, „Moment, so viele?“, „Oh je.“) und das Nennen von Thema oder Ort der nächsten Meldung. Nicht erlaubt: Fragen mit eingebauter Behauptung („Warum ist das Werk so teuer?“), Wertungen und Parteinahme („Was für ein Skandal!“, „zum Glück“), Staunen oder Witz bei Toten, Krieg oder Katastrophen, Fragen, deren Antwort nicht in den Fakten steht.
+- Kurze Einstiege von LAGE und EINORDNUNG wie „Ja, wirklich:“, „Genau.“, „Gute Frage –“ sind erlaubt.
 - Keine Begrüßung, kein Datum.
 
 verdict ist ok, korrigieren oder streichen.
@@ -275,7 +284,8 @@ function toLines(draft: DraftLine[], stories: ScriptStory[]): Line[] {
     ...(l.say ? { say: l.say } : {}),
     story: ids.get(l.key)!,
     kind: l.role === 'LEITUNG' ? 'frage' as const : 'fakt' as const,
-    ...(l.role === 'LEITUNG' ? {} : { facts: l.facts })
+    ...(l.role === 'LEITUNG' ? {} : { facts: l.facts }),
+    ...(l.mood && l.mood !== 'neutral' ? { mood: l.mood } : {})
   }));
 }
 

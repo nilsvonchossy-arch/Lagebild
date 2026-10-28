@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { sprechtext } from '../src/shared/sprechtext.ts';
-import type { Line, Role } from '../src/shared/types.ts';
+import type { Line, Mood, Role } from '../src/shared/types.ts';
 import { parseWav, type Clip } from './mix.ts';
 import { wordMarks } from './tts.ts';
 import { log } from './util.ts';
@@ -22,6 +22,19 @@ export interface VoxcpmConfig {
   dtype?: 'float32' | 'bfloat16';
   /** Höchste Rechenzeit; danach fehlen die restlichen Zeilen und die Folge kommt ohne Audiodatei */
   maxMinutes?: number;
+  /** fortsetzung: setzt die Stimmprobe fort (Klang am genauesten, Ausdruck wie in der Probe);
+   *  steuerbar: klont nur die Klangfarbe, Ausdruck je Zeile über eine Anweisung aus "moods" */
+  mode?: 'fortsetzung' | 'steuerbar';
+  /** Anweisung an die Stimme je Stimmung, z. B. "curious, lively" (VoxCPM2 versteht Englisch am besten) */
+  moods?: Partial<Record<Mood, string>>;
+}
+
+export interface JobLine { i: number; role: Role; say: string; ref: string; style?: string }
+
+/** Anweisung für die Stimme: nur im Modus „steuerbar“, neutral ohne eigene Anweisung fällt auf "neutral" zurück. */
+export function styleFor(l: Line, cfg: VoxcpmConfig): string | undefined {
+  if (cfg.mode !== 'steuerbar' || !cfg.moods) return undefined;
+  return cfg.moods[l.mood ?? 'neutral'] ?? cfg.moods.neutral;
 }
 
 /** Frühester Start des Tageslaufs (Berlin), damit die Folge bis 8 Uhr fertig ist: Die Stimme rechnet
@@ -31,15 +44,14 @@ export function earliestStart(minutes: number, voice: string): string {
   return voice === 'voxcpm2' && minutes >= 8 ? '04:30' : '05:30';
 }
 
-export interface JobLine { i: number; role: Role; say: string; ref: string }
-
 /** Auftrag für die Engine: Sprechtext zum Sprechen, ohne Buchstabieren zum Vergleich mit Whisper. */
 export function voxcpmJob(lines: Line[], cfg: VoxcpmConfig): { lines: JobLine[] } & VoxcpmConfig {
   return {
     ...cfg,
     lines: lines.map((l, i) => {
       const text = l.say ?? l.text;
-      return { i, role: l.role, say: sprechtext(text), ref: sprechtext(text, { spell: false }) };
+      const style = styleFor(l, cfg);
+      return { i, role: l.role, say: sprechtext(text), ref: sprechtext(text, { spell: false }), ...(style ? { style } : {}) };
     })
   };
 }

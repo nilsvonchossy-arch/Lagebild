@@ -1,7 +1,7 @@
 // Regeln für das Drehbuch, die Pipeline und App gemeinsam brauchen: Pausen zwischen den Zeilen,
 // Untertitel-Blöcke, Bild-Beats (Zahl und Orte genau beim Wort), feste Formeln je Ton.
 // Werte aus docs/video-analyse-conflictly.md (Abschnitte 4.3, 6 und 10).
-import type { Line, Role, Story, Tone } from './types.ts';
+import { MOODS, type Line, type Mood, type Role, type Story, type Tone } from './types.ts';
 
 /* ---------- Pausen ---------- */
 
@@ -269,9 +269,15 @@ export const cleanName = (name: string | undefined): string => {
   return n && n.length <= 30 && /^[\p{L}' .-]+$/u.test(n) ? n : '';
 };
 
+/** Stimmung aus dem Drehbuch auf die feste Liste bringen (das SDK reicht Auswahlwerte nur als Beschreibung weiter). */
+export function normalizeMood(raw: string | null | undefined): Mood {
+  const k = (raw ?? '').toLowerCase().trim().replace(/ü/g, 'ue').replace(/ä/g, 'ae').replace(/ö/g, 'oe');
+  return (MOODS as readonly string[]).includes(k) ? (k as Mood) : 'neutral';
+}
+
 export function closingLines(tone: Tone, name?: string): Line[] {
   const n = cleanName(name);
-  return TONE_TEXT[tone].closing.map(([role, text]) => ({ role, text: text.replace('{name}', n ? `, ${n}` : ''), kind: 'abschluss' as const }));
+  return TONE_TEXT[tone].closing.map(([role, text]) => ({ role, text: text.replace('{name}', n ? `, ${n}` : ''), kind: 'abschluss' as const, mood: 'warm' as const }));
 }
 
 const WEEKDAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -294,7 +300,7 @@ export function introLines(tone: Tone, date: string, shorts: string[], name?: st
       : `${hi}! Heute ist ${when}.`;
   const list = listOf(shorts);
   return [
-    { role: 'LEITUNG', text: first, kind: 'begruessung' },
-    ...(list ? [{ role: 'LEITUNG' as const, text: `Ich hab dir das Wichtigste rausgesucht: ${list}. Los geht's.`, kind: 'begruessung' as const }] : [])
+    { role: 'LEITUNG', text: first, kind: 'begruessung', mood: 'warm' },
+    ...(list ? [{ role: 'LEITUNG' as const, text: `Ich hab dir das Wichtigste rausgesucht: ${list}. Los geht's.`, kind: 'begruessung' as const, mood: 'heiter' as const }] : [])
   ];
 }

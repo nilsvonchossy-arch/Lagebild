@@ -45,7 +45,8 @@ const { values: args } = parseArgs({
     'no-tts': { type: 'boolean', default: false },
     probe: { type: 'string' },
     vertonen: { type: 'string' },
-    stimme: { type: 'string' }
+    stimme: { type: 'string' },
+    modus: { type: 'string' }
   }
 });
 
@@ -218,7 +219,9 @@ async function voice(b: Briefing, engine: string): Promise<Record<string, unknow
     }
     r = await synthesizeLines(b.script, { key: process.env.AZURE_SPEECH_KEY, region: process.env.AZURE_SPEECH_REGION, voices: pipelineCfg.voices as Record<Role, VoiceSpec> });
   } else {
-    r = synthesizeVoxcpm(b.script, pipelineCfg.voxcpm2 as VoxcpmConfig, join(tmpdir(), 'lagebild-stimme', b.date));
+    const vcfg = pipelineCfg.voxcpm2 as VoxcpmConfig;
+    const mode = args.modus === 'steuerbar' || args.modus === 'fortsetzung' ? args.modus : vcfg.mode;
+    r = synthesizeVoxcpm(b.script, { ...vcfg, mode }, join(tmpdir(), 'lagebild-stimme', b.date));
   }
   if (r.clips.every((c): c is Clip => c !== null)) {
     b.audio = mixEpisode(b.script, r.clips, OUT, `audio/${b.date}`);

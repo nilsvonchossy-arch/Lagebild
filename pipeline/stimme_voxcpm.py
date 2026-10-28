@@ -3,11 +3,14 @@
   python pipeline/stimme_voxcpm.py auftrag.json ausgabe/
 
 auftrag.json: {"lines": [{"i", "role", "say", "ref"}], "voices": {ROLLE: {"ref", "text"}}, "cfg", "steps",
-               "attempts", "whisper", "seed", "dtype", "maxMinutes"}
+               "attempts", "whisper", "seed", "dtype", "maxMinutes", "mode"}
   say  Sprechtext (Zahlen und Abkürzungen ausgeschrieben, src/shared/sprechtext.ts)
   ref  derselbe Text ohne buchstabierte Abkürzungen, zum Vergleich mit der Whisper-Mitschrift
+  style  nur im Modus "steuerbar": Anweisung für den Ausdruck, z. B. "curious, lively"
 
 Jede Rolle klont eine feste Referenzstimme (config/stimmen/voxcpm2); die Stimmprobe wird einmal kodiert.
+Modus "fortsetzung" setzt die Stimmprobe samt Text fort (Klang am genauesten, Ausdruck so ruhig wie die
+Probe); Modus "steuerbar" nimmt nur die Klangfarbe und steuert den Ausdruck je Zeile mit "(Anweisung)Text".
 Whisper schreibt jede Zeile mit: Weicht sie ab (verschluckte Verneinung, wiederholte oder fehlende
 Satzteile, zu viele falsche Zeichen), wird sie mit anderem Zufall neu erzeugt. Die Wortzeiten aus
 Whisper ergeben die Untertitel-Zeitmarken.
@@ -81,9 +84,13 @@ def main():
     tts = model.tts_model
     sr = tts.sample_rate
     load_tts = time.time() - t0
+    steer = job.get("mode") == "steuerbar"
     caches = {}
     for role, v in job["voices"].items():
-        caches[role] = tts.build_prompt_cache(prompt_text=v["text"], prompt_wav_path=v["ref"], reference_wav_path=v["ref"])
+        if steer:
+            caches[role] = tts.build_prompt_cache(reference_wav_path=v["ref"])
+        else:
+            caches[role] = tts.build_prompt_cache(prompt_text=v["text"], prompt_wav_path=v["ref"], reference_wav_path=v["ref"])
     t1 = time.time()
     whisper = WhisperModel(job.get("whisper", "large-v3-turbo"), device="cpu", compute_type="int8")
     load_whisper = time.time() - t1
@@ -106,7 +113,8 @@ def main():
             torch.manual_seed(int(job.get("seed", 7)) + 1000 * attempt + n)
             ts = time.time()
             wav, _, _ = tts.generate_with_prompt_cache(
-                target_text=line["say"], prompt_cache=caches[line["role"]],
+                target_text=f"({line['style']}){line['say']}" if steer and line.get("style") else line["say"],
+                prompt_cache=caches[line["role"]],
                 inference_timesteps=int(job.get("steps", 10)), cfg_value=float(job.get("cfg", 2.0)), retry_badcase=True,
             )
             audio = trim(wav.squeeze(0).cpu().numpy().astype(np.float32), sr)
@@ -139,7 +147,7 @@ def main():
     calc = time.time() - t_gen
     audio_s = sum(r["dur"] for r in results)
     report = {
-        "engine": "voxcpm2", "sr": sr, "dtype": dtype, "cpu": cpu_info(), "load_tts_s": round(load_tts, 1), "load_whisper_s": round(load_whisper, 1),
+        "engine": "voxcpm2", "mode": job.get("mode", "fortsetzung"), "sr": sr, "dtype": dtype, "cpu": cpu_info(), "load_tts_s": round(load_tts, 1), "load_whisper_s": round(load_whisper, 1),
         "calc_s": round(calc, 1), "audio_s": round(audio_s, 1), "rtf": round(calc / max(audio_s, 0.1), 2),
         "retried": sum(1 for r in results if r["attempts"] > 1), "failed": [r["i"] for r in results if not r["ok"]],
         "timeout": timed_out,

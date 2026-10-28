@@ -28,6 +28,10 @@ export interface LineAudio {
 /** Art einer Zeile: Begrüßung (nur Ton „Assistent“), Frage/Überleitung, Fakt, Zusammenfassung, feste Abschlussformel */
 export type LineKind = 'begruessung' | 'frage' | 'fakt' | 'zusammenfassung' | 'abschluss';
 
+/** Stimmung, mit der eine Zeile gesprochen wird (steuert die Stimme, nicht den Inhalt) */
+export const MOODS = ['neutral', 'neugierig', 'ueberrascht', 'warm', 'ernst', 'nachdenklich', 'heiter'] as const;
+export type Mood = (typeof MOODS)[number];
+
 export interface Line {
   role: Role;
   /** Untertitel */
@@ -39,6 +43,8 @@ export interface Line {
   kind: LineKind;
   /** IDs der geprüften Fakten, auf denen die Zeile beruht (nur Faktzeilen und Zusammenfassung) */
   facts?: string[];
+  /** Stimmung beim Sprechen; fehlt = neutral */
+  mood?: Mood;
   audio?: LineAudio;
 }
 

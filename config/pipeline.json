@@ -37,7 +37,17 @@
     "whisper": "large-v3-turbo",
     "seed": 7,
     "dtype": "float32",
-    "maxMinutes": 190
+    "maxMinutes": 190,
+    "mode": "fortsetzung",
+    "moods": {
+      "neutral": "natural, conversational",
+      "neugierig": "curious, engaged",
+      "ueberrascht": "surprised, animated",
+      "warm": "warm, friendly, smiling",
+      "ernst": "serious, calm, compassionate",
+      "nachdenklich": "thoughtful, measured",
+      "heiter": "cheerful, upbeat"
+    }
   },
   "audioDays": 14,
   "candidates": {
