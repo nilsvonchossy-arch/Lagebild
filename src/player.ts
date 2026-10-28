@@ -6,15 +6,20 @@ import { Atmo, EpisodeAudio, SystemVoice, estimateMs, silentLine } from './audio
 import { Card, categoryColor } from './card';
 import { countUp, scramble, Subtitle } from './fx';
 import type { Globe } from './globe';
+import { fallbackSymbol } from './icons';
 import { cuesFor, LEAD_IN, pauseBefore, secToFrac, type Cue } from './shared/script';
 import type { Briefing, Story } from './shared/types';
 import { $, dateParts, pad2, sleep, speed } from './util';
+import { comparisonHTML, deadlineHTML, symbolHTML, type Viz } from './viz';
 
 const CANCEL = Symbol('cancel');
 const MEDIA = Symbol('media');
 const FRANKFURT: [number, number] = [8.68, 50.11];
 /** Untertitel erscheinen so viele Sekunden vor der Stimme */
 const LEAD = 0.12;
+/** Wie lange Einblendungen stehen bleiben (ms bei normalem Tempo) */
+const HOLD = { comparison: 5200, deadline: 4200, image: 5600, symbol: 2600 };
+const VISUAL = new Set<Cue['kind']>(['comparison', 'deadline', 'image']);
 
 export interface PlayerHooks {
   /** Fortschritt: Abschnitt (Meldung oder Märkte) und Anteil darin */
@@ -40,6 +45,8 @@ export interface Scene {
   last: number;
   /** erste Zeile, die keine Frage ist: ab hier erscheint die Karte */
   firstFact: number;
+  /** Mindestens ein Vergleich, Termin oder Archivbild wird im Dialog genannt; sonst zeigt die Meldung ihr Symbol */
+  hasVisual: boolean;
 }
 
 export function scenesOf(b: Briefing): Scene[] {
@@ -48,9 +55,13 @@ export function scenesOf(b: Briefing): Scene[] {
     const key = l.story ?? '_ende';
     const cur = out[out.length - 1];
     if (cur && cur.key === key) { cur.last = i; if (cur.firstFact < 0 && l.role !== 'LEITUNG') cur.firstFact = i; return; }
-    out.push({ key, story: b.stories.find(s => s.id === key) ?? null, first: i, last: i, firstFact: l.role !== 'LEITUNG' ? i : -1 });
+    out.push({ key, story: b.stories.find(s => s.id === key) ?? null, first: i, last: i, firstFact: l.role !== 'LEITUNG' ? i : -1, hasVisual: false });
   });
-  for (const s of out) if (s.firstFact < 0) s.firstFact = s.first;
+  for (const s of out) {
+    if (s.firstFact < 0) s.firstFact = s.first;
+    const st = s.story;
+    if (st) s.hasVisual = b.script.slice(s.first, s.last + 1).some(l => cuesFor(st, l).some(c => VISUAL.has(c.kind)));
+  }
   return out;
 }
 
@@ -79,6 +90,7 @@ export class Player {
     private readonly audio: EpisodeAudio,
     private readonly sys: SystemVoice,
     private readonly atmo: Atmo,
+    private readonly viz: Viz,
     private readonly settings: () => PlayerSettings,
     private readonly hooks: PlayerHooks
   ) {
@@ -309,12 +321,19 @@ export class Player {
     if (i >= scene.firstFact && !this.factStarted) {
       this.factStarted = true;
       void sleep(300).then(() => this.maybeShowCard());
+      const st = scene.story;
+      if (st && !scene.hasVisual) {
+        const my = this.gen;
+        void sleep(700).then(() => {
+          if (my === this.gen && this.scenes[this.sceneIdx] === scene) this.viz.show(symbolHTML(st.symbol ?? fallbackSymbol(st.category), st.topic), this.acc(st), HOLD.symbol);
+        });
+      }
     }
     this.lineProgress(i, 0);
   }
 
   private cueKey(c: Cue): string {
-    return `${c.kind}:${c.place ?? ''}`;
+    return `${c.kind}:${c.place ?? c.image ?? ''}`;
   }
 
   private lineProgress(i: number, frac: number): void {
@@ -330,11 +349,18 @@ export class Player {
     }
   }
 
-  /** Bild-Beat: Zahl zählt am Pin hoch, weiterer Ort bekommt einen Pin (und eine Linie). */
+  private acc(s: Story): string {
+    return categoryColor(this.briefing!.categories, s.category);
+  }
+
+  /** Bild-Beat: Zahl zählt am Pin hoch, weiterer Ort bekommt einen Pin (und eine Linie), Einblendungen erscheinen. */
   private fire(c: Cue): void {
     const s = this.scenes[this.sceneIdx]?.story;
     if (!s) return;
-    if (c.kind === 'figure' && s.figure) {
+    if (c.kind === 'comparison' && s.comparison) this.viz.show(comparisonHTML(s.comparison), this.acc(s), HOLD.comparison);
+    else if (c.kind === 'deadline' && s.deadline) this.viz.show(deadlineHTML(s.deadline), this.acc(s), HOLD.deadline);
+    else if (c.kind === 'image' && c.image != null && s.images?.[c.image]) void this.viz.showImage(s.images[c.image]!, this.dataBase, this.acc(s), HOLD.image);
+    else if (c.kind === 'figure' && s.figure) {
       $('#pinFigLabel').textContent = s.figure.label;
       $('#pinFig').classList.add('on');
       countUp($('#pinFigNum'), s.figure);
@@ -367,6 +393,7 @@ export class Player {
     this.arrived = false;
     this.factStarted = false;
     $('#pinFig').classList.remove('on');
+    void this.viz.hide();
     void this.card.hide().then(() => this.hooks.layout());
     this.globe.highlight(null);
     this.globe.pin(null);
@@ -445,6 +472,7 @@ export class Player {
     this.sceneIdx = -1;
     this.sub.hide();
     $('#pinFig').classList.remove('on');
+    void this.viz.hide();
     void this.card.hide().then(() => this.hooks.layout());
     $('#title').classList.remove('on');
     this.hooks.progress(this.segments, 0);

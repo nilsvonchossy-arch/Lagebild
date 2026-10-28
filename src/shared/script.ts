@@ -92,9 +92,11 @@ export function subtitleBlocks(text: string, min = 6, max = 10): Block[] {
 export interface Cue {
   /** Anteil am Text, an dem das Wort beginnt */
   at: number;
-  kind: 'figure' | 'place';
+  kind: 'figure' | 'place' | 'comparison' | 'deadline' | 'image';
   /** Index in story.places */
   place?: number;
+  /** Index in story.images */
+  image?: number;
 }
 
 /** Schreibweisen einer Zahl im Text: 55,7 · 2.000 und 2000 · 28 */
@@ -107,22 +109,68 @@ export function numberVariants(value: number, dec: number): string[] {
 
 const esc = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/** Wo in einer Zeile die Zahl der Meldung oder ein weiterer Ort genannt wird. */
-export function cuesFor(story: Pick<Story, 'figure' | 'places'>, line: Pick<Line, 'text'>): Cue[] {
+/** Position einer Zahl im Text (nicht als Teil einer längeren Zahl), sonst -1. */
+export function findNumber(text: string, value: number, dec: number): number {
+  for (const v of numberVariants(value, dec)) {
+    const m = new RegExp(`(?<![\\d.,])${esc(v)}(?![\\d]|[.,]\\d)`).exec(text);
+    if (m) return m.index;
+  }
+  return -1;
+}
+
+const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
+/** Muster für Uhrzeit (HH:MM) oder Datum (JJJJ-MM-TT), wie sie in einem deutschen Satz stehen. */
+export function deadlinePattern(d: { time?: string; date?: string }): RegExp | null {
+  const alts: string[] = [];
+  const t = d.time && /^(\d{1,2}):(\d{2})$/.exec(d.time);
+  if (t) {
+    const h = String(Number(t[1]));
+    alts.push(t[2] === '00' ? `${h}(?:[:.]00)?\\s*Uhr|${h}:00` : `${h}[:.]${t[2]}`);
+  }
+  const dt = d.date && /^\d{4}-(\d{2})-(\d{2})$/.exec(d.date);
+  if (dt) {
+    const day = Number(dt[2]), month = Number(dt[1]);
+    alts.push(`${day}\\.\\s*${MONTHS[month - 1]}`, `0?${day}\\.0?${month}\\.`);
+  }
+  return alts.length ? new RegExp(`(?<![\\d])(?:${alts.join('|')})`, 'i') : null;
+}
+
+type CueStory = Pick<Story, 'figure' | 'places' | 'comparison' | 'deadline' | 'images'>;
+
+/** Wo in einer Zeile die Zahl, ein weiterer Ort, ein Vergleichswert, ein Termin oder ein Bildmotiv genannt wird. */
+export function cuesFor(story: CueStory, line: Pick<Line, 'text'>): Cue[] {
   const text = line.text;
   const cues: Cue[] = [];
+  const at = (i: number): number => i / text.length;
   const f = story.figure;
   if (f) {
-    for (const v of numberVariants(f.value, f.dec)) {
-      const m = new RegExp(`(?<![\\d.,])${esc(v)}(?![\\d]|[.,]\\d)`).exec(text);
-      if (m) { cues.push({ at: m.index / text.length, kind: 'figure' }); break; }
-    }
+    const i = findNumber(text, f.value, f.dec);
+    if (i >= 0) cues.push({ at: at(i), kind: 'figure' });
   }
   story.places?.forEach((p, k) => {
     const name = p.label.trim();
     if (!name) return;
     const m = new RegExp(`(?<![\\p{L}])${esc(name)}`, 'iu').exec(text);
-    if (m) cues.push({ at: m.index / text.length, kind: 'place', place: k });
+    if (m) cues.push({ at: at(m.index), kind: 'place', place: k });
+  });
+  const c = story.comparison;
+  if (c) {
+    // Am liebsten beim Vergleichswert, nicht bei der Zahl, die ohnehin am Pin hochzählt
+    const hits = c.items.map(it => ({ i: findNumber(text, it.value, c.dec), same: Boolean(f && Math.abs(f.value - it.value) < 1e-9) })).filter(h => h.i >= 0);
+    const hit = hits.find(h => !h.same) ?? hits[0];
+    if (hit) cues.push({ at: at(hit.i), kind: 'comparison' });
+  }
+  const d = story.deadline && deadlinePattern(story.deadline);
+  if (d) {
+    const m = d.exec(text);
+    if (m) cues.push({ at: at(m.index), kind: 'deadline' });
+  }
+  story.images?.forEach((img, k) => {
+    const name = img.match.trim();
+    if (!name) return;
+    const m = new RegExp(`(?<![\\p{L}])${esc(name)}`, 'iu').exec(text);
+    if (m) cues.push({ at: at(m.index), kind: 'image', image: k });
   });
   return cues.sort((a, b) => a.at - b.at);
 }

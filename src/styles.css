@@ -76,6 +76,52 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .pin-fig b { font: 800 17px/1 var(--f-text); font-variant-numeric: tabular-nums; }
 .pin-fig small { font: 400 8px/1.2 var(--f-hud); letter-spacing: .14em; text-transform: uppercase; max-width: 22ch; }
 
+/* Feste Zeilen, damit die Einblendung (#viz) die Platzierung im Raster nicht verschiebt */
+#app > #caption { grid-row: 2; }
+#app > #stage { grid-row: 3; }
+#app > .cardwrap { grid-row: 4; }
+#app > .controls { grid-row: 5; }
+
+/* Einblendungen beim Wort: hochkant oben über dem Globus, quer in der rechten Spalte */
+#viz { grid-row: 3; grid-column: 1 / -1; align-self: start; z-index: 3; display: flex; justify-content: center; min-height: 0; max-height: 46%; margin-top: 4px; pointer-events: none; visibility: hidden; }
+#viz[data-state="in"], #viz[data-state="out"] { visibility: visible; }
+.vz { --acc: inherit; width: min(360px, 88%); max-height: 100%; overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding: 11px 14px 13px; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 14%, rgba(9,10,13,.9)), rgba(7,8,11,.9)); border-left: 3px solid var(--acc); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+#viz[data-state="in"] .vz { animation: vzIn .45s cubic-bezier(.2,.8,.2,1) both; }
+#viz[data-state="out"] .vz { animation: vzOut .38s ease-in both; }
+@keyframes vzIn { from { opacity: 0; transform: translateY(-8px) scale(.97); clip-path: inset(0 0 100% 0); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
+@keyframes vzOut { to { opacity: 0; transform: translateY(-6px); } }
+.vz-kind { font: 400 8.5px/1 var(--f-hud); letter-spacing: .26em; text-transform: uppercase; color: var(--acc); }
+.vz-title { font: 500 13px/1.35 var(--f-text); color: var(--soft); text-wrap: balance; }
+.vz-bars { display: grid; gap: 7px; }
+.vz-row { display: grid; grid-template-columns: minmax(3.6em, auto) minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.vz-lab { font: 400 9px/1.2 var(--f-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
+.vz-bar { height: 9px; background: rgba(255,255,255,.09); }
+.vz-bar i { display: block; height: 100%; width: calc(var(--w) * 100%); background: var(--acc); transform-origin: 0 50%; animation: barGrow .9s cubic-bezier(.2,.8,.2,1) var(--d, 0s) both; }
+.vz-bar.neg i { background: repeating-linear-gradient(135deg, var(--acc) 0 4px, transparent 4px 7px); }
+@keyframes barGrow { from { transform: scaleX(0); } to { transform: none; } }
+.vz-num { font: 800 15px/1 var(--f-text); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; min-width: 4.2em; }
+.vz-when { display: flex; align-items: center; gap: 16px; }
+.vz-time { display: flex; align-items: center; gap: 12px; }
+.vz-time b { font: 400 26px/1 var(--f-hud); letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+.vz-clock { width: 52px; height: 52px; fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.vz-clock circle:first-child { stroke: color-mix(in srgb, var(--acc) 70%, transparent); }
+.vz-clock .hh, .vz-clock .mm { transform-origin: 32px 32px; transform: rotate(var(--a)); animation: hand 1s cubic-bezier(.2,.8,.2,1) both; }
+.vz-clock .hh { stroke-width: 3.2; }
+.vz-clock .mm { stroke: var(--acc); }
+.vz-clock .dot { fill: var(--ink); stroke: none; }
+@keyframes hand { from { transform: rotate(0deg); } }
+.vz-cal { width: 52px; display: grid; text-align: center; border: 1px solid rgba(255,255,255,.22); }
+.vz-cal span { padding: 4px 0 3px; background: var(--acc); color: #0b0c0f; font: 400 8.5px/1 var(--f-hud); letter-spacing: .14em; }
+.vz-cal b { padding: 5px 0 6px; font: 800 22px/1 var(--f-text); }
+.vz-img { margin: 0; display: grid; gap: 7px; min-height: 0; }
+.vz-img img { display: block; width: 100%; height: auto; max-height: min(28vh, 240px); object-fit: cover; object-position: 50% 28%; background: #111; }
+.vz-img figcaption { display: grid; gap: 3px; }
+.vz-img figcaption b { font: 600 13px/1.3 var(--f-text); }
+.vz-img figcaption span { font: 400 10.5px/1.35 var(--f-text); color: var(--mute); overflow-wrap: anywhere; }
+.vz-sym { display: flex; align-items: center; gap: 12px; }
+.vz-sym svg { width: 42px; height: 42px; color: var(--acc); flex: none; }
+.vz-sym span { font: 400 11px/1.3 var(--f-hud); letter-spacing: .2em; text-transform: uppercase; }
+
 /* Karte im unteren Drittel: Flagge, Ort, eine Zeile */
 .card { position: relative; margin-bottom: 12px; padding: 12px 14px 20px; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 16%, rgba(9,10,13,.9)), rgba(8,9,12,.92)); border-left: 3px solid var(--acc); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); visibility: hidden; transform-origin: 50% 100%; cursor: pointer; }
 .card[data-state="in"] { visibility: visible; animation: cardIn .5s cubic-bezier(.2,.8,.2,1) both; }
@@ -215,6 +261,9 @@ select, input { font-size: 16px !important; }
 #app.wide > #stage { grid-column: 1; grid-row: 2 / 6; }
 #app.wide > .cardwrap { grid-column: 2; grid-row: 4; }
 #app.wide > .controls { grid-column: 2; grid-row: 5; }
+#app.wide > #viz { grid-column: 2; grid-row: 3; align-self: center; max-height: 100%; margin-top: 0; }
+#app.wide .vz { width: 100%; }
+#app.wide .vz-img img { max-height: min(34vh, 300px); }
 #app.wide .overlay { justify-content: center; background: linear-gradient(90deg, transparent 0%, transparent 42%, rgba(5,7,10,.86) 58%, rgba(5,7,10,.97) 100%); }
 #app.wide #end { justify-content: flex-start; }
 #app.wide .panel { max-width: 440px; margin-inline: auto 0; }

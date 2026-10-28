@@ -162,6 +162,23 @@ describe('Drehbuch-Regeln', () => {
     expect(cuesFor({ figure: { value: 1.9, dec: 1, label: 'x' } }, { text: '1,9-mal so schnell' })).toHaveLength(1);
   });
 
+  it('findet Vergleich, Termin und Bildmotiv im Text', () => {
+    const story = {
+      figure: { value: 55.7, dec: 1, label: 'x' },
+      comparison: { label: 'Wahlbeteiligung', unit: ' %', dec: 1, items: [{ label: '16 Uhr', value: 55.7 }, { label: '2022', value: 47.5 }], facts: ['A1', 'A3'] },
+      deadline: { time: '22:00', label: 'Wahllokale schließen', facts: ['A5'] },
+      images: [{ src: 'bilder/x.jpg', w: 800, h: 600, motif: 'Gadi Eisenkot', match: 'Eisenkot', author: 'X', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:X.jpg' }]
+    };
+    // Der Vergleich erscheint beim Vergleichswert, nicht bei der Zahl, die am Pin hochzählt
+    const a = cuesFor(story, { text: 'Bis 16 Uhr 55,7 Prozent, 2022 waren es 47,5 Prozent.' });
+    expect(a.map(c => c.kind)).toEqual(['figure', 'comparison']);
+    expect(a[1]!.at).toBeCloseTo('Bis 16 Uhr 55,7 Prozent, 2022 waren es '.length / 'Bis 16 Uhr 55,7 Prozent, 2022 waren es 47,5 Prozent.'.length);
+    expect(cuesFor(story, { text: 'Die Wahllokale schließen um 22 Uhr Ortszeit.' }).map(c => c.kind)).toEqual(['deadline']);
+    expect(cuesFor(story, { text: 'Gegen ihn tritt Gadi Eisenkot an.' })).toEqual([{ at: expect.any(Number), kind: 'image', image: 0 }]);
+    expect(cuesFor({ deadline: { date: '2026-11-06', label: 'x', facts: [] } }, { text: 'Ausgeliefert ab dem 6. November.' })).toHaveLength(1);
+    expect(cuesFor({ deadline: { time: '22:00', label: 'x', facts: [] } }, { text: 'Um 122 Uhr' })).toEqual([]);
+  });
+
   it('rechnet zwischen Textanteil und Sekunde', () => {
     const words: [number, number][] = [[0.5, 0.25], [1, 0.5], [2, 1]];
     expect(fracToSec(words, 0.6, 2)).toBe(1);

@@ -79,6 +79,53 @@ export interface Place {
   route?: boolean;
 }
 
+/** Symbole für Meldungen ohne eigenes Bild (eigene Zeichnungen, src/icons.ts) */
+export const SYMBOLS = [
+  'wahl', 'parlament', 'regierung', 'diplomatie', 'gericht', 'sicherheit', 'geld', 'boerse', 'handel', 'fabrik',
+  'arbeit', 'energie', 'klima', 'medizin', 'forschung', 'ki', 'chip', 'cyber', 'raumfahrt', 'verkehr', 'bildung'
+] as const;
+export type SymbolId = (typeof SYMBOLS)[number];
+
+/** Vergleich von 2–4 Werten derselben Art; jeder Wert steht wörtlich in einem der genannten Fakten. */
+export interface Comparison {
+  /** Was verglichen wird, z. B. „Wahlbeteiligung“ */
+  label: string;
+  /** Einheit mit Leerzeichen davor, z. B. " %" */
+  unit: string;
+  dec: number;
+  /** Beschriftung so, wie sie im Fakt steht („2022“, „16 Uhr“), „jetzt“ für den aktuellen Wert */
+  items: { label: string; value: number }[];
+  facts: string[];
+}
+
+/** Uhrzeit oder Datum aus einem Fakt, z. B. Schließung der Wahllokale */
+export interface Deadline {
+  /** HH:MM */
+  time?: string;
+  /** JJJJ-MM-TT */
+  date?: string;
+  label: string;
+  facts: string[];
+}
+
+/** Archivbild aus Wikimedia Commons (über Wikidata); zeigt Person, Ort oder Gebäude, nicht das Ereignis selbst. */
+export interface ArchiveImage {
+  /** Pfad relativ zum Datenordner */
+  src: string;
+  w: number;
+  h: number;
+  /** Bezeichnung aus Wikidata, z. B. „Gadi Eisenkot“ */
+  motif: string;
+  /** Wort im Dialog, bei dem das Bild erscheint */
+  match: string;
+  author: string;
+  /** z. B. „CC BY-SA 4.0“ oder „Public domain“ */
+  license: string;
+  licenseUrl?: string;
+  /** Dateiseite auf Wikimedia Commons */
+  page: string;
+}
+
 export interface Story {
   id: string;
   /** Category.id, bestimmt die Akzentfarbe */
@@ -106,6 +153,11 @@ export interface Story {
   /** Schlagwort für die Zusammenfassung am Ende */
   short: string;
   facts: Fact[];
+  /** Einblendungen: Symbol, Vergleich, Termin und Archivbilder erscheinen beim passenden Wort */
+  symbol?: SymbolId;
+  comparison?: Comparison;
+  deadline?: Deadline;
+  images?: ArchiveImage[];
 }
 
 export interface MarketItem {
@@ -118,6 +170,8 @@ export interface MarketItem {
   changePct: number;
   /** Handelstag JJJJ-MM-TT */
   date: string;
+  /** Schlusskurse der letzten Handelstage, ältester zuerst (Kursverlauf) */
+  series?: number[];
 }
 
 /** Marktdaten; die gesprochenen Sätze (Zeilen mit story "maerkte") werden ohne KI aus den Zahlen gebaut. */

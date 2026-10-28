@@ -12,6 +12,7 @@ import { estimateScript } from './shared/script';
 import { SCHEMA_VERSION, type Briefing, type DayIndex } from './shared/types';
 import { bindTopics, openTopics } from './topics';
 import { $, dateParts, esc, pad2 } from './util';
+import { Viz } from './viz';
 
 const ICON = {
   play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
@@ -75,7 +76,7 @@ function measure(): void {
   });
 }
 
-const player = new Player(globe, card, sub, episodeAudio, sys, atmo, () => S, {
+const player = new Player(globe, card, sub, episodeAudio, sys, atmo, new Viz(), () => S, {
   progress: setProgress,
   state: updateControls,
   layout: measure,
