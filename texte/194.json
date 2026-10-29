@@ -1,0 +1,10 @@
+{
+ "id": 194,
+ "source": "The Decoder",
+ "published": "2026-10-28T14:57:43.000Z",
+ "url": "https://the-decoder.de/neuer-index-von-artificial-analysis-vergroessert-den-abstand-zwischen-offenen-und-geschlossenen-modellen/",
+ "title": "Neuer Index von Artificial Analysis vergrößert den Abstand zwischen offenen und geschlossenen Modellen",
+ "text": "Artificial Analysis hat seinen Intelligence Index überarbeitet, und Kimi K3.1 Pro rutscht in der Rangliste um fünf Plätze ab. Zum Start lag das Modell auf Platz vier, in Version 5 kommt es nur noch auf Rang neun hinter acht geschlossenen Modellen. Den Abstand offener Modelle zur Spitze beziffert Artificial Analysis nun auf 12 statt zuvor 3 Punkte.\nBild: AAII\nGleichzeitig beruhen erstmals 60 Prozent des Index auf privaten Testsets, um gezieltes Training auf bekannte Testfragen, das sogenannte \"Benchmaxxing\", zu verhindern. Der Absturz von Kimi K3.1 Pro legt nahe, dass der alte Index einige Modelle zu gut dastehen ließ, auch Grok 4.7 verlor 12 Punkte.\nDer KI-Forscher Nathan Lambert sieht im Benchmaxxing aber nur einen Teil der Erklärung. Viele Trainingsfortschritte entstünden heute in RL-Umgebungen, deren Aufgaben den Tests ähneln. Um in mehreren Bereichen gleichzeitig mitzuhalten, brauche es eine ausgefeilte RL-Infrastruktur, über die nicht alle Labs verfügten.\nGeschlossene Testsets haben allerdings einen Nachteil: Fehler in den Aufgaben lassen sich von außen nicht mehr aufdecken. Dass es solche Fehler gibt, zeigt der Wissenstest AA-Omniscience, in dem Artificial Analysis für den neuen Index mehrdeutige und fehlerhafte Fragen überarbeitet hat.\n\n KI-News ohne Hype – von Menschen kuratiert\n\n Mit dem THE‑DECODER‑Abo liest du werbefrei und wirst Teil unserer Community: Diskutiere im Kommentarsystem, erhalte unseren wöchentlichen KI‑Newsletter, 6× im Jahr den \"KI Radar\"‑Frontier‑Newsletter mit den neuesten Entwicklungen aus der Spitze der KI‑Forschung, bis zu 25 % Rabatt auf KI Pro‑Events und Zugriff auf das komplette Archiv der letzten zehn Jahre.\n\n Jetzt abonnieren",
+ "date": "2026-10-28",
+ "siteName": "The Decoder"
+}
