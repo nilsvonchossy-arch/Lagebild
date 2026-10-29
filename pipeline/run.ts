@@ -46,7 +46,8 @@ const { values: args } = parseArgs({
     probe: { type: 'string' },
     vertonen: { type: 'string' },
     stimme: { type: 'string' },
-    modus: { type: 'string' }
+    modus: { type: 'string' },
+    rohdaten: { type: 'boolean', default: false }
   }
 });
 
@@ -277,6 +278,23 @@ async function main(): Promise<void> {
   }
 
   if (args.probe) { await probe(args.probe.split(/[\s,]+/).filter(Boolean)); return; }
+
+  if (args.rohdaten) {
+    // Nur Recherche ohne Claude: Kandidaten, Artikeltexte und Märkte als Rohdaten (z. B. für eine von Hand geschriebene Folge)
+    const [{ candidates, report }, markets] = await Promise.all([research(), fetchMarkets()]);
+    writeJSON(join(OUT, 'kandidaten.json'), candidates);
+    writeJSON(join(OUT, 'recherche.json'), report);
+    if (markets) writeJSON(join(OUT, 'maerkte.json'), markets);
+    let ok = 0;
+    await pool(candidates, 8, async c => {
+      const a = await fetchArticle(c.url);
+      if ('error' in a) return;
+      ok++;
+      writeJSON(join(OUT, 'texte', `${c.id}.json`), { id: c.id, source: c.source, published: c.published, ...a });
+    });
+    log(`Rohdaten: ${candidates.length} Kandidaten, ${ok} Artikeltexte`);
+    return;
+  }
 
   if (args.vertonen) {
     // Fertige Folge (z. B. die Demo) nur vertonen und mischen, ohne Claude

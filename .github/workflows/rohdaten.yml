@@ -1,0 +1,30 @@
+# Recherche ohne Claude: Kandidaten aus allen Feeds, Artikeltexte (wie der Faktencheck sie liest) und Märkte.
+# Ergebnis im Branch "rohdaten", z. B. für eine Folge, die im Claude-Chat von Hand geschrieben wird.
+name: Rohdaten
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rohdaten:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Recherche
+        run: node pipeline/run.ts --rohdaten --out rohdaten
+      - name: Ergebnis in Branch schreiben
+        run: |
+          cd rohdaten
+          git init -q -b rohdaten
+          git add -A
+          git -c user.name="Lagebild" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Rohdaten $(TZ=Europe/Berlin date +%F)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" rohdaten
