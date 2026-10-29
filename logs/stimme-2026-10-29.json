@@ -1,0 +1,16 @@
+{
+ "engine": "voxcpm2",
+ "mode": "steuerbar",
+ "sr": 48000,
+ "dtype": "float32",
+ "cpu": "AMD EPYC 7763 64-Core Processor, bfloat16 nativ: nein",
+ "load_tts_s": 68.9,
+ "load_whisper_s": 9.7,
+ "calc_s": 3036.5,
+ "audio_s": 201.9,
+ "rtf": 15.04,
+ "retried": 1,
+ "failed": [],
+ "timeout": false,
+ "problems": []
+}

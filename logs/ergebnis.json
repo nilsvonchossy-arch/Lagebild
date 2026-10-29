@@ -1,0 +1,2505 @@
+{
+ "engine": "voxcpm2",
+ "mode": "steuerbar",
+ "sr": 48000,
+ "dtype": "float32",
+ "cpu": "AMD EPYC 7763 64-Core Processor, bfloat16 nativ: nein",
+ "load_tts_s": 68.9,
+ "load_whisper_s": 9.7,
+ "calc_s": 3036.5,
+ "audio_s": 201.9,
+ "rtf": 15.04,
+ "retried": 1,
+ "failed": [],
+ "timeout": false,
+ "lines": [
+  {
+   "i": 0,
+   "ok": true,
+   "file": "zeile-000.wav",
+   "dur": 4.39,
+   "bounds": [
+    {
+     "end": 0.36,
+     "len": 5
+    },
+    {
+     "end": 0.8,
+     "len": 7
+    },
+    {
+     "end": 1.74,
+     "len": 5
+    },
+    {
+     "end": 1.96,
+     "len": 3
+    },
+    {
+     "end": 2.56,
+     "len": 11
+    },
+    {
+     "end": 2.76,
+     "len": 3
+    },
+    {
+     "end": 3.28,
+     "len": 3
+    },
+    {
+     "end": 4.26,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 1.8,
+   "problems": [],
+   "transcript": "Guten Morgen! Heute ist Donnerstag, der 29. Oktober."
+  },
+  {
+   "i": 1,
+   "ok": true,
+   "file": "zeile-001.wav",
+   "dur": 8.9,
+   "bounds": [
+    {
+     "end": 0.14,
+     "len": 3
+    },
+    {
+     "end": 0.28,
+     "len": 3
+    },
+    {
+     "end": 0.4,
+     "len": 3
+    },
+    {
+     "end": 0.58,
+     "len": 3
+    },
+    {
+     "end": 1.04,
+     "len": 10
+    },
+    {
+     "end": 1.7,
+     "len": 12
+    },
+    {
+     "end": 2.76,
+     "len": 9
+    },
+    {
+     "end": 3.22,
+     "len": 8
+    },
+    {
+     "end": 3.74,
+     "len": 9
+    },
+    {
+     "end": 4.94,
+     "len": 17
+    },
+    {
+     "end": 5.12,
+     "len": 3
+    },
+    {
+     "end": 5.64,
+     "len": 2
+    },
+    {
+     "end": 5.88,
+     "len": 3
+    },
+    {
+     "end": 6.82,
+     "len": 17
+    },
+    {
+     "end": 6.96,
+     "len": 2
+    },
+    {
+     "end": 7.64,
+     "len": 12
+    },
+    {
+     "end": 8.42,
+     "len": 3
+    },
+    {
+     "end": 8.82,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.8,
+   "problems": [],
+   "transcript": "Ich hab dir das Wichtigste rausgesucht, Netanyahu verliert Mehrheit, Milliardenverlust bei VW und Stimmzettelstreit in Kalifornien. Los geht's!"
+  },
+  {
+   "i": 2,
+   "ok": true,
+   "file": "zeile-002.wav",
+   "dur": 5.29,
+   "bounds": [
+    {
+     "end": 0.36,
+     "len": 6
+    },
+    {
+     "end": 0.56,
+     "len": 4
+    },
+    {
+     "end": 0.72,
+     "len": 3
+    },
+    {
+     "end": 1.04,
+     "len": 5
+    },
+    {
+     "end": 2.28,
+     "len": 10
+    },
+    {
+     "end": 2.88,
+     "len": 9
+    },
+    {
+     "end": 3.28,
+     "len": 3
+    },
+    {
+     "end": 3.5,
+     "len": 4
+    },
+    {
+     "end": 3.92,
+     "len": 8
+    },
+    {
+     "end": 4.26,
+     "len": 4
+    },
+    {
+     "end": 4.66,
+     "len": 8
+    },
+    {
+     "end": 5.02,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 1.4,
+   "problems": [],
+   "transcript": "Israel nach der Wahl. Netanyahus Koalition hat laut Guardian ihre Mehrheit verloren."
+  },
+  {
+   "i": 3,
+   "ok": true,
+   "file": "zeile-003.wav",
+   "dur": 2.32,
+   "bounds": [
+    {
+     "end": 0.14,
+     "len": 3
+    },
+    {
+     "end": 0.66,
+     "len": 10
+    },
+    {
+     "end": 1.06,
+     "len": 3
+    },
+    {
+     "end": 1.32,
+     "len": 4
+    },
+    {
+     "end": 1.74,
+     "len": 5
+    },
+    {
+     "end": 2.18,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Die Opposition hat eine klare Mehrheit."
+  },
+  {
+   "i": 4,
+   "ok": true,
+   "file": "zeile-004.wav",
+   "dur": 3.28,
+   "bounds": [
+    {
+     "end": 0.6,
+     "len": 4
+    },
+    {
+     "end": 1.36,
+     "len": 4
+    },
+    {
+     "end": 1.82,
+     "len": 3
+    },
+    {
+     "end": 2.76,
+     "len": 9
+    },
+    {
+     "end": 3.12,
+     "len": 5
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Oha, also ist Netanjahu raus."
+  },
+  {
+   "i": 5,
+   "ok": true,
+   "file": "zeile-005.wav",
+   "dur": 6.28,
+   "bounds": [
+    {
+     "end": 0.16,
+     "len": 5
+    },
+    {
+     "end": 0.54,
+     "len": 10
+    },
+    {
+     "end": 1.44,
+     "len": 3
+    },
+    {
+     "end": 1.8,
+     "len": 7
+    },
+    {
+     "end": 2.3,
+     "len": 9
+    },
+    {
+     "end": 3.32,
+     "len": 19
+    },
+    {
+     "end": 3.58,
+     "len": 6
+    },
+    {
+     "end": 3.84,
+     "len": 5
+    },
+    {
+     "end": 4.04,
+     "len": 3
+    },
+    {
+     "end": 4.88,
+     "len": 15
+    },
+    {
+     "end": 5.32,
+     "len": 9
+    },
+    {
+     "end": 5.78,
+     "len": 8
+    },
+    {
+     "end": 6.14,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Nicht unbedingt. Die meisten jüdischen Oppositionsparteien wollen nicht mit palästinensisch geführten Parteien regieren."
+  },
+  {
+   "i": 6,
+   "ok": true,
+   "file": "zeile-006.wav",
+   "dur": 5.31,
+   "bounds": [
+    {
+     "end": 0.24,
+     "len": 4
+    },
+    {
+     "end": 0.62,
+     "len": 4
+    },
+    {
+     "end": 1.04,
+     "len": 6
+    },
+    {
+     "end": 1.8,
+     "len": 9
+    },
+    {
+     "end": 2.04,
+     "len": 4
+    },
+    {
+     "end": 2.5,
+     "len": 8
+    },
+    {
+     "end": 2.7,
+     "len": 2
+    },
+    {
+     "end": 2.94,
+     "len": 3
+    },
+    {
+     "end": 3.3,
+     "len": 7
+    },
+    {
+     "end": 3.76,
+     "len": 4
+    },
+    {
+     "end": 4.08,
+     "len": 5
+    },
+    {
+     "end": 4.8,
+     "len": 16
+    },
+    {
+     "end": 5.18,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 1.3,
+   "problems": [],
+   "transcript": "Hält das, könnte Netanyahu laut Guardian im Amt bleiben oder lange geschäftsführend regieren."
+  },
+  {
+   "i": 7,
+   "ok": true,
+   "file": "zeile-007.wav",
+   "dur": 1.62,
+   "bounds": [
+    {
+     "end": 0.22,
+     "len": 3
+    },
+    {
+     "end": 0.36,
+     "len": 3
+    },
+    {
+     "end": 0.94,
+     "len": 10
+    },
+    {
+     "end": 1.54,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Und die arabischen Parteien?"
+  },
+  {
+   "i": 8,
+   "ok": true,
+   "file": "zeile-008.wav",
+   "dur": 5.35,
+   "bounds": [
+    {
+     "end": 0.42,
+     "len": 3
+    },
+    {
+     "end": 0.76,
+     "len": 6
+    },
+    {
+     "end": 0.98,
+     "len": 4
+    },
+    {
+     "end": 1.58,
+     "len": 8
+    },
+    {
+     "end": 1.82,
+     "len": 3
+    },
+    {
+     "end": 2.2,
+     "len": 2
+    },
+    {
+     "end": 2.78,
+     "len": 6
+    },
+    {
+     "end": 3.54,
+     "len": 8
+    },
+    {
+     "end": 3.74,
+     "len": 3
+    },
+    {
+     "end": 3.98,
+     "len": 5
+    },
+    {
+     "end": 5.02,
+     "len": 18
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Sie kommen laut Prognose auf 19 Sitze, getragen von einer Rekordbeteiligung."
+  },
+  {
+   "i": 9,
+   "ok": true,
+   "file": "zeile-009.wav",
+   "dur": 3.49,
+   "bounds": [
+    {
+     "end": 0.44,
+     "len": 4
+    },
+    {
+     "end": 0.94,
+     "len": 5
+    },
+    {
+     "end": 1.22,
+     "len": 3
+    },
+    {
+     "end": 1.4,
+     "len": 3
+    },
+    {
+     "end": 1.94,
+     "len": 10
+    },
+    {
+     "end": 2.26,
+     "len": 4
+    },
+    {
+     "end": 2.46,
+     "len": 3
+    },
+    {
+     "end": 2.68,
+     "len": 5
+    },
+    {
+     "end": 3.22,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 2.2,
+   "problems": [],
+   "transcript": "Jair Golan von den Demokraten will mit ihnen regieren,"
+  },
+  {
+   "i": 10,
+   "ok": true,
+   "file": "zeile-010.wav",
+   "dur": 4.63,
+   "bounds": [
+    {
+     "end": 0.32,
+     "len": 4
+    },
+    {
+     "end": 0.9,
+     "len": 8
+    },
+    {
+     "end": 1.14,
+     "len": 6
+    },
+    {
+     "end": 1.4,
+     "len": 4
+    },
+    {
+     "end": 1.76,
+     "len": 8
+    },
+    {
+     "end": 2.34,
+     "len": 12
+    },
+    {
+     "end": 2.88,
+     "len": 3
+    },
+    {
+     "end": 3.06,
+     "len": 3
+    },
+    {
+     "end": 3.62,
+     "len": 9
+    },
+    {
+     "end": 4.16,
+     "len": 9
+    },
+    {
+     "end": 4.48,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Gadi Eisenkot stellt laut Guardian Bedingungen, die das politisch unmöglich machen."
+  },
+  {
+   "i": 11,
+   "ok": true,
+   "file": "zeile-011.wav",
+   "dur": 6.4,
+   "bounds": [
+    {
+     "end": 0.8,
+     "len": 10
+    },
+    {
+     "end": 1.28,
+     "len": 5
+    },
+    {
+     "end": 1.6,
+     "len": 7
+    },
+    {
+     "end": 1.82,
+     "len": 3
+    },
+    {
+     "end": 2.04,
+     "len": 5
+    },
+    {
+     "end": 2.68,
+     "len": 11
+    },
+    {
+     "end": 3.02,
+     "len": 5
+    },
+    {
+     "end": 3.58,
+     "len": 7
+    },
+    {
+     "end": 3.94,
+     "len": 3
+    },
+    {
+     "end": 4.82,
+     "len": 11
+    },
+    {
+     "end": 5.14,
+     "len": 5
+    },
+    {
+     "end": 5.42,
+     "len": 5
+    },
+    {
+     "end": 5.82,
+     "len": 5
+    },
+    {
+     "end": 6.22,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Netanjahus Likud spricht von einer gestohlenen Wahl, Polizei und Wahlkomitee sehen dafür keine Belege."
+  },
+  {
+   "i": 12,
+   "ok": true,
+   "file": "zeile-012.wav",
+   "dur": 1.27,
+   "bounds": [
+    {
+     "end": 0.36,
+     "len": 3
+    },
+    {
+     "end": 0.62,
+     "len": 6
+    },
+    {
+     "end": 0.74,
+     "len": 5
+    },
+    {
+     "end": 1.06,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Wie geht's jetzt weiter?"
+  },
+  {
+   "i": 13,
+   "ok": true,
+   "file": "zeile-013.wav",
+   "dur": 6.79,
+   "bounds": [
+    {
+     "end": 0.44,
+     "len": 7
+    },
+    {
+     "end": 0.66,
+     "len": 6
+    },
+    {
+     "end": 0.84,
+     "len": 4
+    },
+    {
+     "end": 0.98,
+     "len": 3
+    },
+    {
+     "end": 2.06,
+     "len": 19
+    },
+    {
+     "end": 2.56,
+     "len": 4
+    },
+    {
+     "end": 3.2,
+     "len": 4
+    },
+    {
+     "end": 3.56,
+     "len": 4
+    },
+    {
+     "end": 3.84,
+     "len": 3
+    },
+    {
+     "end": 4.38,
+     "len": 2
+    },
+    {
+     "end": 4.98,
+     "len": 4
+    },
+    {
+     "end": 5.26,
+     "len": 3
+    },
+    {
+     "end": 5.76,
+     "len": 9
+    },
+    {
+     "end": 6.1,
+     "len": 3
+    },
+    {
+     "end": 6.62,
+     "len": 5
+    }
+   ],
+   "attempts": 1,
+   "cer": 1.0,
+   "problems": [],
+   "transcript": "Gezählt werden noch die Abwesenheitsstimmen laut INET erst gut 29.000 von geschätzt 500.000."
+  },
+  {
+   "i": 14,
+   "ok": true,
+   "file": "zeile-014.wav",
+   "dur": 1.7,
+   "bounds": [
+    {
+     "end": 0.44,
+     "len": 6
+    },
+    {
+     "end": 0.78,
+     "len": 6
+    },
+    {
+     "end": 0.98,
+     "len": 4
+    },
+    {
+     "end": 1.58,
+     "len": 10
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Kurzer Sprung nach Wolfsburg?"
+  },
+  {
+   "i": 15,
+   "ok": true,
+   "file": "zeile-015.wav",
+   "dur": 5.06,
+   "bounds": [
+    {
+     "end": 0.48,
+     "len": 2
+    },
+    {
+     "end": 0.72,
+     "len": 3
+    },
+    {
+     "end": 0.88,
+     "len": 2
+    },
+    {
+     "end": 1.22,
+     "len": 7
+    },
+    {
+     "end": 1.88,
+     "len": 7
+    },
+    {
+     "end": 2.24,
+     "len": 4
+    },
+    {
+     "end": 2.66,
+     "len": 1
+    },
+    {
+     "end": 3.28,
+     "len": 2
+    },
+    {
+     "end": 3.62,
+     "len": 10
+    },
+    {
+     "end": 4.12,
+     "len": 4
+    },
+    {
+     "end": 4.56,
+     "len": 7
+    },
+    {
+     "end": 4.86,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "VW hat im dritten Quartal rund 5,8 Milliarden Euro Verlust gemacht."
+  },
+  {
+   "i": 16,
+   "ok": true,
+   "file": "zeile-016.wav",
+   "dur": 2.51,
+   "bounds": [
+    {
+     "end": 0.54,
+     "len": 5
+    },
+    {
+     "end": 1.54,
+     "len": 2
+    },
+    {
+     "end": 1.7,
+     "len": 5
+    },
+    {
+     "end": 1.88,
+     "len": 3
+    },
+    {
+     "end": 2.24,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 15.0,
+   "problems": [],
+   "transcript": "Boah, wo liegt das Problem?"
+  },
+  {
+   "i": 17,
+   "ok": true,
+   "file": "zeile-017.wav",
+   "dur": 4.98,
+   "bounds": [
+    {
+     "end": 0.18,
+     "len": 3
+    },
+    {
+     "end": 0.48,
+     "len": 5
+    },
+    {
+     "end": 0.76,
+     "len": 4
+    },
+    {
+     "end": 1.56,
+     "len": 12
+    },
+    {
+     "end": 1.92,
+     "len": 3
+    },
+    {
+     "end": 2.3,
+     "len": 4
+    },
+    {
+     "end": 2.76,
+     "len": 1
+    },
+    {
+     "end": 3.32,
+     "len": 2
+    },
+    {
+     "end": 3.6,
+     "len": 10
+    },
+    {
+     "end": 4.18,
+     "len": 4
+    },
+    {
+     "end": 4.46,
+     "len": 3
+    },
+    {
+     "end": 4.74,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Vor allem eine Abschreibung von rund 6,4 Milliarden Euro auf Porsche."
+  },
+  {
+   "i": 18,
+   "ok": true,
+   "file": "zeile-018.wav",
+   "dur": 3.97,
+   "bounds": [
+    {
+     "end": 0.24,
+     "len": 4
+    },
+    {
+     "end": 0.54,
+     "len": 4
+    },
+    {
+     "end": 1.0,
+     "len": 2
+    },
+    {
+     "end": 1.2,
+     "len": 3
+    },
+    {
+     "end": 1.54,
+     "len": 8
+    },
+    {
+     "end": 1.88,
+     "len": 5
+    },
+    {
+     "end": 2.36,
+     "len": 9
+    },
+    {
+     "end": 3.0,
+     "len": 10
+    },
+    {
+     "end": 3.22,
+     "len": 3
+    },
+    {
+     "end": 3.54,
+     "len": 2
+    },
+    {
+     "end": 3.88,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Dazu laut VW das schwache China-Geschäft Preisdruck und US-Zölle."
+  },
+  {
+   "i": 19,
+   "ok": true,
+   "file": "zeile-019.wav",
+   "dur": 0.86,
+   "bounds": [
+    {
+     "end": 0.22,
+     "len": 3
+    },
+    {
+     "end": 0.34,
+     "len": 3
+    },
+    {
+     "end": 0.62,
+     "len": 5
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Und die Jobs?"
+  },
+  {
+   "i": 20,
+   "ok": true,
+   "file": "zeile-020.wav",
+   "dur": 5.03,
+   "bounds": [
+    {
+     "end": 0.72,
+     "len": 11
+    },
+    {
+     "end": 1.08,
+     "len": 6
+    },
+    {
+     "end": 1.46,
+     "len": 7
+    },
+    {
+     "end": 1.86,
+     "len": 2
+    },
+    {
+     "end": 2.42,
+     "len": 4
+    },
+    {
+     "end": 2.74,
+     "len": 7
+    },
+    {
+     "end": 3.12,
+     "len": 3
+    },
+    {
+     "end": 3.36,
+     "len": 4
+    },
+    {
+     "end": 3.7,
+     "len": 5
+    },
+    {
+     "end": 3.84,
+     "len": 2
+    },
+    {
+     "end": 4.24,
+     "len": 11
+    },
+    {
+     "end": 4.52,
+     "len": 3
+    },
+    {
+     "end": 4.64,
+     "len": 3
+    },
+    {
+     "end": 5.0,
+     "len": 6
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Konzernweit stehen weitere 50.000 Stellen und vier Werke in Deutschland auf der Kippe."
+  },
+  {
+   "i": 21,
+   "ok": true,
+   "file": "zeile-021.wav",
+   "dur": 5.11,
+   "bounds": [
+    {
+     "end": 0.7,
+     "len": 10
+    },
+    {
+     "end": 1.12,
+     "len": 7
+    },
+    {
+     "end": 1.46,
+     "len": 5
+    },
+    {
+     "end": 1.56,
+     "len": 3
+    },
+    {
+     "end": 1.96,
+     "len": 7
+    },
+    {
+     "end": 2.12,
+     "len": 2
+    },
+    {
+     "end": 2.46,
+     "len": 6
+    },
+    {
+     "end": 2.76,
+     "len": 2
+    },
+    {
+     "end": 3.04,
+     "len": 6
+    },
+    {
+     "end": 3.6,
+     "len": 9
+    },
+    {
+     "end": 3.74,
+     "len": 2
+    },
+    {
+     "end": 3.84,
+     "len": 3
+    },
+    {
+     "end": 4.18,
+     "len": 7
+    },
+    {
+     "end": 4.4,
+     "len": 2
+    },
+    {
+     "end": 4.96,
+     "len": 12
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Finanzchef Antlitz nennt die Rendite zu wenig, um weiter kraftvoll in die Zukunft zu investieren."
+  },
+  {
+   "i": 22,
+   "ok": true,
+   "file": "zeile-022.wav",
+   "dur": 1.37,
+   "bounds": [
+    {
+     "end": 0.2,
+     "len": 2
+    },
+    {
+     "end": 0.4,
+     "len": 3
+    },
+    {
+     "end": 1.1,
+     "len": 6
+    }
+   ],
+   "attempts": 2,
+   "cer": 20.0,
+   "problems": [],
+   "transcript": "an den Asien,"
+  },
+  {
+   "i": 23,
+   "ok": true,
+   "file": "zeile-023.wav",
+   "dur": 5.32,
+   "bounds": [
+    {
+     "end": 0.68,
+     "len": 9
+    },
+    {
+     "end": 0.86,
+     "len": 3
+    },
+    {
+     "end": 1.1,
+     "len": 4
+    },
+    {
+     "end": 1.88,
+     "len": 9
+    },
+    {
+     "end": 2.48,
+     "len": 7
+    },
+    {
+     "end": 2.76,
+     "len": 4
+    },
+    {
+     "end": 3.06,
+     "len": 4
+    },
+    {
+     "end": 4.28,
+     "len": 19
+    },
+    {
+     "end": 4.46,
+     "len": 3
+    },
+    {
+     "end": 4.66,
+     "len": 4
+    },
+    {
+     "end": 5.24,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Nordkorea hat laut Südkoreas Militär rund zehn Kurzstreckenraketen ins Meer gefeuert."
+  },
+  {
+   "i": 24,
+   "ok": true,
+   "file": "zeile-024.wav",
+   "dur": 1.6,
+   "bounds": [
+    {
+     "end": 0.38,
+     "len": 3
+    },
+    {
+     "end": 0.72,
+     "len": 3
+    },
+    {
+     "end": 0.86,
+     "len": 2
+    },
+    {
+     "end": 1.38,
+     "len": 4
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Was ist da los?"
+  },
+  {
+   "i": 25,
+   "ok": true,
+   "file": "zeile-025.wav",
+   "dur": 3.6,
+   "bounds": [
+    {
+     "end": 0.3,
+     "len": 8
+    },
+    {
+     "end": 0.6,
+     "len": 4
+    },
+    {
+     "end": 0.7,
+     "len": 1
+    },
+    {
+     "end": 0.76,
+     "len": 3
+    },
+    {
+     "end": 1.36,
+     "len": 8
+    },
+    {
+     "end": 1.68,
+     "len": 7
+    },
+    {
+     "end": 1.84,
+     "len": 3
+    },
+    {
+     "end": 2.32,
+     "len": 10
+    },
+    {
+     "end": 2.58,
+     "len": 4
+    },
+    {
+     "end": 2.8,
+     "len": 5
+    },
+    {
+     "end": 3.5,
+     "len": 12
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Zwischen Nord- und Südkorea wachsen die Spannungen über einen Grenzstreit."
+  },
+  {
+   "i": 26,
+   "ok": true,
+   "file": "zeile-026.wav",
+   "dur": 7.96,
+   "bounds": [
+    {
+     "end": 0.14,
+     "len": 2
+    },
+    {
+     "end": 0.5,
+     "len": 9
+    },
+    {
+     "end": 0.94,
+     "len": 6
+    },
+    {
+     "end": 1.18,
+     "len": 4
+    },
+    {
+     "end": 2.02,
+     "len": 14
+    },
+    {
+     "end": 2.56,
+     "len": 8
+    },
+    {
+     "end": 2.76,
+     "len": 5
+    },
+    {
+     "end": 3.32,
+     "len": 10
+    },
+    {
+     "end": 3.82,
+     "len": 9
+    },
+    {
+     "end": 4.28,
+     "len": 4
+    },
+    {
+     "end": 4.88,
+     "len": 8
+    },
+    {
+     "end": 5.04,
+     "len": 3
+    },
+    {
+     "end": 5.32,
+     "len": 2
+    },
+    {
+     "end": 5.58,
+     "len": 3
+    },
+    {
+     "end": 6.2,
+     "len": 9
+    },
+    {
+     "end": 6.54,
+     "len": 7
+    },
+    {
+     "end": 7.1,
+     "len": 9
+    },
+    {
+     "end": 7.6,
+     "len": 10
+    },
+    {
+     "end": 7.84,
+     "len": 4
+    }
+   ],
+   "attempts": 1,
+   "cer": 4.1,
+   "problems": [],
+   "transcript": "Am September wurden drei südkoreanische Soldaten durch Landmeinen verletzt. Laut Südkorea und UN von Nordkorea gelegt, Pyongyang bestreitet das."
+  },
+  {
+   "i": 27,
+   "ok": true,
+   "file": "zeile-027.wav",
+   "dur": 2.0,
+   "bounds": [
+    {
+     "end": 0.52,
+     "len": 6
+    },
+    {
+     "end": 0.96,
+     "len": 5
+    },
+    {
+     "end": 1.84,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Gibt's einen Ausweg?"
+  },
+  {
+   "i": 28,
+   "ok": true,
+   "file": "zeile-028.wav",
+   "dur": 4.91,
+   "bounds": [
+    {
+     "end": 0.56,
+     "len": 8
+    },
+    {
+     "end": 0.74,
+     "len": 3
+    },
+    {
+     "end": 1.28,
+     "len": 9
+    },
+    {
+     "end": 1.52,
+     "len": 4
+    },
+    {
+     "end": 1.7,
+     "len": 3
+    },
+    {
+     "end": 2.4,
+     "len": 12
+    },
+    {
+     "end": 3.06,
+     "len": 10
+    },
+    {
+     "end": 3.78,
+     "len": 4
+    },
+    {
+     "end": 4.2,
+     "len": 7
+    },
+    {
+     "end": 4.46,
+     "len": 5
+    },
+    {
+     "end": 4.8,
+     "len": 4
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Südkorea hat Gespräche über den Grenzverlauf angeboten. Eine Antwort steht aus."
+  },
+  {
+   "i": 29,
+   "ok": true,
+   "file": "zeile-029.wav",
+   "dur": 1.85,
+   "bounds": [
+    {
+     "end": 0.42,
+     "len": 5
+    },
+    {
+     "end": 0.76,
+     "len": 4
+    },
+    {
+     "end": 1.68,
+     "len": 12
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Rüber nach Kalifornien."
+  },
+  {
+   "i": 30,
+   "ok": true,
+   "file": "zeile-030.wav",
+   "dur": 5.84,
+   "bounds": [
+    {
+     "end": 0.12,
+     "len": 3
+    },
+    {
+     "end": 0.82,
+     "len": 13
+    },
+    {
+     "end": 1.1,
+     "len": 5
+    },
+    {
+     "end": 1.24,
+     "len": 2
+    },
+    {
+     "end": 1.48,
+     "len": 3
+    },
+    {
+     "end": 2.24,
+     "len": 11
+    },
+    {
+     "end": 2.46,
+     "len": 3
+    },
+    {
+     "end": 3.02,
+     "len": 10
+    },
+    {
+     "end": 3.3,
+     "len": 3
+    },
+    {
+     "end": 3.54,
+     "len": 4
+    },
+    {
+     "end": 3.92,
+     "len": 2
+    },
+    {
+     "end": 4.42,
+     "len": 4
+    },
+    {
+     "end": 5.08,
+     "len": 12
+    },
+    {
+     "end": 5.28,
+     "len": 2
+    },
+    {
+     "end": 5.72,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Ein Bundesrichter lehnt es ab, Kalifornien zum Aussondern von rund 20.000 Stimmzetteln zu zwingen."
+  },
+  {
+   "i": 31,
+   "ok": true,
+   "file": "zeile-031.wav",
+   "dur": 2.01,
+   "bounds": [
+    {
+     "end": 0.58,
+     "len": 7
+    },
+    {
+     "end": 1.24,
+     "len": 3
+    },
+    {
+     "end": 1.54,
+     "len": 6
+    },
+    {
+     "end": 1.88,
+     "len": 4
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Moment, wer wollte das?"
+  },
+  {
+   "i": 32,
+   "ok": true,
+   "file": "zeile-032.wav",
+   "dur": 6.18,
+   "bounds": [
+    {
+     "end": 0.48,
+     "len": 6
+    },
+    {
+     "end": 1.6,
+     "len": 18
+    },
+    {
+     "end": 2.08,
+     "len": 2
+    },
+    {
+     "end": 2.66,
+     "len": 10
+    },
+    {
+     "end": 2.86,
+     "len": 3
+    },
+    {
+     "end": 3.22,
+     "len": 8
+    },
+    {
+     "end": 3.42,
+     "len": 3
+    },
+    {
+     "end": 4.46,
+     "len": 19
+    },
+    {
+     "end": 5.04,
+     "len": 5
+    },
+    {
+     "end": 5.22,
+     "len": 4
+    },
+    {
+     "end": 5.54,
+     "len": 5
+    },
+    {
+     "end": 6.02,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Trumps Justizministerium. Es behauptet, sie stammten von Nichtstaatsbürgern, nennt aber keine Methode."
+  },
+  {
+   "i": 33,
+   "ok": true,
+   "file": "zeile-033.wav",
+   "dur": 3.97,
+   "bounds": [
+    {
+     "end": 0.22,
+     "len": 2
+    },
+    {
+     "end": 0.46,
+     "len": 3
+    },
+    {
+     "end": 0.76,
+     "len": 7
+    },
+    {
+     "end": 1.0,
+     "len": 4
+    },
+    {
+     "end": 1.26,
+     "len": 2
+    },
+    {
+     "end": 1.76,
+     "len": 5
+    },
+    {
+     "end": 2.28,
+     "len": 9
+    },
+    {
+     "end": 2.5,
+     "len": 4
+    },
+    {
+     "end": 2.66,
+     "len": 3
+    },
+    {
+     "end": 2.98,
+     "len": 5
+    },
+    {
+     "end": 3.56,
+     "len": 10
+    },
+    {
+     "end": 3.8,
+     "len": 4
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "In Los Angeles gibt es erste Hinweise, dass die Liste fehlerhaft ist."
+  },
+  {
+   "i": 34,
+   "ok": true,
+   "file": "zeile-034.wav",
+   "dur": 5.04,
+   "bounds": [
+    {
+     "end": 0.36,
+     "len": 7
+    },
+    {
+     "end": 0.58,
+     "len": 6
+    },
+    {
+     "end": 1.0,
+     "len": 9
+    },
+    {
+     "end": 1.94,
+     "len": 3
+    },
+    {
+     "end": 2.72,
+     "len": 14
+    },
+    {
+     "end": 3.4,
+     "len": 11
+    },
+    {
+     "end": 3.66,
+     "len": 4
+    },
+    {
+     "end": 4.2,
+     "len": 9
+    },
+    {
+     "end": 4.4,
+     "len": 3
+    },
+    {
+     "end": 4.9,
+     "len": 11
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Richter Carter schreibt, ein ausgesonderter Stimmzettel wäre praktisch ein Entfernter."
+  },
+  {
+   "i": 35,
+   "ok": true,
+   "file": "zeile-035.wav",
+   "dur": 1.04,
+   "bounds": [
+    {
+     "end": 0.18,
+     "len": 3
+    },
+    {
+     "end": 0.44,
+     "len": 3
+    },
+    {
+     "end": 0.78,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Und bei Google?"
+  },
+  {
+   "i": 36,
+   "ok": true,
+   "file": "zeile-036.wav",
+   "dur": 4.4,
+   "bounds": [
+    {
+     "end": 0.18,
+     "len": 3
+    },
+    {
+     "end": 0.64,
+     "len": 8
+    },
+    {
+     "end": 1.1,
+     "len": 6
+    },
+    {
+     "end": 1.32,
+     "len": 3
+    },
+    {
+     "end": 1.48,
+     "len": 4
+    },
+    {
+     "end": 1.64,
+     "len": 3
+    },
+    {
+     "end": 2.4,
+     "len": 14
+    },
+    {
+     "end": 3.06,
+     "len": 11
+    },
+    {
+     "end": 3.32,
+     "len": 2
+    },
+    {
+     "end": 3.6,
+     "len": 1
+    },
+    {
+     "end": 3.9,
+     "len": 2
+    },
+    {
+     "end": 4.28,
+     "len": 6
+    }
+   ],
+   "attempts": 1,
+   "cer": 10.1,
+   "problems": [],
+   "transcript": "Die Alphabet-Aktie lag nach den Quartalszahlen vorbörslich 10% im Minus."
+  },
+  {
+   "i": 37,
+   "ok": true,
+   "file": "zeile-037.wav",
+   "dur": 3.6,
+   "bounds": [
+    {
+     "end": 0.82,
+     "len": 4
+    },
+    {
+     "end": 2.16,
+     "len": 3
+    },
+    {
+     "end": 2.56,
+     "len": 5
+    },
+    {
+     "end": 2.72,
+     "len": 3
+    },
+    {
+     "end": 3.4,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Oha! Was stört die Anleger?"
+  },
+  {
+   "i": 38,
+   "ok": true,
+   "file": "zeile-038.wav",
+   "dur": 3.95,
+   "bounds": [
+    {
+     "end": 0.26,
+     "len": 4
+    },
+    {
+     "end": 0.96,
+     "len": 4
+    },
+    {
+     "end": 1.4,
+     "len": 7
+    },
+    {
+     "end": 1.54,
+     "len": 3
+    },
+    {
+     "end": 1.8,
+     "len": 7
+    },
+    {
+     "end": 2.06,
+     "len": 3
+    },
+    {
+     "end": 2.2,
+     "len": 3
+    },
+    {
+     "end": 2.58,
+     "len": 2
+    },
+    {
+     "end": 3.32,
+     "len": 14
+    },
+    {
+     "end": 3.78,
+     "len": 11
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Laut CNBC schauen Sie darauf, was die KI-Investitionen einbringen."
+  },
+  {
+   "i": 39,
+   "ok": true,
+   "file": "zeile-039.wav",
+   "dur": 5.82,
+   "bounds": [
+    {
+     "end": 0.16,
+     "len": 3
+    },
+    {
+     "end": 0.72,
+     "len": 8
+    },
+    {
+     "end": 1.14,
+     "len": 5
+    },
+    {
+     "end": 1.46,
+     "len": 1
+    },
+    {
+     "end": 2.38,
+     "len": 3
+    },
+    {
+     "end": 2.94,
+     "len": 10
+    },
+    {
+     "end": 3.3,
+     "len": 6
+    },
+    {
+     "end": 3.88,
+     "len": 9
+    },
+    {
+     "end": 4.18,
+     "len": 6
+    },
+    {
+     "end": 4.62,
+     "len": 8
+    },
+    {
+     "end": 4.88,
+     "len": 4
+    },
+    {
+     "end": 5.08,
+     "len": 4
+    },
+    {
+     "end": 5.24,
+     "len": 3
+    },
+    {
+     "end": 5.62,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Und Alphabet hatte 9,07 Milliarden Dollar negativen freien Cashflow viel mehr als erwartet."
+  },
+  {
+   "i": 40,
+   "ok": true,
+   "file": "zeile-040.wav",
+   "dur": 1.08,
+   "bounds": [
+    {
+     "end": 0.22,
+     "len": 3
+    },
+    {
+     "end": 0.56,
+     "len": 6
+    },
+    {
+     "end": 0.86,
+     "len": 5
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Was gibt's noch?"
+  },
+  {
+   "i": 41,
+   "ok": true,
+   "file": "zeile-041.wav",
+   "dur": 7.38,
+   "bounds": [
+    {
+     "end": 0.3,
+     "len": 6
+    },
+    {
+     "end": 0.58,
+     "len": 5
+    },
+    {
+     "end": 0.9,
+     "len": 5
+    },
+    {
+     "end": 1.14,
+     "len": 3
+    },
+    {
+     "end": 1.36,
+     "len": 4
+    },
+    {
+     "end": 2.04,
+     "len": 2
+    },
+    {
+     "end": 2.5,
+     "len": 4
+    },
+    {
+     "end": 3.18,
+     "len": 13
+    },
+    {
+     "end": 3.42,
+     "len": 3
+    },
+    {
+     "end": 3.76,
+     "len": 2
+    },
+    {
+     "end": 5.1,
+     "len": 25
+    },
+    {
+     "end": 5.88,
+     "len": 15
+    },
+    {
+     "end": 6.46,
+     "len": 8
+    },
+    {
+     "end": 6.74,
+     "len": 3
+    },
+    {
+     "end": 7.06,
+     "len": 4
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Hacker haben Daten von über 41.000 Beschäftigten des US-Heimatschutzministeriums veröffentlicht, darunter von ICE."
+  },
+  {
+   "i": 42,
+   "ok": true,
+   "file": "zeile-042.wav",
+   "dur": 2.24,
+   "bounds": [
+    {
+     "end": 0.16,
+     "len": 3
+    },
+    {
+     "end": 0.72,
+     "len": 11
+    },
+    {
+     "end": 0.98,
+     "len": 7
+    },
+    {
+     "end": 1.14,
+     "len": 3
+    },
+    {
+     "end": 1.28,
+     "len": 5
+    },
+    {
+     "end": 1.6,
+     "len": 9
+    },
+    {
+     "end": 2.18,
+     "len": 10
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Das Ministerium spricht von einem möglichen Datenleck."
+  },
+  {
+   "i": 43,
+   "ok": true,
+   "file": "zeile-043.wav",
+   "dur": 5.11,
+   "bounds": [
+    {
+     "end": 0.14,
+     "len": 3
+    },
+    {
+     "end": 0.3,
+     "len": 3
+    },
+    {
+     "end": 0.76,
+     "len": 6
+    },
+    {
+     "end": 1.14,
+     "len": 6
+    },
+    {
+     "end": 1.4,
+     "len": 4
+    },
+    {
+     "end": 2.14,
+     "len": 13
+    },
+    {
+     "end": 2.82,
+     "len": 8
+    },
+    {
+     "end": 3.0,
+     "len": 2
+    },
+    {
+     "end": 3.14,
+     "len": 3
+    },
+    {
+     "end": 3.42,
+     "len": 5
+    },
+    {
+     "end": 4.4,
+     "len": 3
+    },
+    {
+     "end": 4.96,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 1.2,
+   "problems": [],
+   "transcript": "Und auf Moskau flogen laut Bürgermeister Sopjanin in der Nacht 613 Drohnen."
+  },
+  {
+   "i": 44,
+   "ok": true,
+   "file": "zeile-044.wav",
+   "dur": 2.27,
+   "bounds": [
+    {
+     "end": 0.16,
+     "len": 4
+    },
+    {
+     "end": 0.54,
+     "len": 7
+    },
+    {
+     "end": 0.7,
+     "len": 4
+    },
+    {
+     "end": 1.0,
+     "len": 5
+    },
+    {
+     "end": 1.18,
+     "len": 3
+    },
+    {
+     "end": 1.52,
+     "len": 6
+    },
+    {
+     "end": 1.74,
+     "len": 6
+    },
+    {
+     "end": 2.06,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Über Schäden oder Opfer ist bisher nichts bekannt."
+  },
+  {
+   "i": 45,
+   "ok": true,
+   "file": "zeile-045.wav",
+   "dur": 1.4,
+   "bounds": [
+    {
+     "end": 0.3,
+     "len": 3
+    },
+    {
+     "end": 0.48,
+     "len": 2
+    },
+    {
+     "end": 0.7,
+     "len": 3
+    },
+    {
+     "end": 1.18,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "und an den Börsen."
+  },
+  {
+   "i": 46,
+   "ok": true,
+   "file": "zeile-046.wav",
+   "dur": 6.76,
+   "bounds": [
+    {
+     "end": 0.14,
+     "len": 3
+    },
+    {
+     "end": 0.38,
+     "len": 3
+    },
+    {
+     "end": 0.62,
+     "len": 5
+    },
+    {
+     "end": 0.8,
+     "len": 2
+    },
+    {
+     "end": 1.88,
+     "len": 19
+    },
+    {
+     "end": 2.08,
+     "len": 3
+    },
+    {
+     "end": 2.66,
+     "len": 2
+    },
+    {
+     "end": 4.14,
+     "len": 4
+    },
+    {
+     "end": 4.74,
+     "len": 7
+    },
+    {
+     "end": 5.34,
+     "len": 4
+    },
+    {
+     "end": 5.6,
+     "len": 1
+    },
+    {
+     "end": 6.18,
+     "len": 2
+    },
+    {
+     "end": 6.46,
+     "len": 8
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Der DAX steht am Donnerstagvormittag bei 25.844 Punkten plus 0,5 Prozent."
+  },
+  {
+   "i": 47,
+   "ok": true,
+   "file": "zeile-047.wav",
+   "dur": 6.45,
+   "bounds": [
+    {
+     "end": 0.14,
+     "len": 2
+    },
+    {
+     "end": 0.3,
+     "len": 3
+    },
+    {
+     "end": 0.54,
+     "len": 4
+    },
+    {
+     "end": 0.84,
+     "len": 6
+    },
+    {
+     "end": 1.1,
+     "len": 1
+    },
+    {
+     "end": 1.4,
+     "len": 2
+    },
+    {
+     "end": 1.96,
+     "len": 3
+    },
+    {
+     "end": 2.72,
+     "len": 3
+    },
+    {
+     "end": 2.88,
+     "len": 3
+    },
+    {
+     "end": 3.32,
+     "len": 6
+    },
+    {
+     "end": 3.48,
+     "len": 2
+    },
+    {
+     "end": 4.1,
+     "len": 8
+    },
+    {
+     "end": 4.6,
+     "len": 7
+    },
+    {
+     "end": 4.84,
+     "len": 1
+    },
+    {
+     "end": 5.38,
+     "len": 2
+    },
+    {
+     "end": 5.78,
+     "len": 7
+    },
+    {
+     "end": 6.32,
+     "len": 9
+    }
+   ],
+   "attempts": 1,
+   "cer": 3.3,
+   "problems": [],
+   "transcript": "In New York hatten S&P 500 und der Nasdaq am Mittwoch jeweils 0,3 Prozent zugelegt."
+  },
+  {
+   "i": 48,
+   "ok": true,
+   "file": "zeile-048.wav",
+   "dur": 3.35,
+   "bounds": [
+    {
+     "end": 0.2,
+     "len": 3
+    },
+    {
+     "end": 0.56,
+     "len": 5
+    },
+    {
+     "end": 0.72,
+     "len": 3
+    },
+    {
+     "end": 1.02,
+     "len": 6
+    },
+    {
+     "end": 1.84,
+     "len": 3
+    },
+    {
+     "end": 2.1,
+     "len": 5
+    },
+    {
+     "end": 2.3,
+     "len": 4
+    },
+    {
+     "end": 2.52,
+     "len": 3
+    },
+    {
+     "end": 2.7,
+     "len": 3
+    },
+    {
+     "end": 3.16,
+     "len": 10
+    }
+   ],
+   "attempts": 1,
+   "cer": 2.4,
+   "problems": [],
+   "transcript": "Das war's für heute. Ich halte dich auf dem Laufenden."
+  },
+  {
+   "i": 49,
+   "ok": true,
+   "file": "zeile-049.wav",
+   "dur": 0.91,
+   "bounds": [
+    {
+     "end": 0.24,
+     "len": 3
+    },
+    {
+     "end": 0.62,
+     "len": 7
+    }
+   ],
+   "attempts": 1,
+   "cer": 0.0,
+   "problems": [],
+   "transcript": "Bis morgen."
+  }
+ ]
+}
