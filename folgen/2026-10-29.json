@@ -1,0 +1,1080 @@
+{
+ "schema": 2,
+ "date": "2026-10-29",
+ "generated": "2026-10-29T11:30:00+01:00",
+ "episode": 1,
+ "tone": "assistent",
+ "categories": [
+  {
+   "id": "geopolitik",
+   "name": "Geopolitik & Sicherheit",
+   "color": "#ff7a3d"
+  },
+  {
+   "id": "wirtschaft",
+   "name": "Wirtschaft & Märkte",
+   "color": "#f2bf45"
+  },
+  {
+   "id": "ki",
+   "name": "KI & Technologie",
+   "color": "#4cc9ff"
+  }
+ ],
+ "stories": [
+  {
+   "id": "netanjahu-verliert-mehrheit",
+   "category": "geopolitik",
+   "topic": "Nahost-Konflikt",
+   "relevance": 5,
+   "relevanceNote": "Machtfrage in Israel nach der Parlamentswahl",
+   "format": "aufmacher",
+   "country": "ISR",
+   "label": "JERUSALEM",
+   "flag": "🇮🇱",
+   "lon": 35.21,
+   "lat": 31.77,
+   "zoom": 10,
+   "headline": "[Netanjahu] verliert Mehrheit, Regierung [offen]",
+   "brief": "Netanjahus Koalition hat laut Guardian ihre Mehrheit verloren, die Opposition hat eine klare Mehrheit. Weil die meisten jüdischen Oppositionsparteien eine Regierung mit palästinensisch geführten Parteien ausschließen, könnte Netanjahu trotzdem im Amt bleiben. Die arabischen Parteien kommen laut Prognose auf 19 Sitze.",
+   "source": {
+    "name": "The Guardian",
+    "url": "https://www.theguardian.com/world/live/2026/oct/29/israel-election-results-live-updates-poll-netanyahu-eisenkot-bloc-coalition-latest-news",
+    "date": "2026-10-29",
+    "title": "Israel election results live: count of absentee ballots under way as coalition talks set to begin"
+   },
+   "short": "Netanjahu verliert Mehrheit",
+   "facts": [
+    {
+     "id": "A1",
+     "text": "Laut Guardian hat Netanjahus Koalition bei der Wahl ihre Mehrheit verloren, die Opposition hat eine klare Mehrheit."
+    },
+    {
+     "id": "A2",
+     "text": "Die meisten jüdischen Oppositionsparteien schließen aus, mit palästinensisch geführten Parteien zu regieren."
+    },
+    {
+     "id": "A3",
+     "text": "Hält diese Absage, könnte Netanjahu laut Guardian im Amt bleiben oder lange geschäftsführend regieren, womöglich bis zu einer weiteren Wahl."
+    },
+    {
+     "id": "A4",
+     "text": "Die Parteien der palästinensischen Bürger Israels kommen laut Prognose auf 19 Sitze, getragen von einer Rekordbeteiligung der arabischen Bevölkerung."
+    },
+    {
+     "id": "A5",
+     "text": "Yair Golan, Chef der Mitte-links-Partei Die Demokraten, fordert eine Regierung gemeinsam mit den arabischen Bürgern Israels."
+    },
+    {
+     "id": "A6",
+     "text": "Gadi Eisenkot, Chef der größten Oppositionspartei, hat das laut Guardian nicht direkt ausgeschlossen, aber Bedingungen gestellt, die eine Beteiligung politisch unmöglich machen."
+    },
+    {
+     "id": "A7",
+     "text": "Netanjahus Likud spricht von einer gestohlenen Wahl; Polizei und Wahlkomitee sehen dafür keine Belege."
+    },
+    {
+     "id": "A8",
+     "text": "Gezählt werden noch die sogenannten Abwesenheitsstimmen, laut Ynet bisher gut 29.000 von geschätzt 500.000."
+    },
+    {
+     "id": "A9",
+     "text": "Sicherheitsminister Itamar Ben-Gvir fordert die Festnahme der Chefs arabischer Parteien und verweist auf unbelegte Vorwürfe einer Finanzierung aus Katar."
+    }
+   ],
+   "symbol": "wahl",
+   "figure": {
+    "value": 19,
+    "dec": 0,
+    "label": "arabische Parteien (Prognose)",
+    "suffix": " Sitze"
+   }
+  },
+  {
+   "id": "milliardenverlust-bei-vw",
+   "category": "wirtschaft",
+   "topic": "Wirtschaft & Konjunktur",
+   "relevance": 4,
+   "relevanceNote": "Europas größter Autobauer mit Milliardenverlust, Jobs in Deutschland betroffen",
+   "format": "meldung",
+   "country": "DEU",
+   "label": "WOLFSBURG",
+   "flag": "🇩🇪",
+   "lon": 10.79,
+   "lat": 52.42,
+   "zoom": 6.4,
+   "headline": "[VW] mit Milliardenverlust, [Jobs] auf der Kippe",
+   "brief": "Volkswagen hat im dritten Quartal rund 5,8 Milliarden Euro Verlust gemacht, vor allem wegen einer Abschreibung von 6,4 Milliarden Euro auf Porsche. Dazu belasten China, Preisdruck und US-Zölle. Konzernweit stehen weitere 50.000 Jobs und vier Werke in Deutschland auf der Kippe.",
+   "source": {
+    "name": "tagesschau",
+    "url": "https://www.tagesschau.de/wirtschaft/unternehmen/volkswagen-milliardenverlust-102.html",
+    "date": "2026-10-29",
+    "title": "Milliardenverlust bei Volkswagen"
+   },
+   "short": "Milliardenverlust bei VW",
+   "facts": [
+    {
+     "id": "B1",
+     "text": "Volkswagen hat im dritten Quartal rund 5,8 Milliarden Euro Verlust gemacht."
+    },
+    {
+     "id": "B2",
+     "text": "Hauptgrund sind Sondereffekte von 7,8 Milliarden Euro, vor allem eine Abschreibung von rund 6,4 Milliarden Euro auf den Firmenwert von Porsche."
+    },
+    {
+     "id": "B3",
+     "text": "Außerdem belasten laut VW das schwache China-Geschäft, Preis- und Wettbewerbsdruck und die US-Zollpolitik."
+    },
+    {
+     "id": "B4",
+     "text": "In China verkaufte VW im dritten Quartal knapp 406.000 Fahrzeuge, 38,5 Prozent weniger."
+    },
+    {
+     "id": "B5",
+     "text": "Finanzchef Arno Antlitz nennt die bereinigte Rendite von 3,8 Prozent „zu wenig, um weiter kraftvoll in unsere Zukunft zu investieren“."
+    },
+    {
+     "id": "B6",
+     "text": "VW ringt mit den Arbeitnehmern um weitere Einschnitte: Konzernweit stehen weitere 50.000 Jobs und vier Werke in Deutschland auf der Kippe."
+    },
+    {
+     "id": "B7",
+     "text": "Beschlossen ist bereits der Abbau von konzernweit 50.000 Stellen bis 2030."
+    }
+   ],
+   "symbol": "fabrik",
+   "figure": {
+    "value": 5.8,
+    "dec": 1,
+    "label": "Verlust im dritten Quartal",
+    "suffix": " Mrd. Euro"
+   }
+  },
+  {
+   "id": "raketen-aus-nordkorea",
+   "category": "geopolitik",
+   "topic": "Korea",
+   "relevance": 3,
+   "relevanceNote": "Raketentests verschärfen Spannungen auf der koreanischen Halbinsel",
+   "format": "meldung",
+   "country": "PRK",
+   "label": "WONSAN",
+   "flag": "🇰🇵",
+   "lon": 127.44,
+   "lat": 39.15,
+   "zoom": 7.2,
+   "headline": "[Nordkorea] feuert rund [10] Raketen ab",
+   "brief": "Nordkorea hat laut südkoreanischem Militär rund 10 Kurzstreckenraketen ins Meer gefeuert. Hintergrund sind Spannungen um Landminen, durch die im September drei südkoreanische Soldaten verletzt wurden. Südkorea bietet Gespräche über den Grenzverlauf an, eine Antwort steht aus.",
+   "source": {
+    "name": "DW",
+    "url": "https://www.dw.com/en/north-korea-south-korea-japan-kim-jong-un-missile/a-79791900?maca=en-rss-en-asia-5133-rdf",
+    "date": "2026-10-29",
+    "title": "North Korea fires several missiles amid growing tensions with South Korea"
+   },
+   "short": "Raketen aus Nordkorea",
+   "facts": [
+    {
+     "id": "C1",
+     "text": "Nordkorea hat laut südkoreanischem Militär rund 10 ballistische Kurzstreckenraketen ins Meer vor seiner Ostküste abgefeuert."
+    },
+    {
+     "id": "C2",
+     "text": "Der Start fällt in wachsende Spannungen zwischen Nord- und Südkorea über einen Grenzstreit."
+    },
+    {
+     "id": "C3",
+     "text": "Am 21. September wurden drei südkoreanische Soldaten durch Landminen in der entmilitarisierten Zone verletzt."
+    },
+    {
+     "id": "C4",
+     "text": "Eine Untersuchung von Südkorea und den Vereinten Nationen kam zu dem Schluss, dass Nordkorea die Minen gelegt hat; Pjöngjang bestreitet das."
+    },
+    {
+     "id": "C5",
+     "text": "Südkorea hat Gespräche zur Klärung des Grenzverlaufs vorgeschlagen; Pjöngjang hat noch nicht geantwortet."
+    },
+    {
+     "id": "C6",
+     "text": "Laut Japans Verteidigungsministerium landeten die Raketen außerhalb von Japans Wirtschaftszone."
+    }
+   ],
+   "places": [
+    {
+     "label": "Südkorea",
+     "lon": 126.98,
+     "lat": 37.57
+    }
+   ],
+   "symbol": "sicherheit"
+  },
+  {
+   "id": "stimmzettel-streit-in-kaliforn",
+   "category": "geopolitik",
+   "topic": "USA-Politik",
+   "relevance": 4,
+   "relevanceNote": "Streit um Stimmzettel kurz vor den Zwischenwahlen",
+   "format": "meldung",
+   "country": "USA",
+   "label": "LOS ANGELES",
+   "flag": "🇺🇸",
+   "lon": -118.24,
+   "lat": 34.05,
+   "zoom": 2.6,
+   "headline": "[Richter] lehnt Aussonderung von [20.000] Stimmen ab",
+   "brief": "Ein Bundesrichter hat es abgelehnt, Kalifornien zu zwingen, rund 20.000 Stimmzettel auszusondern. Das Justizministerium behauptet, sie stammten von Nicht-Staatsbürgern, nennt aber keine Methode; in Los Angeles gibt es Hinweise auf Fehler in der Liste. Das Ministerium droht Wahlbeamten zudem mit Strafverfolgung.",
+   "source": {
+    "name": "The Guardian",
+    "url": "https://www.theguardian.com/us-news/2026/oct/28/federal-judge-trump-california-ballots",
+    "date": "2026-10-29",
+    "title": "Judge rebuffs Trump DoJ’s bid to force California to set aside 20,000 ballots"
+   },
+   "short": "Stimmzettel-Streit in Kalifornien",
+   "facts": [
+    {
+     "id": "D1",
+     "text": "Ein US-Bundesrichter hat es abgelehnt, Kalifornien zu zwingen, rund 20.000 Stimmzettel auszusondern und nicht zu zählen."
+    },
+    {
+     "id": "D2",
+     "text": "Das Justizministerium der Trump-Regierung behauptet, die Stimmzettel stammten von Nicht-Staatsbürgern, nennt aber keine Details zu seiner Methode."
+    },
+    {
+     "id": "D3",
+     "text": "Wahlbeamte in Los Angeles fanden erste Hinweise, dass die Liste des Ministeriums fehlerhaft ist."
+    },
+    {
+     "id": "D4",
+     "text": "Richter David Carter schreibt, ein ausgesonderter Stimmzettel wäre praktisch ein entfernter Stimmzettel."
+    },
+    {
+     "id": "D5",
+     "text": "Ein Berufungsgericht hatte Anfang der Woche mit zwei zu einer Stimme gegen das Justizministerium entschieden."
+    },
+    {
+     "id": "D6",
+     "text": "Das Justizministerium droht Wahlbeamten zudem mit Strafverfolgung, falls sie Stimmen von Nicht-Staatsbürgern auszählen."
+    }
+   ],
+   "symbol": "gericht",
+   "figure": {
+    "value": 20000,
+    "dec": 0,
+    "label": "Stimmzettel"
+   }
+  },
+  {
+   "id": "alphabet-aktie-unter-druck",
+   "category": "wirtschaft",
+   "topic": "Märkte & Marktanalyse",
+   "relevance": 3,
+   "relevanceNote": "Anleger zweifeln am Ertrag der KI-Ausgaben",
+   "format": "meldung",
+   "country": "USA",
+   "label": "MOUNTAIN VIEW",
+   "flag": "🇺🇸",
+   "lon": -122.08,
+   "lat": 37.39,
+   "zoom": 2.6,
+   "headline": "[Alphabet]-Aktie vorbörslich [10 Prozent] im Minus",
+   "brief": "Die Alphabet-Aktie lag nach den Quartalszahlen vorbörslich 10 Prozent im Minus. Alphabet meldete einen negativen freien Cashflow von 9,07 Milliarden Dollar, deutlich mehr als erwartet, und hält an Investitionen von bis zu 205 Milliarden Dollar fest. Microsoft lag vorbörslich fast 4 Prozent im Plus.",
+   "source": {
+    "name": "CNBC",
+    "url": "https://www.cnbc.com/2026/10/29/alphabet-google-microsoft-msft-shares-today-earnings.html",
+    "date": "2026-10-29",
+    "title": "Alphabet falls 10% in premarket, putting it on course for its biggest ever post-earnings drop"
+   },
+   "short": "Alphabet-Aktie unter Druck",
+   "facts": [
+    {
+     "id": "E1",
+     "text": "Die Alphabet-Aktie lag nach den Quartalszahlen vorbörslich 10 Prozent im Minus, Microsoft fast 4 Prozent im Plus."
+    },
+    {
+     "id": "E2",
+     "text": "Laut CNBC schauen die Anleger auf die Ausgaben und den freien Cashflow der Tech-Konzerne und darauf, was ihre KI-Investitionen einbringen."
+    },
+    {
+     "id": "E3",
+     "text": "Alphabet meldete einen negativen freien Cashflow von 9,07 Milliarden Dollar; Analysten hatten mit minus 2,70 Milliarden gerechnet."
+    },
+    {
+     "id": "E4",
+     "text": "Alphabet hält an seinen Investitionsplänen von 195 bis 205 Milliarden Dollar für das Gesamtjahr fest."
+    },
+    {
+     "id": "E5",
+     "text": "Microsoft investierte im Quartal 45,2 Milliarden Dollar, weniger als Analysten erwartet hatten."
+    },
+    {
+     "id": "E6",
+     "text": "Schließt Alphabet am Donnerstag mehr als 9,77 Prozent tiefer, wäre es die schlechteste Reaktion auf Quartalszahlen seit dem Börsengang 2004."
+    }
+   ],
+   "symbol": "boerse",
+   "figure": {
+    "value": 10,
+    "dec": 0,
+    "label": "Alphabet vorbörslich",
+    "prefix": "−",
+    "suffix": " %"
+   }
+  },
+  {
+   "id": "datenleck-beim-us-heimatschutz",
+   "category": "ki",
+   "topic": "Cybersicherheit",
+   "relevance": 3,
+   "relevanceNote": "Großes Datenleck bei einer US-Sicherheitsbehörde",
+   "format": "kurz",
+   "country": "USA",
+   "label": "WASHINGTON",
+   "flag": "🇺🇸",
+   "lon": -77.04,
+   "lat": 38.9,
+   "zoom": 2.6,
+   "headline": "Daten von [41.000] US-Heimatschutz-Beschäftigten geleakt",
+   "brief": "Hacker haben Namen, Dienstadressen und Telefonnummern von mehr als 41.000 Beschäftigten des US-Heimatschutzministeriums veröffentlicht, darunter Tausende der Einwanderungsbehörde ICE. Das Ministerium spricht von einem möglichen Datenleck.",
+   "source": {
+    "name": "BBC News",
+    "url": "https://www.bbc.co.uk/news/articles/cq8jzkpjr28vo?at_medium=RSS&at_campaign=rss",
+    "date": "2026-10-28",
+    "title": "Details of thousands of US immigration agents leaked in major hack"
+   },
+   "short": "Datenleck beim US-Heimatschutz",
+   "facts": [
+    {
+     "id": "F1",
+     "text": "Hacker haben Daten von mehr als 41.000 Beschäftigten des US-Heimatschutzministeriums veröffentlicht, darunter Tausende der Einwanderungsbehörde ICE."
+    },
+    {
+     "id": "F2",
+     "text": "Veröffentlicht wurden Namen, Dienstadressen und Telefonnummern sowie bisher unbekannte Namen von Einsätzen."
+    },
+    {
+     "id": "F3",
+     "text": "Das Ministerium spricht von einem möglichen Datenleck und arbeitet nach eigenen Angaben daran."
+    },
+    {
+     "id": "F4",
+     "text": "Hinter dem Angriff steht laut BBC eine Gruppe namens Department of Peace."
+    }
+   ],
+   "symbol": "cyber"
+  },
+  {
+   "id": "drohnen-auf-moskau",
+   "category": "geopolitik",
+   "topic": "Russland, Ukraine & NATO",
+   "relevance": 3,
+   "relevanceNote": "Großer Drohnenangriff auf die Region Moskau",
+   "format": "kurz",
+   "country": "RUS",
+   "label": "MOSKAU",
+   "flag": "🇷🇺",
+   "lon": 37.62,
+   "lat": 55.75,
+   "zoom": 2.6,
+   "headline": "[613] Drohnen Richtung [Moskau]",
+   "brief": "Laut Moskaus Bürgermeister Sobjanin flogen in der Nacht 613 Drohnen in Richtung der Region Moskau; die meisten seien abgefangen worden. Drei Flughäfen schränkten den Betrieb für zwei Stunden ein. Über Schäden oder Opfer ist bisher nichts bekannt.",
+   "source": {
+    "name": "Meduza",
+    "url": "https://meduza.io/en/news/2026/10/29/more-than-600-drones-flew-toward-moscow-mayor-says-as-three-airports-restricted-flights",
+    "date": "2026-10-29",
+    "title": "More than 600 drones flew toward Moscow, mayor says, as three airports restricted flights"
+   },
+   "short": "Drohnen auf Moskau",
+   "facts": [
+    {
+     "id": "G1",
+     "text": "Laut Moskaus Bürgermeister Sergej Sobjanin flogen in der Nacht 613 Drohnen in Richtung der Region Moskau."
+    },
+    {
+     "id": "G2",
+     "text": "Drei Moskauer Flughäfen schränkten den Flugbetrieb für zwei Stunden ein."
+    },
+    {
+     "id": "G3",
+     "text": "Über Schäden oder Opfer ist bisher nichts bekannt."
+    }
+   ],
+   "symbol": "sicherheit"
+  }
+ ],
+ "markets": {
+  "asOf": "2026-10-29",
+  "source": {
+   "name": "Yahoo Finance",
+   "url": "https://finance.yahoo.com/markets/",
+   "date": "2026-10-29"
+  },
+  "items": [
+   {
+    "id": "dax",
+    "name": "DAX",
+    "dec": 0,
+    "unit": "Pkt.",
+    "value": 25844,
+    "changePct": 0.54,
+    "date": "2026-10-29",
+    "series": [
+     25199.19,
+     24939.35,
+     25231.2,
+     25254.21,
+     25449.19,
+     25104.36,
+     24806.97,
+     25087.27,
+     25277.68,
+     25259.9,
+     25298.61,
+     25382.62,
+     25622.61,
+     25319.77,
+     25304.42,
+     25645.04,
+     25371.75,
+     25181.65,
+     25410.84,
+     25590.77,
+     25704.02,
+     25843.86
+    ]
+   },
+   {
+    "id": "spx",
+    "name": "S&P 500",
+    "dec": 0,
+    "unit": "Pkt.",
+    "value": 7744,
+    "changePct": 0.28,
+    "date": "2026-10-28",
+    "series": [
+     7670.84,
+     7651.54,
+     7666.45,
+     7722.72,
+     7773.95,
+     7818.93,
+     7801.77,
+     7765.36,
+     7811.54,
+     7807.24,
+     7805.45,
+     7718.94,
+     7744.06,
+     7659.44,
+     7690.73,
+     7712.57,
+     7757.17,
+     7663.43,
+     7623.68,
+     7676.77,
+     7722.6,
+     7743.98
+    ]
+   },
+   {
+    "id": "ndq",
+    "name": "Nasdaq",
+    "dec": 0,
+    "unit": "Pkt.",
+    "value": 26550,
+    "changePct": 0.27,
+    "date": "2026-10-28",
+    "series": [
+     26797.54,
+     26861.06,
+     26871.6,
+     27190.86,
+     27477.31,
+     27599.79,
+     27538.69,
+     27193.34,
+     27366.17,
+     27245.9,
+     27204.38,
+     26692.87,
+     26713.03,
+     26140.03,
+     26430.89,
+     26424.82,
+     26702.86,
+     26008.86,
+     25955.34,
+     26169.38,
+     26477.81,
+     26549.85
+    ]
+   },
+   {
+    "id": "eurusd",
+    "name": "Euro",
+    "dec": 4,
+    "unit": "$",
+    "value": 1.1137,
+    "changePct": 0.07,
+    "date": "2026-10-29",
+    "series": [
+     1.1341,
+     1.1327,
+     1.125,
+     1.1255,
+     1.1217,
+     1.1254,
+     1.1201,
+     1.1213,
+     1.1205,
+     1.116,
+     1.1204,
+     1.1195,
+     1.1213,
+     1.1225,
+     1.1216,
+     1.1227,
+     1.1235,
+     1.1221,
+     1.1218,
+     1.1174,
+     1.113,
+     1.1137
+    ]
+   },
+   {
+    "id": "gold",
+    "name": "Gold",
+    "dec": 0,
+    "unit": "$/Unze",
+    "value": 4038,
+    "changePct": -0.33,
+    "date": "2026-10-29",
+    "series": [
+     4186.7,
+     4202.3,
+     4162.3,
+     4156.8,
+     4187.1,
+     4140.7,
+     4157,
+     4216.3,
+     4190.6,
+     4177.3,
+     4107.9,
+     4170.1,
+     4181.1,
+     4160.1,
+     4142.6,
+     4150,
+     4060.4,
+     4007.9,
+     4038.4,
+     4074.6,
+     4051.6,
+     4038.4
+    ]
+   },
+   {
+    "id": "brent",
+    "name": "Öl (Brent)",
+    "dec": 2,
+    "unit": "$/Barrel",
+    "value": 110.56,
+    "changePct": -4.13,
+    "date": "2026-10-29",
+    "series": [
+     103.53,
+     102.31,
+     102.25,
+     100.32,
+     100.58,
+     100.2,
+     104.28,
+     104.72,
+     106.65,
+     105.69,
+     106.06,
+     105.92,
+     109.86,
+     109.55,
+     108.79,
+     108.82,
+     113.17,
+     116.72,
+     115.81,
+     113.88,
+     115.32,
+     110.56
+    ]
+   },
+   {
+    "id": "btc",
+    "name": "Bitcoin",
+    "dec": 0,
+    "unit": "$",
+    "value": 79836,
+    "changePct": -1.76,
+    "date": "2026-10-29",
+    "series": [
+     81676.34,
+     82546.32,
+     82912.23,
+     83679.47,
+     81762.56,
+     83095.13,
+     81562.49,
+     82141.46,
+     81500.8,
+     81382.15,
+     82017.6,
+     81853.54,
+     82941,
+     84011.97,
+     81311.89,
+     81074.19,
+     80790.84,
+     80024.01,
+     80006.66,
+     80805.08,
+     81267.59,
+     79836.43
+    ]
+   }
+  ]
+ },
+ "script": [
+  {
+   "role": "LEITUNG",
+   "text": "Guten Morgen! Heute ist Donnerstag, der 29. Oktober.",
+   "kind": "begruessung",
+   "mood": "warm"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Ich hab dir das Wichtigste rausgesucht: Netanjahu verliert Mehrheit, Milliardenverlust bei VW und Stimmzettel-Streit in Kalifornien. Los geht's.",
+   "kind": "begruessung",
+   "mood": "heiter"
+  },
+  {
+   "role": "LAGE",
+   "text": "Israel nach der Wahl: Netanjahus Koalition hat laut Guardian ihre Mehrheit verloren.",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A1"
+   ],
+   "mood": "neugierig"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Die Opposition hat eine klare Mehrheit.",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A1"
+   ]
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Oha. Also ist Netanjahu raus?",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "frage",
+   "mood": "ueberrascht"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Nicht unbedingt. Die meisten jüdischen Oppositionsparteien wollen nicht mit palästinensisch geführten Parteien regieren.",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A2"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Hält das, könnte Netanjahu laut Guardian im Amt bleiben – oder lange geschäftsführend regieren.",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A3"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Und die arabischen Parteien?",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "frage",
+   "mood": "neugierig"
+  },
+  {
+   "role": "LAGE",
+   "text": "Sie kommen laut Prognose auf 19 Sitze – getragen von einer Rekordbeteiligung.",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A4"
+   ],
+   "mood": "ueberrascht"
+  },
+  {
+   "role": "LAGE",
+   "text": "Yair Golan von den Demokraten will mit ihnen regieren,",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A5"
+   ]
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Gadi Eisenkot stellt laut Guardian Bedingungen, die das politisch unmöglich machen.",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A6"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LAGE",
+   "text": "Netanjahus Likud spricht von einer gestohlenen Wahl – Polizei und Wahlkomitee sehen dafür keine Belege.",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A7"
+   ],
+   "mood": "ernst"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Wie geht's jetzt weiter?",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "frage",
+   "mood": "neugierig"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Gezählt werden noch die Abwesenheitsstimmen – laut Ynet erst gut 29.000 von geschätzt 500.000.",
+   "story": "netanjahu-verliert-mehrheit",
+   "kind": "fakt",
+   "facts": [
+    "A8"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Kurzer Sprung nach Wolfsburg?",
+   "story": "milliardenverlust-bei-vw",
+   "kind": "frage",
+   "mood": "neugierig"
+  },
+  {
+   "role": "LAGE",
+   "text": "VW hat im dritten Quartal rund 5,8 Milliarden Euro Verlust gemacht.",
+   "story": "milliardenverlust-bei-vw",
+   "kind": "fakt",
+   "facts": [
+    "B1"
+   ],
+   "mood": "ernst"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Puh. Wo liegt das Problem?",
+   "story": "milliardenverlust-bei-vw",
+   "kind": "frage",
+   "mood": "ernst"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Vor allem eine Abschreibung von rund 6,4 Milliarden Euro auf Porsche.",
+   "story": "milliardenverlust-bei-vw",
+   "kind": "fakt",
+   "facts": [
+    "B2"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Dazu laut VW das schwache China-Geschäft, Preisdruck und US-Zölle.",
+   "story": "milliardenverlust-bei-vw",
+   "kind": "fakt",
+   "facts": [
+    "B3"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Und die Jobs?",
+   "story": "milliardenverlust-bei-vw",
+   "kind": "frage",
+   "mood": "ernst"
+  },
+  {
+   "role": "LAGE",
+   "text": "Konzernweit stehen weitere 50.000 Stellen und vier Werke in Deutschland auf der Kippe.",
+   "story": "milliardenverlust-bei-vw",
+   "kind": "fakt",
+   "facts": [
+    "B6"
+   ],
+   "mood": "ernst"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Finanzchef Antlitz nennt die Rendite zu wenig, um weiter kraftvoll in die Zukunft zu investieren.",
+   "story": "milliardenverlust-bei-vw",
+   "kind": "fakt",
+   "facts": [
+    "B5"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Und in Asien?",
+   "story": "raketen-aus-nordkorea",
+   "kind": "frage",
+   "mood": "neugierig"
+  },
+  {
+   "role": "LAGE",
+   "text": "Nordkorea hat laut Südkoreas Militär rund 10 Kurzstreckenraketen ins Meer gefeuert.",
+   "story": "raketen-aus-nordkorea",
+   "kind": "fakt",
+   "facts": [
+    "C1"
+   ],
+   "mood": "ernst"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Was ist da los?",
+   "story": "raketen-aus-nordkorea",
+   "kind": "frage",
+   "mood": "neugierig"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Zwischen Nord- und Südkorea wachsen die Spannungen über einen Grenzstreit.",
+   "story": "raketen-aus-nordkorea",
+   "kind": "fakt",
+   "facts": [
+    "C2"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Im September wurden drei südkoreanische Soldaten durch Landminen verletzt – laut Südkorea und UN von Nordkorea gelegt, Pjöngjang bestreitet das.",
+   "story": "raketen-aus-nordkorea",
+   "kind": "fakt",
+   "facts": [
+    "C3",
+    "C4"
+   ],
+   "mood": "ernst"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Gibt's einen Ausweg?",
+   "story": "raketen-aus-nordkorea",
+   "kind": "frage",
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LAGE",
+   "text": "Südkorea hat Gespräche über den Grenzverlauf angeboten – eine Antwort steht aus.",
+   "story": "raketen-aus-nordkorea",
+   "kind": "fakt",
+   "facts": [
+    "C5"
+   ]
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Rüber nach Kalifornien?",
+   "story": "stimmzettel-streit-in-kaliforn",
+   "kind": "frage",
+   "mood": "neugierig"
+  },
+  {
+   "role": "LAGE",
+   "text": "Ein Bundesrichter lehnt es ab, Kalifornien zum Aussondern von rund 20.000 Stimmzetteln zu zwingen.",
+   "story": "stimmzettel-streit-in-kaliforn",
+   "kind": "fakt",
+   "facts": [
+    "D1"
+   ]
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Moment – wer wollte das?",
+   "story": "stimmzettel-streit-in-kaliforn",
+   "kind": "frage",
+   "mood": "ueberrascht"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Trumps Justizministerium. Es behauptet, sie stammten von Nicht-Staatsbürgern, nennt aber keine Methode.",
+   "story": "stimmzettel-streit-in-kaliforn",
+   "kind": "fakt",
+   "facts": [
+    "D2"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "In Los Angeles gibt es erste Hinweise, dass die Liste fehlerhaft ist.",
+   "story": "stimmzettel-streit-in-kaliforn",
+   "kind": "fakt",
+   "facts": [
+    "D3"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LAGE",
+   "text": "Richter Carter schreibt: Ein ausgesonderter Stimmzettel wäre praktisch ein entfernter.",
+   "story": "stimmzettel-streit-in-kaliforn",
+   "kind": "fakt",
+   "facts": [
+    "D4"
+   ],
+   "mood": "ernst"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Und bei Google?",
+   "story": "alphabet-aktie-unter-druck",
+   "kind": "frage",
+   "mood": "neugierig"
+  },
+  {
+   "role": "LAGE",
+   "text": "Die Alphabet-Aktie lag nach den Quartalszahlen vorbörslich 10 Prozent im Minus.",
+   "story": "alphabet-aktie-unter-druck",
+   "kind": "fakt",
+   "facts": [
+    "E1"
+   ],
+   "mood": "ueberrascht"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Oha. Was stört die Anleger?",
+   "story": "alphabet-aktie-unter-druck",
+   "kind": "frage",
+   "mood": "ueberrascht"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Laut CNBC schauen sie darauf, was die KI-Investitionen einbringen –",
+   "story": "alphabet-aktie-unter-druck",
+   "kind": "fakt",
+   "facts": [
+    "E2"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "und Alphabet hatte 9,07 Milliarden Dollar negativen freien Cashflow, viel mehr als erwartet.",
+   "story": "alphabet-aktie-unter-druck",
+   "kind": "fakt",
+   "facts": [
+    "E3"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Was gibt's noch?",
+   "story": "datenleck-beim-us-heimatschutz",
+   "kind": "frage",
+   "mood": "neugierig"
+  },
+  {
+   "role": "LAGE",
+   "text": "Hacker haben Daten von über 41.000 Beschäftigten des US-Heimatschutzministeriums veröffentlicht, darunter von ICE.",
+   "story": "datenleck-beim-us-heimatschutz",
+   "kind": "fakt",
+   "facts": [
+    "F1"
+   ],
+   "mood": "ueberrascht"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Das Ministerium spricht von einem möglichen Datenleck.",
+   "story": "datenleck-beim-us-heimatschutz",
+   "kind": "fakt",
+   "facts": [
+    "F3"
+   ]
+  },
+  {
+   "role": "LAGE",
+   "text": "Und auf Moskau flogen laut Bürgermeister Sobjanin in der Nacht 613 Drohnen.",
+   "story": "drohnen-auf-moskau",
+   "kind": "fakt",
+   "facts": [
+    "G1"
+   ],
+   "mood": "ernst"
+  },
+  {
+   "role": "EINORDNUNG",
+   "text": "Über Schäden oder Opfer ist bisher nichts bekannt.",
+   "story": "drohnen-auf-moskau",
+   "kind": "fakt",
+   "facts": [
+    "G3"
+   ],
+   "mood": "nachdenklich"
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Und an den Börsen?",
+   "story": "maerkte",
+   "kind": "frage"
+  },
+  {
+   "role": "LAGE",
+   "story": "maerkte",
+   "kind": "fakt",
+   "text": "Der DAX steht am Donnerstagvormittag bei 25.844 Punkten, plus 0,5 Prozent.",
+   "mood": "heiter"
+  },
+  {
+   "role": "LAGE",
+   "story": "maerkte",
+   "kind": "fakt",
+   "text": "In New York hatten der S&P 500 und der Nasdaq am Mittwoch jeweils 0,3 Prozent zugelegt.",
+   "say": "In New York hatten der S und P 500 und der Nasdaq am Mittwoch jeweils 0,3 Prozent zugelegt."
+  },
+  {
+   "role": "LEITUNG",
+   "text": "Das war's für heute. Ich halt dich auf dem Laufenden.",
+   "kind": "abschluss",
+   "mood": "warm"
+  },
+  {
+   "role": "LAGE",
+   "text": "Bis morgen!",
+   "kind": "abschluss",
+   "mood": "warm"
+  }
+ ],
+ "meta": {
+  "model": "claude-opus-5-5 (im Chat)",
+  "costUsd": 0,
+  "script": "claude"
+ },
+ "note": "Folge vom 29.10.2026, im Claude-Chat aus den verlinkten Quellen geschrieben (Recherche über den Workflow „Rohdaten“)."
+}
