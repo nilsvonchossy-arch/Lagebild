@@ -1,7 +1,8 @@
 // Karte im unteren Drittel: runde Flagge, Ort in breiten Versalien, eine Zeile, Zähler.
 // „Kurz gesagt“, Zahl und Quelle stehen in den Details (Tippen auf die Karte) und auf dem Endbildschirm.
 import { fadeText, fmtNum } from './fx';
-import type { Category, Markets, Story } from './shared/types';
+import { NOW_DATE } from './shared/script';
+import type { Category, Fact, Markets, Source, Story } from './shared/types';
 import { $, esc, pad2, shortDate, sleep } from './util';
 
 /** "[Israel] wählt" → [..] in Akzentfarbe, Wörter einzeln einblenden. */
@@ -23,8 +24,8 @@ export function relevanceHTML(r: number | undefined): string {
 
 export const categoryColor = (cats: Category[], id: string): string => cats.find(c => c.id === id)?.color ?? '#ff7a3d';
 
-const FORMAT_LABEL = { aufmacher: 'Aufmacher', meldung: 'Meldung', kurz: 'Kurz notiert' } as const;
-export const formatLabel = (s: Story): string => FORMAT_LABEL[s.format] ?? '';
+const FORMAT_LABEL = { aufmacher: 'Aufmacher', fokus: 'Im Fokus', meldung: 'Meldung', kurz: 'Kurz notiert' } as const;
+export const formatLabel = (s: Story): string => `${FORMAT_LABEL[s.format] ?? ''}${s.investigative ? ' · Recherche' : ''}`;
 
 const pct = (v: number): string => `${v > 0 ? '+' : ''}${v.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
 
@@ -61,16 +62,33 @@ function extrasHTML(s: Story): string {
   return out.join('');
 }
 
-/** Details einer Meldung: Kurz gesagt, Zahl, Vergleich, Termin, Quelle mit Link und Datum, Bildnachweise. */
+/** Hintergrund (Fakten mit Quelle), Vorgeschichte, Wer steht wo und Ursache und Wirkung als Text (ab Schema 3) */
+export function backgroundHTML(s: Story): string {
+  const parts: string[] = [];
+  const srcOf = (f: Fact): string => (f.source ? s.sources?.[f.source]?.name ?? '' : '');
+  const bg = (s.background?.facts ?? []).map(id => s.facts.find(f => f.id === id)).filter((f): f is Fact => Boolean(f));
+  if (bg.length) parts.push(`<h4>Hintergrund</h4><ul>${bg.map(f => `<li>${esc(f.text)}${srcOf(f) ? ` <small>(${esc(srcOf(f))})</small>` : ''}</li>`).join('')}</ul>`);
+  if (s.timeline?.length) parts.push(`<h4>Vorgeschichte</h4><ul>${s.timeline.map(e => `<li><b>${esc(NOW_DATE.test(e.date) ? 'Heute' : e.date)}:</b> ${esc(e.label)}</li>`).join('')}</ul>`);
+  if (s.actors?.length) parts.push(`<h4>Wer steht wo</h4><ul>${s.actors.map(a => `<li><b>${esc(a.name)}</b> (${esc(a.role)}): ${esc(a.position)}</li>`).join('')}</ul>`);
+  if (s.chain?.length) parts.push(`<h4>Ursache und Wirkung</h4><p class="det-x">${s.chain.map(c => esc(c.label)).join(' → ')}</p>`);
+  return parts.length ? `<div class="det-bg">${parts.join('')}</div>` : '';
+}
+
+const srcHTML = (src: Source, label: string): string =>
+  `<a class="src" href="${esc(src.url)}" target="_blank" rel="noopener">${label} <span class="sep"></span> <b>${esc(src.name)}</b> <span class="src-date">${shortDate(src.date)}</span> ↗</a>`;
+
+/** Details einer Meldung: Kurz gesagt, Zahl, Vergleich, Termin, Hintergrund, Quellen mit Link und Datum, Bildnachweise. */
 export function detailsHTML(s: Story, cats: Category[]): string {
   const c = categoryColor(cats, s.category);
+  const sources = s.sources?.length ? s.sources : [s.source];
   return `<article class="det" style="--acc:${c}">
     <div class="det-top"><span class="tag">${esc(s.topic)}</span><span class="det-fmt">${esc(formatLabel(s))}</span>${relevanceHTML(s.relevance)}</div>
     <h3 class="det-head"><span class="flag">${s.flag}</span><span>${headlineHTML(s.headline, 0)}</span></h3>
     <p class="det-brief"><b>Kurz gesagt:</b> ${esc(s.brief)}</p>
     ${s.figure ? `<div class="det-fig"><span class="fig-num">${esc(fmtNum(s.figure.value, s.figure))}</span><span class="fig-label">${esc(s.figure.label)}</span></div>` : ''}
     ${extrasHTML(s)}
-    <a class="src" href="${esc(s.source.url)}" target="_blank" rel="noopener">Quelle <span class="sep"></span> <b>${esc(s.source.name)}</b> <span class="src-date">${shortDate(s.source.date)}</span> ↗</a>
+    ${backgroundHTML(s)}
+    ${sources.length > 1 ? `<div class="det-srcs">${sources.map((x, i) => srcHTML(x, i ? 'Hintergrund' : 'Quelle')).join('')}</div>` : srcHTML(sources[0]!, 'Quelle')}
   </article>`;
 }
 

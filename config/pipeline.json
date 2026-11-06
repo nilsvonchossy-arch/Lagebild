@@ -1,6 +1,19 @@
 {
   "model": "claude-haiku-5-5",
   "effort": "high",
+  "steps": {
+    "auswahl": {
+      "model": "claude-sonnet-5-5",
+      "effort": "medium"
+    },
+    "faktencheck": {
+      "model": "claude-sonnet-5-5",
+      "effort": "high"
+    }
+  },
+  "background": {
+    "maxStories": 2
+  },
   "voices": {
     "LEITUNG": {
       "name": "de-DE-ConradNeural",

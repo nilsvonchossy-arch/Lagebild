@@ -143,6 +143,62 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 .vz-sym { display: flex; align-items: center; gap: 14px; }
 .vz-sym svg { width: 30px; height: 30px; padding: 10px; box-sizing: content-box; border-radius: 14px; color: var(--acc); background: color-mix(in srgb, var(--acc) 16%, transparent); flex: none; }
 .vz-sym span { font: 650 15px/1.3 var(--f-text); }
+/* Erklär-Grafiken: Einträge kommen nacheinander herein; was gerade erzählt wird, ist hervorgehoben */
+.vz-tl, .vz-acts, .vz-chain { list-style: none; margin: 0; padding: 0; display: grid; flex: none; }
+.vz-step, .vz-arrow { animation: stepIn .5s cubic-bezier(.2, .8, .2, 1) var(--d, 0s) both; }
+@keyframes stepIn { from { opacity: 0; transform: translateY(6px); } }
+/* Vorgeschichte: senkrechte Zeitleiste, die Linie füllt sich bis zum aktuellen Eintrag */
+.vz-tl .vz-step { position: relative; display: grid; grid-template-columns: 20px auto minmax(0, 1fr); column-gap: 10px; align-items: start; padding-bottom: 12px; }
+.vz-tl .vz-step:last-child { padding-bottom: 0; }
+.vz-tl .vz-step::before, .vz-tl .vz-step::after { content: ""; position: absolute; left: 9px; top: 10px; bottom: -10px; width: 2px; border-radius: 2px; background: rgba(255, 255, 255, .12); }
+.vz-tl .vz-step::after { background: var(--acc); transform-origin: 50% 0; transform: scaleY(0); transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
+.vz-tl .vz-step.done::after { transform: none; }
+.vz-tl .vz-step:last-child::before, .vz-tl .vz-step:last-child::after { display: none; }
+.vz-dot { position: relative; z-index: 1; width: 12px; height: 12px; margin: 3px 4px 0; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); background: var(--glass-strong); transition: background .4s, border-color .4s; }
+.vz-step.done .vz-dot, .vz-step.on .vz-dot, .vz-step.now .vz-dot { background: var(--acc); border-color: var(--acc); }
+.vz-step.now .vz-dot { border-radius: 4px; }
+.vz-tl .on .vz-dot { animation: dotPulse 1.8s ease-out .3s infinite; }
+@keyframes dotPulse { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acc) 60%, transparent); } to { box-shadow: 0 0 0 9px transparent; } }
+.vz-tl b { font: 750 15px/1.25 var(--f-display); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vz-tl span { font: 500 13.5px/1.35 var(--f-text); color: var(--soft); text-wrap: pretty; }
+.vz-tl b, .vz-tl span { transition: opacity .4s, color .4s; }
+.vz-tl .vz-step:not(.on):not(.done):not(.now) b, .vz-tl .vz-step:not(.on):not(.done):not(.now) span { opacity: .45; }
+.vz-tl .on span { color: var(--ink); }
+/* Wer steht wo: Beteiligte mit Rolle und Position, ohne Einordnung in Lager */
+.vz-acts { gap: 8px; }
+.vz-act { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 9px; align-items: start; padding: 7px 10px; border-radius: var(--r-md); background: rgba(255, 255, 255, .03); border: 1px solid transparent; transition: background .35s, border-color .35s; }
+.vz-act.on { background: color-mix(in srgb, var(--acc) 12%, transparent); border-color: color-mix(in srgb, var(--acc) 42%, transparent); }
+.vz-ini { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--acc) 22%, var(--surface-2)); font: 700 12px/1 var(--f-display); transition: background .35s, color .35s; }
+.vz-act.on .vz-ini { background: var(--acc); color: #120a05; }
+/* Name und Rolle in einer Zeile, darunter die Position */
+.vz-who { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+.vz-act b { font: 650 14px/1.25 var(--f-text); }
+.vz-act small { font: 500 11.5px/1.3 var(--f-text); color: var(--mute); }
+.vz-act p { margin: 2px 0 0; font: 400 13px/1.35 var(--f-text); color: var(--soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.vz-acts:has(> :nth-child(3)) p { -webkit-line-clamp: 1; }
+.vz-act:not(.on) > div { opacity: .78; transition: opacity .35s; }
+/* Hochkant brauchen Erklär-Grafiken etwas mehr Höhe über dem Globus als Balken oder Uhr */
+#app:not(.wide) > #viz:has(.vz-tl, .vz-acts, .vz-chain) { max-height: 60%; }
+/* Kompakt, wenn der Platz nicht reicht (viz.ts, fit): Nebentexte nur beim aktuellen Eintrag, Überschrift bleibt stehen */
+.vz.tight { gap: 8px; padding-top: 12px; padding-bottom: 12px; scrollbar-width: none; }
+.vz.tight > .vz-kind { position: sticky; top: -12px; z-index: 2; margin: -12px -16px 0; padding: 12px 16px 6px; background: var(--glass-strong); }
+.vz.tight .vz-acts { gap: 6px; }
+.vz.tight .vz-act:not(.on) { padding-block: 5px; align-items: center; }
+.vz.tight .vz-act:not(.on) small, .vz.tight .vz-act:not(.on) p { display: none; }
+.vz.tight .vz-tl .vz-step { padding-bottom: 8px; }
+.vz.tight .vz-tl .vz-step:not(.on) span, .vz.tight .vz-link:not(.on) span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vz.tight .vz-link span { padding-block: 6px; }
+.vz.tight .vz-arrow { height: 16px; }
+/* Ursache und Wirkung: Kette von oben nach unten, Pfeile zeichnen sich ein */
+.vz-chain { gap: 0; }
+.vz-link span { display: block; padding: 9px 12px; border-radius: var(--r-md); background: rgba(255, 255, 255, .04); border: 1px solid var(--line); font: 600 14px/1.3 var(--f-text); text-align: center; text-wrap: balance; color: var(--mute); transition: background .4s, border-color .4s, color .4s; }
+.vz-link.done span { color: var(--soft); background: color-mix(in srgb, var(--acc) 9%, transparent); }
+.vz-link.on span { color: var(--ink); background: color-mix(in srgb, var(--acc) 18%, transparent); border-color: color-mix(in srgb, var(--acc) 55%, transparent); }
+.vz-arrow { display: grid; place-items: center; height: 24px; }
+.vz-arrow svg { width: 18px; height: 18px; fill: none; stroke: rgba(255, 255, 255, .22); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.vz-arrow path { stroke-dasharray: 34; }
+.vz-arrow.done path { stroke: var(--acc); animation: draw .6s cubic-bezier(.2, .8, .2, 1) var(--d, 0s) both; }
+@keyframes draw { from { stroke-dashoffset: 34; } }
 
 /* Karte im unteren Drittel: Flagge, Ort, eine Zeile */
 .card { position: relative; margin-bottom: 14px; padding: 14px 16px 16px; border-radius: var(--r-lg); background: var(--glass-strong); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border: 1px solid var(--line); box-shadow: var(--shadow); visibility: hidden; transform-origin: 50% 100%; cursor: pointer; }
@@ -190,6 +246,11 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 .det-x { margin: 0; font: 400 14px/1.45 var(--f-text); color: var(--soft); }
 .det-x b { color: var(--ink); font-weight: 600; }
 .det-credit { margin: 0; font: 400 12px/1.45 var(--f-text); color: var(--mute); }
+.det-bg { display: grid; gap: 6px; padding: 12px; border-radius: var(--r-md); background: var(--surface-2); }
+.det-bg h4 { margin: 0; font: 650 13px/1.2 var(--f-text); color: var(--acc); }
+.det-bg ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font: 400 14px/1.45 var(--f-text); color: var(--soft); }
+.det-bg small { color: var(--mute); }
+.det-srcs { display: grid; gap: 6px; }
 .det-credit a { color: var(--soft); }
 .det-fig { display: flex; align-items: baseline; gap: 12px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-2); }
 .fig-num { font: 800 28px/1 var(--f-display); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--acc); }

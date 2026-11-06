@@ -19,19 +19,19 @@ import type { Briefing, Line, Markets, Role, Story } from '../src/shared/types.t
 import { dateParts } from '../src/util.ts';
 import { buildBriefing, KEYS, toScriptStory, toStory, type Built } from './assemble.ts';
 import { resolveImages } from './bilder.ts';
-import { Claude, RefusalError } from './claude.ts';
+import { Claude, RefusalError, type Effort, type ModelChoice, type Step } from './claude.ts';
 import { writeScript } from './drehbuch.ts';
-import { selectStories, verifyStory, writeStory, type Selection } from './editorial.ts';
+import { selectStories, verifyBackground, verifyStory, writeBackground, writeStory, type Selection } from './editorial.ts';
 import { fetchArticle, type Article } from './extract.ts';
 import { resolveExtraPlace, resolvePlace } from './geo.ts';
 import { fetchMarkets } from './markets.ts';
 import { mixEpisode, type Clip } from './mix.ts';
-import { planEpisode, wantedStories } from './plan.ts';
+import { BACKGROUND_MIN_RELEVANCE, planEpisode, score, wantedStories, type PlanInput } from './plan.ts';
 import { fetchFeeds, matchTopics, mergeCandidates, parseFeed, searchGdelt, type Candidate, type Quellen } from './sources.ts';
 import { dayPath, nextEpisode, previousHeadlines, pruneMedia, writeIndex, writeJSON } from './store.ts';
 import { synthesizeLines, type VoiceSpec } from './tts.ts';
 import { earliestStart, synthesizeVoxcpm, type VoxcpmConfig } from './tts-voxcpm.ts';
-import { berlinISO, berlinNow, log, pool } from './util.ts';
+import { berlinISO, berlinNow, domainOf, log, normalizeUrl, pool } from './util.ts';
 
 const { values: args } = parseArgs({
   options: {
@@ -113,9 +113,9 @@ async function buildOne(claude: Claude, sel: Selection, cands: Map<number, Candi
     const a = await getArticle(c.url);
     if ('error' in a) { slog.attempts.push({ url: c.url, result: a.error }); continue; }
     try {
-      const draft = await writeStory(claude, a, { topic: topic.name, category, title: sel.working_title, source: c.source, date: c.published?.slice(0, 10) ?? null });
+      const draft = await writeStory(claude.for('fakten'), a, { topic: topic.name, category, title: sel.working_title, source: c.source, date: c.published?.slice(0, 10) ?? null, investigative: sel.investigative });
       if (!draft.usable) { slog.attempts.push({ url: c.url, result: 'keine verwertbare Nachricht' }); continue; }
-      const checked = await verifyStory(claude, a, draft, sel.working_title);
+      const checked = await verifyStory(claude.for('faktencheck'), a, draft, sel.working_title);
       slog.issues.push(...checked.issues);
       if (!checked.draft) { slog.attempts.push({ url: c.url, result: 'Faktencheck nicht bestanden' }); continue; }
       const place = resolvePlace(checked.draft.place.country_iso3, checked.draft.place.lon, checked.draft.place.lat);
@@ -138,6 +138,59 @@ async function buildOne(claude: Claude, sel: Selection, cands: Map<number, Candi
   return null;
 }
 
+const isFatal = (e: unknown): boolean =>
+  e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError || (e instanceof Anthropic.BadRequestError && /credit|billing/i.test(e.message));
+
+/**
+ * Hintergrund für eine große Meldung: zweite Quelle zum selben Ereignis (Hinweise der Auswahl zuerst, dann die
+ * übrigen Artikel, andere Domain bevorzugt), Fakten ziehen und gegen diesen Text prüfen. Gibt es keine zweite
+ * Quelle mit verwertbarem Hintergrund, noch einmal die Hauptquelle.
+ */
+async function addBackground(claude: Claude, b: Built, byId: Map<number, Candidate>, slog: StoryLog): Promise<void> {
+  const mainUrl = normalizeUrl(b.article.url);
+  const mainDomain = domainOf(b.article.url);
+  const others = [...new Set([...b.sel.background_articles, ...b.sel.articles])]
+    .map(id => byId.get(id))
+    .filter((c): c is Candidate => Boolean(c) && normalizeUrl(c!.url) !== mainUrl)
+    .sort((x, y) => Number(x.domain === mainDomain) - Number(y.domain === mainDomain));
+  const tries: { article: Article; sourceName: string; published: string | null; sameSource: boolean }[] = [];
+  for (const c of others.slice(0, 3)) {
+    const a = await getArticle(c.url);
+    if ('error' in a) { slog.attempts.push({ url: c.url, result: `Hintergrund: ${a.error}` }); continue; }
+    tries.push({ article: a, sourceName: a.siteName && a.siteName.length <= 40 ? a.siteName : c.source, published: c.published, sameSource: false });
+    if (tries.length >= 2) break;
+  }
+  tries.push({ article: b.article, sourceName: b.sourceName, published: b.published, sameSource: true });
+  for (const t of tries) {
+    try {
+      const meta = { title: b.sel.working_title, mainSource: b.sourceName, source: t.sourceName, sameSource: t.sameSource };
+      const draft = await writeBackground(claude.for('hintergrund'), t.article, b.draft, meta);
+      if (!draft) { slog.attempts.push({ url: t.article.url, result: 'Hintergrund: nichts Verwertbares' }); continue; }
+      const checked = await verifyBackground(claude.for('faktencheck'), t.article, b.draft, draft, b.sel.working_title);
+      slog.issues.push(...checked.issues.map(i => `Hintergrund: ${i}`));
+      if (!checked.background) { slog.attempts.push({ url: t.article.url, result: 'Hintergrund: Faktencheck nicht bestanden' }); continue; }
+      b.background = { ...t, draft: checked.background };
+      const bg = checked.background;
+      slog.attempts.push({ url: t.article.url, result: `Hintergrund ok: ${bg.facts.length} Fakten, Zeitleiste ${bg.timeline.length}, Akteure ${bg.actors.length}, Kette ${bg.chain.length}` });
+      return;
+    } catch (e) {
+      if (isFatal(e)) throw e;
+      slog.attempts.push({ url: t.article.url, result: `Hintergrund: ${e instanceof RefusalError ? e.message : `Fehler: ${(e as Error).message}`}` });
+    }
+  }
+}
+
+/** Eingabe für den Plan; Hintergrund-Fakten zählen mit (nur Aufmacher und Fokus bekommen sie in die Folge). */
+const planInput = (b: Built): PlanInput => ({
+  relevance: b.sel.relevance,
+  weight: b.topic.weight,
+  facts: b.draft.facts.length + (b.background?.draft.facts.length ?? 0),
+  lon: b.place.lon,
+  lat: b.place.lat,
+  minPerDay: Boolean(b.topic.minPerDay),
+  investigative: b.draft.enthuellung
+});
+
 async function produce(claude: Claude, selections: Selection[], cands: Candidate[], logs: StoryLog[], want: number): Promise<Built[]> {
   const byId = new Map(cands.map(c => [c.id, c]));
   const perTopic = new Map<string, number>();
@@ -158,16 +211,23 @@ async function produce(claude: Claude, selections: Selection[], cands: Candidate
     if (results.filter(Boolean).length >= want) break;
     results.push(await buildOne(claude, s, byId, mkLog(s)));
   }
-  return results.filter((b): b is Built => b !== null);
+  const built = results.filter((b): b is Built => b !== null);
+  // Hintergrund für die wichtigsten großen Meldungen (Kandidaten für Aufmacher und Fokus), höchstens maxStories
+  const big = built
+    .map((b, i) => ({ b, i }))
+    .filter(x => x.b.sel.relevance >= BACKGROUND_MIN_RELEVANCE && x.b.topic.weight !== 'kurz')
+    .sort((x, y) => score(planInput(y.b)) - score(planInput(x.b)) || x.i - y.i)
+    .slice(0, pipelineCfg.background.maxStories);
+  await pool(big, 2, async ({ b }) => {
+    const l = logs.find(x => x.title === b.sel.working_title);
+    await addBackground(claude, b, byId, l ?? mkLog(b.sel));
+  });
+  return built;
 }
 
 /** Plan, Drehbuch und Montage: aus den geprüften Meldungen wird die Folge. */
 async function compose(claude: Claude, built: Built[], date: string, markets: { markets: Markets; lines: Line[] } | null, logs: StoryLog[], model: string, images = true): Promise<{ briefing: Briefing; scriptIssues: string[] }> {
-  const plan = planEpisode(
-    built.map(b => ({ relevance: b.sel.relevance, weight: b.topic.weight, facts: b.draft.facts.length, lon: b.place.lon, lat: b.place.lat, minPerDay: Boolean(b.topic.minPerDay) })),
-    cfg.episode.minutes,
-    Boolean(markets)
-  );
+  const plan = planEpisode(built.map(planInput), cfg.episode.minutes, Boolean(markets));
   for (const i of plan.dropped) {
     const l = logs.find(x => x.title === built[i]!.sel.working_title);
     if (l) l.result = 'aus Zeitgründen weggelassen';
@@ -186,7 +246,7 @@ async function compose(claude: Claude, built: Built[], date: string, markets: { 
     taken.push(s.id);
     return s;
   });
-  const script = await writeScript(claude, stories.map((s, k) => toScriptStory(s, built[plan.items[k]!.index]!, KEYS[k]!, plan.items[k]!)), cfg.episode.tone);
+  const script = await writeScript(claude.for('drehbuch'), stories.map((s, k) => toScriptStory(s, built[plan.items[k]!.index]!, KEYS[k]!, plan.items[k]!)), cfg.episode.tone);
   const briefing = buildBriefing({
     date,
     generated: berlinISO(),
@@ -195,7 +255,7 @@ async function compose(claude: Claude, built: Built[], date: string, markets: { 
     stories,
     script: script.lines,
     markets,
-    meta: { model, costUsd: 0, script: script.source }
+    meta: { model, models: claude.models(), costUsd: 0, script: script.source }
   });
   return { briefing, scriptIssues: script.issues };
 }
@@ -241,7 +301,7 @@ async function compare(models: string[], date: string, cands: Candidate[], marke
   const ref = models[0]!;
   let refSelection: Selection[] = [];
   for (const m of models) {
-    const claude = new Claude(m, pipelineCfg.effort as 'medium');
+    const claude = new Claude(m, pipelineCfg.effort as Effort);
     const sel = await selectStories(claude, cfg, cands, { dateLabel: dateLabel(date), yesterday, want, minutes: cfg.episode.minutes });
     if (m === ref) refSelection = sel;
     (report.models as Record<string, unknown>)[m] = { selection: sel.map(s => ({ title: s.working_title, topic: s.topic, relevance: s.relevance, reason: s.reason })) };
@@ -249,7 +309,7 @@ async function compare(models: string[], date: string, cands: Candidate[], marke
   }
   // Alle Modelle schreiben dieselben Meldungen aus denselben Quellen, damit sich die Texte vergleichen lassen
   for (const m of models) {
-    const claude = new Claude(m, pipelineCfg.effort as 'medium');
+    const claude = new Claude(m, pipelineCfg.effort as Effort);
     const logs: StoryLog[] = [];
     const built = await produce(claude, refSelection, cands, logs, want);
     const { briefing, scriptIssues } = await compose(claude, built, date, markets, logs, m, false);
@@ -331,11 +391,13 @@ async function main(): Promise<void> {
     return;
   }
 
-  const model = args.model ?? process.env.LAGEBILD_MODEL ?? pipelineCfg.model;
-  const claude = new Claude(model, pipelineCfg.effort as 'medium');
+  // Ein Modell für alles, wenn es von außen vorgegeben ist (--model, LAGEBILD_MODEL); sonst je Schritt aus config/pipeline.json
+  const forced = args.model ?? process.env.LAGEBILD_MODEL;
+  const model = forced ?? pipelineCfg.model;
+  const claude = new Claude(model, pipelineCfg.effort as Effort, forced ? {} : (pipelineCfg.steps as Partial<Record<Step, ModelChoice>>));
   const want = wantedStories(cfg.episode.minutes);
-  log(`Auswahl mit ${model} aus ${candidates.length} Kandidaten, Ziel ${want} Meldungen für ${cfg.episode.minutes} Minuten …`);
-  const selections = await selectStories(claude, cfg, candidates, { dateLabel: dateLabel(date), yesterday: previousHeadlines(OUT, date), want, minutes: cfg.episode.minutes });
+  log(`Auswahl mit ${claude.for('auswahl').model} aus ${candidates.length} Kandidaten, Ziel ${want} Meldungen für ${cfg.episode.minutes} Minuten …`);
+  const selections = await selectStories(claude.for('auswahl'), cfg, candidates, { dateLabel: dateLabel(date), yesterday: previousHeadlines(OUT, date), want, minutes: cfg.episode.minutes });
   const storyLogs: StoryLog[] = [];
   const built = await produce(claude, selections, candidates, storyLogs, want);
   if (!built.length) throw new Error('Keine Meldung hat den Faktencheck bestanden.');
@@ -348,7 +410,7 @@ async function main(): Promise<void> {
   writeJSON(dayPath(OUT, date), briefing);
   writeIndex(OUT, briefing.generated);
   const pruned = pruneMedia(OUT, date, pipelineCfg.audioDays);
-  writeJSON(join(OUT, 'logs', `${date}.json`), { date, model, candidates: candidates.length, research: report, selections, stories: storyLogs, script: { source: briefing.meta.script, issues: scriptIssues }, usage: claude.usage, tts, pruned });
+  writeJSON(join(OUT, 'logs', `${date}.json`), { date, model, models: claude.models(), candidates: candidates.length, research: report, selections, stories: storyLogs, script: { source: briefing.meta.script, issues: scriptIssues }, usage: claude.usage, tts, pruned });
   log(`Fertig: Folge ${briefing.episode}, ${briefing.stories.length} Meldungen (${briefing.meta.script === 'claude' ? 'Drehbuch' : 'einfache Fassung'}), Claude-Kosten ${claude.usage.costUsd.toFixed(3)} $ (${claude.usage.calls} Aufrufe).`);
   output('changed', 'true');
 }

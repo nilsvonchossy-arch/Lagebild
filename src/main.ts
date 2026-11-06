@@ -11,7 +11,7 @@ import { symbolSVG } from './icons';
 import { Player } from './player';
 import { estimateScript } from './shared/script';
 import { fallbackSymbol } from './shared/symbols';
-import { SCHEMA_VERSION, type Briefing, type DayIndex } from './shared/types';
+import { isPlayable, type Briefing, type DayIndex } from './shared/types';
 import { bindTopics, openTopics } from './topics';
 import { $, dateParts, esc, pad2 } from './util';
 import { Viz } from './viz';
@@ -149,8 +149,8 @@ function show(b: Briefing): void {
   $('#start').hidden = false;
 }
 
-/** Nur Tage im aktuellen Format abspielen; ältere Formate gibt es (noch) nicht. */
-const usable = (b: Briefing | null): b is Briefing => Boolean(b && b.schema === SCHEMA_VERSION && Array.isArray(b.script));
+/** Nur Tage in einem Format abspielen, das die App kennt (Schema 2 und 3; 3 ergänzt nur Felder). */
+const usable = (b: Briefing | null): b is Briefing => isPlayable(b);
 
 /* ---------- Archiv ---------- */
 function renderArchive(): void {

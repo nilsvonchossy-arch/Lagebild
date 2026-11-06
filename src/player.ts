@@ -7,19 +7,18 @@ import { Card, categoryColor } from './card';
 import { countUp, fadeText, Subtitle } from './fx';
 import type { Globe } from './globe';
 import { fallbackSymbol } from './shared/symbols';
-import { comparisonAtFigure, cuesFor, LEAD_IN, pauseBefore, secToFrac, type Cue } from './shared/script';
+import { comparisonAtFigure, cuesFor, LEAD_IN, pauseBefore, secToFrac, VISUAL_CUES, type Cue } from './shared/script';
 import type { Briefing, Story } from './shared/types';
 import { $, dateParts, pad2, sleep, speed } from './util';
-import { comparisonHTML, deadlineHTML, symbolHTML, type Viz } from './viz';
+import { actorsHTML, chainHTML, comparisonHTML, deadlineHTML, symbolHTML, timelineHTML, type Viz } from './viz';
 
 const CANCEL = Symbol('cancel');
 const MEDIA = Symbol('media');
 const FRANKFURT: [number, number] = [8.68, 50.11];
 /** Untertitel erscheinen so viele Sekunden vor der Stimme */
 const LEAD = 0.12;
-/** Wie lange Einblendungen stehen bleiben (ms bei normalem Tempo) */
-const HOLD = { comparison: 5200, deadline: 4200, image: 5600, symbol: 2600 };
-const VISUAL = new Set<Cue['kind']>(['comparison', 'deadline', 'image']);
+/** Wie lange Einblendungen stehen bleiben (ms bei normalem Tempo); Erklär-Grafiken verlängern sich bei jedem weiteren Eintrag */
+const HOLD = { comparison: 5200, deadline: 4200, image: 5600, symbol: 2600, timeline: 7000, actors: 6500, chain: 6500 };
 /** Rahmen der Folge ohne eigenen Fortschrittsbalken */
 const FRAME = new Set(['_start', '_ende']);
 
@@ -47,7 +46,7 @@ export interface Scene {
   last: number;
   /** erste Zeile, die keine Frage ist: ab hier erscheint die Karte */
   firstFact: number;
-  /** Mindestens ein Vergleich, Termin oder Archivbild wird im Dialog genannt; sonst zeigt die Meldung ihr Symbol */
+  /** Mindestens ein Vergleich, Termin, Archivbild oder eine Erklär-Grafik kommt im Dialog vor; sonst zeigt die Meldung ihr Symbol */
   hasVisual: boolean;
   /** Der Dialog nennt keinen anderen Vergleichswert: Vergleich bei der Hauptzahl zeigen */
   cmpAtFigure: boolean;
@@ -67,7 +66,7 @@ export function scenesOf(b: Briefing): Scene[] {
     if (!st) continue;
     const lines = b.script.slice(s.first, s.last + 1);
     s.cmpAtFigure = comparisonAtFigure(st, lines);
-    s.hasVisual = lines.some(l => cuesFor(st, l, { comparisonAtFigure: s.cmpAtFigure }).some(c => VISUAL.has(c.kind)));
+    s.hasVisual = lines.some(l => cuesFor(st, l, { comparisonAtFigure: s.cmpAtFigure }).some(c => VISUAL_CUES.has(c.kind)));
   }
   return out;
 }
@@ -346,7 +345,7 @@ export class Player {
   }
 
   private cueKey(c: Cue): string {
-    return `${c.kind}:${c.place ?? c.image ?? ''}`;
+    return `${c.kind}:${c.place ?? c.image ?? c.index ?? ''}`;
   }
 
   private lineProgress(i: number, frac: number): void {
@@ -373,6 +372,9 @@ export class Player {
     if (c.kind === 'comparison' && s.comparison) this.viz.show(comparisonHTML(s.comparison), this.acc(s), HOLD.comparison);
     else if (c.kind === 'deadline' && s.deadline) this.viz.show(deadlineHTML(s.deadline), this.acc(s), HOLD.deadline);
     else if (c.kind === 'image' && c.image != null && s.images?.[c.image]) void this.viz.showImage(s.images[c.image]!, this.dataBase, this.acc(s), HOLD.image);
+    else if (c.kind === 'timeline' && s.timeline && c.index != null) this.explain(`timeline:${s.id}`, c.index, 'progress', HOLD.timeline, () => timelineHTML(s.timeline!, c.index!), s);
+    else if (c.kind === 'actors' && s.actors && c.index != null) this.explain(`actors:${s.id}`, c.index, 'single', HOLD.actors, () => actorsHTML(s.actors!, c.index!), s);
+    else if (c.kind === 'chain' && s.chain) this.viz.show(chainHTML(s.chain), this.acc(s), HOLD.chain, `chain:${s.id}`);
     else if (c.kind === 'figure' && s.figure) {
       $('#pinFigLabel').textContent = s.figure.label;
       $('#pinFig').classList.add('on');
@@ -381,6 +383,11 @@ export class Player {
       const p = s.places?.[c.place];
       if (p) this.globe.addMarker([p.lon, p.lat], p.label, Boolean(p.route));
     }
+  }
+
+  /** Erklär-Grafik zeigen oder, wenn sie schon steht, nur zum genannten Eintrag weiterschalten. */
+  private explain(key: string, index: number, mode: 'progress' | 'single', hold: number, html: () => string, s: Story): void {
+    if (!this.viz.step(key, index, mode, hold)) this.viz.show(html(), this.acc(s), hold, key);
   }
 
   private maybeShowCard(): void {

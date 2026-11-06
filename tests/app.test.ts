@@ -74,8 +74,8 @@ describe('Datum', () => {
 
 describe('Demo-Folge', () => {
   const b = demo as unknown as Briefing;
-  it('erfüllt das Schema 2', () => {
-    expect(b.schema).toBe(2);
+  it('erfüllt das Schema 3', () => {
+    expect(b.schema).toBe(3);
     expect(b.episode).toBe(1);
     const cats = new Set(b.categories.map(c => c.id));
     const ids = new Set(b.stories.map(s => s.id));
@@ -84,7 +84,7 @@ describe('Demo-Folge', () => {
       expect(countryInfo(s.country), s.id).not.toBeNull();
       expect(s.source.url).toMatch(/^https:\/\//);
       expect(s.source.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      expect(['aufmacher', 'meldung', 'kurz']).toContain(s.format);
+      expect(['aufmacher', 'fokus', 'meldung', 'kurz']).toContain(s.format);
       expect(s.facts.length).toBeGreaterThan(1);
     }
     expect(b.stories[0]!.format).toBe('aufmacher');
