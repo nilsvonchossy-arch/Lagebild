@@ -96,6 +96,7 @@ const draft = (): Draft => ({
   place: { label: 'BERLIN', country_iso3: 'DEU', lon: 13.4, lat: 52.52 },
   places: [],
   source_date: '2026-10-27',
+  enthuellung: false,
   vergleich: { label: 'Ja-Stimmen', unit: '', decimals: 0, items: [{ label: 'jetzt', value: 412 }, { label: '2020', value: 380 }] },
   termin: null,
   symbol: 'parlament',
@@ -345,7 +346,7 @@ describe('Montage', () => {
   it('baut eine Folge im App-Schema', () => {
     const topic = cfg.topics.find(t => t.id === 'deutschland')!;
     const mk = (rel: number, short: string): Built => ({
-      sel: { topic: 'deutschland', articles: [1], relevance: rel, reason: 'Grund', working_title: short },
+      sel: { topic: 'deutschland', articles: [1], relevance: rel, reason: 'Grund', working_title: short, investigative: false, background_articles: [] },
       topic,
       article: { url: 'https://example.org/a', title: 'T', text: 'x', date: '2026-10-27', siteName: null },
       sourceName: 'tagesschau',
@@ -365,7 +366,7 @@ describe('Montage', () => {
     const script: Line[] = [{ role: 'LAGE', text: 'x', story: stories[0]!.id, kind: 'fakt', facts: ['A1'] }];
     const markets = { markets: { asOf: '2026-10-27', source: { name: 'Y', url: 'https://y', date: '2026-10-27' }, items: [] }, lines: [{ role: 'LAGE' as const, text: 'DAX.', story: 'maerkte', kind: 'fakt' as const }] };
     const b = buildBriefing({ date: '2026-10-28', generated: 'jetzt', cfg, episode: 7, stories, script, markets, meta: { model: 'test', costUsd: 0, script: 'claude' } });
-    expect(b.schema).toBe(2);
+    expect(b.schema).toBe(3);
     expect(b.episode).toBe(7);
     // Ton „Assistent“ (Voreinstellung): Begrüßung mit Datum und Vorschau, keine Zusammenfassung am Ende
     expect(b.script.map(l => l.kind)).toEqual(['begruessung', 'begruessung', 'fakt', 'frage', 'fakt', 'abschluss', 'abschluss']);

@@ -9,7 +9,13 @@ import { normalizeMood, TONE_TEXT } from '../src/shared/script.ts';
 import type { Format, Line, Mood, Role, Tone } from '../src/shared/types.ts';
 import type { Claude } from './claude.ts';
 
-export interface ScriptFact { id: string; text: string; kind: string }
+export interface ScriptFact {
+  id: string;
+  text: string;
+  kind: string;
+  /** Name der Quelle, wenn der Fakt nicht aus der Hauptquelle stammt */
+  source?: string;
+}
 
 export interface ScriptStory {
   /** Buchstabe in der Folge: A, B, C … */
@@ -23,13 +29,15 @@ export interface ScriptStory {
   places: string[];
   /** Hauptzahl für den Ton, z. B. „55,7 % (Wahlbeteiligung um 16 Uhr)“ */
   figure: string | null;
-  /** Was eingeblendet wird, sobald es gesagt wird (Vergleichswerte, Termin, Namen der Bildmotive) */
+  /** Was eingeblendet wird, sobald es gesagt wird (Vergleichswerte, Termin, Namen der Bildmotive, Zeitleiste, Akteure) */
   visuals?: string | null;
+  /** Eigene Recherche eines Mediums (Enthüllung) */
+  investigative?: boolean;
   facts: ScriptFact[];
 }
 
-const FORMAT_TEXT: Record<Format, string> = { aufmacher: 'Aufmacher', meldung: 'Meldung', kurz: 'Kurz notiert' };
-const LINES: Record<Format, string> = { aufmacher: '7–10 Zeilen', meldung: '4–6 Zeilen', kurz: '1–2 Zeilen' };
+const FORMAT_TEXT: Record<Format, string> = { aufmacher: 'Aufmacher', fokus: 'Im Fokus', meldung: 'Meldung', kurz: 'Kurz notiert' };
+const LINES: Record<Format, string> = { aufmacher: '7–10 Zeilen', fokus: '14–22 Zeilen', meldung: '4–6 Zeilen', kurz: '1–2 Zeilen' };
 
 const TONE_RULES: Record<Tone, string> = {
   lagezentrum: `TON: LAGEZENTRUM
@@ -75,6 +83,10 @@ AUFBAU DER FOLGE
 - BRIEFING STATT SCHLAGZEILE: Der Zuhörer will jede Meldung so verstehen wie eine Regierungschefin nach einem Lagebriefing – die Kerninformationen und Probleme, so knapp wie möglich. Jede Meldung folgt dieser Leiter, soweit die Fakten sie hergeben: Kern (was ist passiert) → Problem (worum es eigentlich geht, was auf dem Spiel steht, Fakten der Art „problem“) → Positionen und Größenordnung (wer will was, Zahl) → Ausblick (was als Nächstes passiert, Fakten der Art „ausblick“) → offener Punkt (Vorbehalt). Eine Meldung, die nur den Kern sagt, obwohl Problem- oder Ausblick-Fakten da sind, ist zu oberflächlich.
 - Nimm lieber die Fakten mit Substanz als die mit Farbe: Problem, Ausblick und Positionen gehen vor Details. Kein Satz ohne neue Information.
 - Die Fragen von LEITUNG führen durch diese Leiter, kurz und gezielt: „Worum geht's im Kern?“, „Wo liegt das Problem?“, „Wer steht dagegen?“, „Was heißt das konkret?“, „Und wie geht's weiter?“, „Was ist noch offen?“. Reaktionen bleiben, aber kurz und meist in der Frage selbst („Oha. Und das Problem?“). Der Aufmacher bekommt mindestens eine Vertiefungsfrage mitten im Thema.
+- HINTERGRUND: Hat eine Meldung Fakten der Art „hintergrund“ (Vorgeschichte, Beteiligte, Gründe), bekommt sie nach dem Kern einen eigenen Teil Hintergrund. LEITUNG fragt danach, so wie man nachfragt, wenn man es verstehen will: „Wie kam es dazu?“, „Wer steckt dahinter?“, „Und warum?“, „Was war vorher?“. Darauf antworten EINORDNUNG oder LAGE nur mit diesen Hintergrund-Fakten, ältere Ereignisse zuerst; die Zeitangaben genau wie im Fakt. Danach geht es mit Positionen, Ausblick und offenem Punkt weiter. Ein Grund oder Motiv bleibt immer mit Zuschreibung („laut …“, „sagt …“).
+- Steht bei einem Fakt eine andere Quelle in eckigen Klammern, darfst du sie nennen („laut Deutschlandfunk“), damit hörbar ist, woher der Hintergrund kommt.
+- IM FOKUS (60–90 Sekunden, höchstens einer pro Folge): eine große Enthüllung oder Entwicklung ausführlich, so dass man danach versteht, was passiert ist und warum. Leiter: Kern → was genau herausgekommen ist (Belege, Zahl) → Hintergrund (Vorgeschichte, Beteiligte, Gründe) → Reaktionen und Positionen → Ausblick → offener Punkt. Mindestens drei Fragen von LEITUNG, darunter eine Hintergrundfrage. Pro Meldung hier bis zu drei Zahlen im Ton.
+- ENTHÜLLUNG: Ist eine Meldung als Enthüllung markiert, nennt der erste Satz, wer recherchiert hat, genau wie im Kern-Fakt („Nach Recherchen von …“). Was nur die Recherche belegt, bleibt der Recherche zugeschrieben; nichts davon als gesicherte Tatsache ohne Zuschreibung.
 - Rollenmuster variieren, nicht jedes Thema „LAGE, LAGE, EINORDNUNG“.
 - Meldungen im Format „Kurz notiert“ laufen am Ende als Block: eine kurze Frage von LEITUNG davor (z. B. „${TONE_TEXT[tone].more}“), dann je Meldung eine oder zwei Zeilen ohne weitere Fragen: der Kern und, wenn vorhanden, das Problem oder der nächste Schritt.
 - Länge: Halte dich an die Wortzahl jeder Meldung (etwa 2,5 Wörter pro Sekunde). Weniger ist besser als aufgebläht: Hat eine Meldung wenig Fakten, wird sie kürzer.
@@ -105,11 +117,11 @@ lines: alle Zeilen in Sprechreihenfolge. role: LEITUNG, LAGE oder EINORDNUNG. st
 export function drehbuchPrompt(stories: ScriptStory[]): string {
   const blocks = stories.map(s => {
     const words = Math.round(s.seconds * 2.5);
-    return `${s.key} · ${FORMAT_TEXT[s.format]} · etwa ${s.seconds} Sekunden (≈ ${words} Wörter, ${LINES[s.format]})
+    return `${s.key} · ${FORMAT_TEXT[s.format]}${s.investigative ? ' · Enthüllung (eigene Recherche)' : ''} · etwa ${s.seconds} Sekunden (≈ ${words} Wörter, ${LINES[s.format]})
 Thema: ${s.topic} · Ort: ${s.label}${s.places.length ? ` · weitere Orte: ${s.places.join(', ')}` : ''}
 Hauptzahl: ${s.figure ?? '(keine)'}${s.visuals ? `\nEinblendungen beim Wort (wenn es passt, genau so nennen): ${s.visuals}` : ''}
 Fakten:
-${s.facts.map(f => `${f.id} [${f.kind}] ${f.text}`).join('\n')}`;
+${s.facts.map(f => `${f.id} [${f.kind}${f.source ? ` · Quelle: ${f.source}` : ''}] ${f.text}`).join('\n')}`;
   }).join('\n\n');
   return `MELDUNGEN in dieser Reihenfolge\n\n${blocks}`;
 }
@@ -175,7 +187,8 @@ export const PRUEF_SYSTEM = `Du prüfst das Drehbuch einer Folge von „Lagebild
 Für jede Zeile:
 - LAGE und EINORDNUNG (Faktzeilen): Jede Tatsachenbehauptung muss durch die Fakten derselben Meldung gedeckt sein, vor allem durch die genannten Fakten-IDs. Nicht erlaubt: hinzugefügte Details, auch kleine wie „Ortszeit“, Wochentage oder Titel; Ursachen oder Verknüpfungen („deshalb“, „damit“), die nicht im Fakt stehen; Wertungen; fehlende Zuschreibungen („laut X“ ist verloren gegangen); Anführungszeichen um etwas, das kein wörtliches Zitat im Fakt ist; Zahlen, die nicht stimmen. Erlaubt: Kürzen, Umstellen, gesprochene Sprache, Weglassen, Rundungen, die wahr bleiben („Milliarden“ für 95 Milliarden).
 - LEITUNG: Die Zeile darf keine Tatsache behaupten oder unterstellen. Erlaubt sind Fragen, kurze Reaktionen mit Gefühl („Okay.“, „Oha.“, „Wow – echt?“, „Moment, so viele?“, „Oh je.“) und das Nennen von Thema oder Ort der nächsten Meldung. Nicht erlaubt: Fragen mit eingebauter Behauptung („Warum ist das Werk so teuer?“), Wertungen und Parteinahme („Was für ein Skandal!“, „zum Glück“), Staunen oder Witz bei Toten, Krieg oder Katastrophen, Fragen, deren Antwort nicht in den Fakten steht.
-- Kurze Einstiege von LAGE und EINORDNUNG wie „Ja, wirklich:“, „Genau.“, „Gute Frage –“ sind erlaubt.
+- Kurze Einstiege von LAGE und EINORDNUNG wie „Ja, wirklich:“, „Genau.“, „Gute Frage –“ sind erlaubt, ebenso die Quelle eines Fakts zu nennen, wenn sie beim Fakt in eckigen Klammern steht („laut Deutschlandfunk“).
+- Hintergrund-Fragen von LEITUNG („Wie kam es dazu?“, „Wer steckt dahinter?“) sind nur erlaubt, wenn die Antwort in den Fakten der Meldung steht.
 - Keine Begrüßung, kein Datum.
 
 verdict ist ok, korrigieren oder streichen.
@@ -197,7 +210,7 @@ export interface LineVerdict { nr: number; verdict: 'ok' | 'korrigieren' | 'stre
 export const normalizeLineVerdict = (v: string): LineVerdict['verdict'] => (/strei|lösch|entf/i.test(v) ? 'streichen' : /korr|änder|fix/i.test(v) ? 'korrigieren' : /^\s*ok/i.test(v) ? 'ok' : 'streichen');
 
 export function pruefPrompt(stories: ScriptStory[], lines: DraftLine[], only?: Set<number>): string {
-  const facts = stories.map(s => `${s.key} (${s.topic}, ${s.label})\n${s.facts.map(f => `${f.id} ${f.text}`).join('\n')}`).join('\n\n');
+  const facts = stories.map(s => `${s.key} (${s.topic}, ${s.label})\n${s.facts.map(f => `${f.id}${f.source ? ` [Quelle: ${f.source}]` : ''} ${f.text}`).join('\n')}`).join('\n\n');
   const rows = lines.map((l, i) => (only && !only.has(i) ? null : `${i + 1} | ${l.key} | ${l.role} | [${l.facts.join(', ')}] | ${l.text}`)).filter(Boolean).join('\n');
   return `FAKTEN JE MELDUNG\n\n${facts}\n\nDREHBUCH (Nummer | Meldung | Rolle | Fakten | Text)\n${rows}`;
 }
@@ -253,11 +266,19 @@ export function simpleLines(stories: ScriptStory[], tone: Tone, only?: Set<strin
       } else out.push({ role: 'LEITUNG', key: s.key, text: t.next[i % t.next.length]!, say: null, facts: [] });
     }
     if (s.format === 'kurz') firstKurz = false;
-    const n = s.format === 'aufmacher' ? 5 : s.format === 'meldung' ? 3 : 1;
-    s.facts.slice(0, n).forEach((f, k) => {
+    // Aufmacher und Fokus: Hintergrund-Fakten als eigener Teil nach dem Kern, mit eigener Frage
+    const big = s.format === 'aufmacher' || s.format === 'fokus';
+    const core = big ? s.facts.filter(f => f.kind !== 'hintergrund') : s.facts;
+    const back = big ? s.facts.filter(f => f.kind === 'hintergrund') : [];
+    const n = s.format === 'fokus' ? 8 : s.format === 'aufmacher' ? 5 : s.format === 'meldung' ? 3 : 1;
+    core.slice(0, n).forEach((f, k) => {
       const role: Role = k === 0 ? 'LAGE' : EINORDNEND.has(f.kind) ? 'EINORDNUNG' : k % 2 ? 'EINORDNUNG' : 'LAGE';
       out.push({ role, key: s.key, text: f.text, say: null, facts: [f.id] });
     });
+    if (back.length) {
+      out.push({ role: 'LEITUNG', key: s.key, text: t.background, say: null, facts: [] });
+      for (const f of back.slice(0, s.format === 'fokus' ? 4 : 2)) out.push({ role: 'EINORDNUNG', key: s.key, text: f.text, say: null, facts: [f.id] });
+    }
   });
   return out;
 }

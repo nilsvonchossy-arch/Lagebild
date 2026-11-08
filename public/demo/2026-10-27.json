@@ -1,5 +1,5 @@
 {
- "schema": 2,
+ "schema": 3,
  "date": "2026-10-27",
  "generated": "2026-10-27T17:40:00+01:00",
  "note": "Demo-Folge mit den Meldungen vom 27.10.2026, aus den verlinkten Quellen, vertont mit der offenen Stimme der Pipeline (VoxCPM2). Die täglichen Folgen kommen, sobald die Pipeline läuft.",
@@ -50,6 +50,13 @@
     "url": "https://timesofisrael.com/liveblog-october-27-2026",
     "date": "2026-10-27"
    },
+   "sources": [
+    {
+     "name": "Times of Israel",
+     "url": "https://timesofisrael.com/liveblog-october-27-2026",
+     "date": "2026-10-27"
+    }
+   ],
    "short": "Rekordbeteiligung in Israel",
    "format": "aufmacher",
    "figure": {
@@ -61,29 +68,47 @@
    "facts": [
     {
      "id": "A1",
-     "text": "Israel wählt ein neues Parlament, die Knesset."
+     "text": "Israel wählt ein neues Parlament, die Knesset.",
+     "kind": "kern",
+     "source": 0
     },
     {
      "id": "A2",
-     "text": "Bis 16 Uhr Ortszeit lag die Wahlbeteiligung bei 55,7 Prozent."
+     "text": "Bis 16 Uhr Ortszeit lag die Wahlbeteiligung bei 55,7 Prozent.",
+     "kind": "zahl",
+     "source": 0
     },
     {
      "id": "A3",
-     "text": "Laut Wahlkomitee ist das der höchste Wert zu dieser Uhrzeit seit Beginn der Messungen 1973."
+     "text": "Laut Wahlkomitee ist das der höchste Wert zu dieser Uhrzeit seit Beginn der Messungen 1973.",
+     "kind": "hintergrund",
+     "source": 0
     },
     {
      "id": "A4",
-     "text": "2022 lag die Wahlbeteiligung zur gleichen Zeit bei 47,5 Prozent."
+     "text": "2022 lag die Wahlbeteiligung zur gleichen Zeit bei 47,5 Prozent.",
+     "kind": "hintergrund",
+     "source": 0
     },
     {
      "id": "A5",
-     "text": "Netanjahus Likud tritt gegen Gadi Eisenkots Partei Yashar an; Eisenkot ist der Hauptherausforderer."
+     "text": "Netanjahus Likud tritt gegen Gadi Eisenkots Partei Yashar an; Eisenkot ist der Hauptherausforderer.",
+     "kind": "detail",
+     "source": 0
     },
     {
      "id": "A6",
-     "text": "Die Wahllokale schließen um 22 Uhr."
+     "text": "Die Wahllokale schließen um 22 Uhr.",
+     "kind": "ausblick",
+     "source": 0
     }
    ],
+   "background": {
+    "facts": [
+     "A3",
+     "A4"
+    ]
+   },
    "symbol": "wahl",
    "comparison": {
     "label": "Wahlbeteiligung bis 16 Uhr",
@@ -123,6 +148,48 @@
      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
      "page": "https://commons.wikimedia.org/wiki/File:Gadi_Eisenkot_2_(cropped_-_WD).jpg"
     }
+   ],
+   "timeline": [
+    {
+     "date": "1973",
+     "label": "Beginn der Messungen",
+     "facts": [
+      "A3"
+     ]
+    },
+    {
+     "date": "2022",
+     "label": "47,5 % bis 16 Uhr",
+     "facts": [
+      "A4"
+     ]
+    },
+    {
+     "date": "heute",
+     "label": "55,7 % bis 16 Uhr, höchster Wert",
+     "facts": [
+      "A2",
+      "A3"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "name": "Likud",
+     "role": "Partei von Netanjahu",
+     "position": "tritt gegen Yashar an",
+     "facts": [
+      "A5"
+     ]
+    },
+    {
+     "name": "Yashar",
+     "role": "Partei von Gadi Eisenkot",
+     "position": "Eisenkot ist der Hauptherausforderer",
+     "facts": [
+      "A5"
+     ]
+    }
    ]
   },
   {
@@ -142,6 +209,13 @@
     "url": "https://www.vienna.at/europas-letztes-penicillin-werk-unter-druck/10571465",
     "date": "2026-10-21"
    },
+   "sources": [
+    {
+     "name": "APA/Reuters",
+     "url": "https://www.vienna.at/europas-letztes-penicillin-werk-unter-druck/10571465",
+     "date": "2026-10-21"
+    }
+   ],
    "short": "Druck auf das Penicillin-Werk in Kundl",
    "format": "meldung",
    "figure": {
@@ -153,23 +227,33 @@
    "facts": [
     {
      "id": "B1",
-     "text": "In Kundl in Tirol steht Europas letztes großes Penicillin-Werk unter Druck."
+     "text": "In Kundl in Tirol steht Europas letztes großes Penicillin-Werk unter Druck.",
+     "kind": "kern",
+     "source": 0
     },
     {
      "id": "B2",
-     "text": "Betreiber Sandoz nennt die Produktion wirtschaftlich nicht tragfähig, wenn Regierungen nicht mehr für Penicillin zahlen."
+     "text": "Betreiber Sandoz nennt die Produktion wirtschaftlich nicht tragfähig, wenn Regierungen nicht mehr für Penicillin zahlen.",
+     "kind": "problem",
+     "source": 0
     },
     {
      "id": "B3",
-     "text": "Grund ist günstigere Konkurrenz aus China."
+     "text": "Grund ist günstigere Konkurrenz aus China.",
+     "kind": "hintergrund",
+     "source": 0
     },
     {
      "id": "B4",
-     "text": "Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht."
+     "text": "Sandoz hat in Brüssel eine Antidumping-Beschwerde eingereicht.",
+     "kind": "reaktion",
+     "source": 0
     },
     {
      "id": "B5",
-     "text": "Am Standort arbeiten mehr als 2.000 Menschen."
+     "text": "Am Standort arbeiten mehr als 2.000 Menschen.",
+     "kind": "zahl",
+     "source": 0
     }
    ],
    "symbol": "medizin",
@@ -184,6 +268,20 @@
      "license": "CC BY-SA 3.0",
      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
      "page": "https://commons.wikimedia.org/wiki/File:Kundl_view_from_hahntax.JPG"
+    }
+   ],
+   "chain": [
+    {
+     "label": "Günstigere Konkurrenz aus China",
+     "facts": [
+      "B3"
+     ]
+    },
+    {
+     "label": "Europas letztes großes Penicillin-Werk unter Druck",
+     "facts": [
+      "B1"
+     ]
     }
    ]
   },
@@ -204,6 +302,13 @@
     "url": "https://finance.yahoo.com/markets/stocks/articles/stock-market-news-oct-27-072700640.html",
     "date": "2026-10-27"
    },
+   "sources": [
+    {
+     "name": "Zacks via Yahoo Finance",
+     "url": "https://finance.yahoo.com/markets/stocks/articles/stock-market-news-oct-27-072700640.html",
+     "date": "2026-10-27"
+    }
+   ],
    "short": "Kursgewinne an der Wall Street",
    "format": "meldung",
    "figure": {
@@ -216,23 +321,33 @@
    "facts": [
     {
      "id": "C1",
-     "text": "Die Wall Street hat am Montag zugelegt."
+     "text": "Die Wall Street hat am Montag zugelegt.",
+     "kind": "kern",
+     "source": 0
     },
     {
      "id": "C2",
-     "text": "Der Nasdaq stieg um 0,8 Prozent auf 26.169 Punkte."
+     "text": "Der Nasdaq stieg um 0,8 Prozent auf 26.169 Punkte.",
+     "kind": "zahl",
+     "source": 0
     },
     {
      "id": "C3",
-     "text": "Der S&P 500 stieg um 0,7 Prozent, Technologiewerte legten um 1,7 Prozent zu."
+     "text": "Der S&P 500 stieg um 0,7 Prozent, Technologiewerte legten um 1,7 Prozent zu.",
+     "kind": "detail",
+     "source": 0
     },
     {
      "id": "C4",
-     "text": "Auslöser waren KI-Nachrichten: Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen."
+     "text": "Auslöser waren KI-Nachrichten: Meta will 95 Milliarden Dollar für KI-Infrastruktur aufnehmen.",
+     "kind": "hintergrund",
+     "source": 0
     },
     {
      "id": "C5",
-     "text": "Anthropic hat den Börsengang beantragt."
+     "text": "Anthropic hat den Börsengang beantragt.",
+     "kind": "detail",
+     "source": 0
     }
    ],
    "symbol": "boerse",
@@ -277,6 +392,13 @@
     "url": "https://aiweekly.co/ai-news-today",
     "date": "2026-10-27"
    },
+   "sources": [
+    {
+     "name": "Apple via AI Weekly",
+     "url": "https://aiweekly.co/ai-news-today",
+     "date": "2026-10-27"
+    }
+   ],
    "short": "neue Macs von Apple",
    "format": "meldung",
    "figure": {
@@ -288,15 +410,21 @@
    "facts": [
     {
      "id": "D1",
-     "text": "Apple bringt neue Macs mit M6-Chip: einen iMac ab 1.499 Dollar und ein 14-Zoll-MacBook-Pro ab 1.999 Dollar."
+     "text": "Apple bringt neue Macs mit M6-Chip: einen iMac ab 1.499 Dollar und ein 14-Zoll-MacBook-Pro ab 1.999 Dollar.",
+     "kind": "kern",
+     "source": 0
     },
     {
      "id": "D2",
-     "text": "Ausgeliefert wird ab 6. November."
+     "text": "Ausgeliefert wird ab 6. November.",
+     "kind": "ausblick",
+     "source": 0
     },
     {
      "id": "D3",
-     "text": "Die Neural Engine für KI-Aufgaben soll laut Apple 1,9-mal so schnell sein wie beim M5."
+     "text": "Die Neural Engine für KI-Aufgaben soll laut Apple 1,9-mal so schnell sein wie beim M5.",
+     "kind": "detail",
+     "source": 0
     }
    ],
    "symbol": "chip",
@@ -325,6 +453,13 @@
     "url": "https://www.justsecurity.org/162113/early-edition-october-27-2026/",
     "date": "2026-10-27"
    },
+   "sources": [
+    {
+     "name": "WSJ/AP via Just Security",
+     "url": "https://www.justsecurity.org/162113/early-edition-october-27-2026/",
+     "date": "2026-10-27"
+    }
+   ],
    "short": "kleinere Klassen in Frankreich",
    "format": "kurz",
    "figure": {
@@ -335,15 +470,21 @@
    "facts": [
     {
      "id": "E1",
-     "text": "Eingangsklassen an öffentlichen Gymnasien in Frankreich sollen höchstens 28 Schüler haben."
+     "text": "Eingangsklassen an öffentlichen Gymnasien in Frankreich sollen höchstens 28 Schüler haben.",
+     "kind": "kern",
+     "source": 0
     },
     {
      "id": "E2",
-     "text": "Die Vergabeplattform für Studienplätze, Parcoursup, soll bis 2028 abgeschafft werden."
+     "text": "Die Vergabeplattform für Studienplätze, Parcoursup, soll bis 2028 abgeschafft werden.",
+     "kind": "ausblick",
+     "source": 0
     },
     {
      "id": "E3",
-     "text": "Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an."
+     "text": "Die Regierung kündigt neue Lehrerstellen, mehr Studienplätze und Kredite für Schulsanierungen an.",
+     "kind": "detail",
+     "source": 0
     }
    ],
    "symbol": "bildung"
@@ -386,7 +527,7 @@
   },
   {
    "role": "EINORDNUNG",
-   "text": "Ja, so viele wie noch nie um diese Uhrzeit, sagt das Wahlkomitee.",
+   "text": "Ja, so viele wie noch nie um diese Uhrzeit seit Beginn der Messungen 1973, sagt das Wahlkomitee.",
    "story": "israel",
    "kind": "fakt",
    "facts": [

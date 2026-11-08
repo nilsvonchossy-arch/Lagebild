@@ -16,18 +16,52 @@ const FALLBACK_MODELS = new Set(['claude-opus-5-5', 'claude-sonnet-5-5']);
 
 export class RefusalError extends Error {}
 
-export interface UsageTotal { calls: number; input: number; output: number; cacheRead: number; cacheWrite: number; costUsd: number }
+export interface UsageTotal {
+  calls: number; input: number; output: number; cacheRead: number; cacheWrite: number; costUsd: number;
+  /** Aufrufe und Kosten je Modell, das tatsächlich geantwortet hat */
+  byModel: Record<string, { calls: number; costUsd: number }>;
+}
+
+export type Effort = 'low' | 'medium' | 'high';
+/** Schritte der Pipeline, die ein eigenes Modell bekommen können (config/pipeline.json, "steps") */
+export const STEPS = ['auswahl', 'fakten', 'hintergrund', 'faktencheck', 'drehbuch'] as const;
+export type Step = (typeof STEPS)[number];
+export interface ModelChoice { model: string; effort?: Effort }
 
 export class Claude {
-  readonly usage: UsageTotal = { calls: 0, input: 0, output: 0, cacheRead: 0, cacheWrite: 0, costUsd: 0 };
-  private readonly client = new Anthropic({ maxRetries: 4 });
+  readonly usage: UsageTotal;
+  private readonly lazy: { client?: Anthropic };
 
   readonly model: string;
-  readonly effort: 'low' | 'medium' | 'high';
+  readonly effort: Effort;
+  private readonly steps: Partial<Record<Step, ModelChoice>>;
 
-  constructor(model: string, effort: 'low' | 'medium' | 'high' = 'medium') {
+  /**
+   * `steps` legt für einzelne Schritte ein anderes Modell fest (z. B. Auswahl und Faktencheck auf Sonnet);
+   * alle anderen nehmen `model`. Kosten und Aufrufe aller Schritte landen im selben Zähler.
+   */
+  constructor(model: string, effort: Effort = 'medium', steps: Partial<Record<Step, ModelChoice>> = {}, shared?: { usage: UsageTotal; lazy: { client?: Anthropic } }) {
     this.model = model;
     this.effort = effort;
+    this.steps = steps;
+    this.usage = shared?.usage ?? { calls: 0, input: 0, output: 0, cacheRead: 0, cacheWrite: 0, costUsd: 0, byModel: {} };
+    this.lazy = shared?.lazy ?? {};
+  }
+
+  private get client(): Anthropic {
+    return (this.lazy.client ??= new Anthropic({ maxRetries: 4 }));
+  }
+
+  /** Dieselbe Verbindung und derselbe Kostenzähler, aber das Modell des Schritts. */
+  for(step: Step): Claude {
+    const c = this.steps[step];
+    if (!c || (c.model === this.model && (c.effort ?? this.effort) === this.effort)) return this;
+    return new Claude(c.model, c.effort ?? this.effort, {}, { usage: this.usage, lazy: this.lazy });
+  }
+
+  /** Welches Modell jeder Schritt nimmt (für meta.models und das Protokoll) */
+  models(): Record<Step, string> {
+    return Object.fromEntries(STEPS.map(s => [s, this.steps[s]?.model ?? this.model])) as Record<Step, string>;
   }
 
   /** Eine Anfrage mit festem System-Prompt (wird gecacht) und strukturierter Antwort; bei Formatfehlern ein zweiter Versuch. */
@@ -72,6 +106,10 @@ export class Claude {
     this.usage.output += output;
     this.usage.cacheRead += cacheRead;
     this.usage.cacheWrite += cacheWrite;
-    this.usage.costUsd += (input * pin + cacheWrite * pin * 1.25 + cacheRead * pcache + output * pout) / 1e6;
+    const cost = (input * pin + cacheWrite * pin * 1.25 + cacheRead * pcache + output * pout) / 1e6;
+    this.usage.costUsd += cost;
+    const m = (this.usage.byModel[servedBy] ??= { calls: 0, costUsd: 0 });
+    m.calls++;
+    m.costUsd += cost;
   }
 }

@@ -3,14 +3,22 @@
 //
 // Version 2: Eine Folge ist ein durchgehendes Drehbuch (script) mit drei Rollen. Fakten jeder Meldung
 // liegen einzeln und geprüft vor; jede Faktzeile im Drehbuch nennt die Fakten, auf denen sie beruht.
+// Version 3 (nur zusätzliche Felder): Format „fokus“, Hintergrund-Teil, mehrere Quellen, Art und Quelle
+// je Fakt, Zeitleiste, Akteure und Ursache-Wirkung-Kette. Tage mit Version 2 laufen unverändert weiter.
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
+/** Versionen, die die App abspielt (Version 3 ergänzt Version 2 nur um Felder) */
+export const SUPPORTED_SCHEMAS: readonly number[] = [2, 3];
 
 /** LEITUNG fragt und leitet über, LAGE berichtet, EINORDNUNG ordnet ein (Zuschreibungen, Vorbehalte). */
 export type Role = 'LEITUNG' | 'LAGE' | 'EINORDNUNG';
 
-/** Aufmacher 30–45 s, Meldung 15–25 s, Kurz notiert 5–10 s */
-export type Format = 'aufmacher' | 'meldung' | 'kurz';
+/** Aufmacher 30–45 s, Im Fokus 60–90 s (große Enthüllung, höchstens eins pro Folge), Meldung 15–25 s, Kurz notiert 5–10 s */
+export type Format = 'aufmacher' | 'fokus' | 'meldung' | 'kurz';
+
+/** Arten von Fakten; „hintergrund“ = Vorgeschichte, Akteure, Gründe */
+export const FACT_KINDS = ['kern', 'problem', 'ausblick', 'detail', 'zahl', 'zitat', 'vorbehalt', 'hintergrund', 'reaktion'] as const;
+export type FactKind = (typeof FACT_KINDS)[number];
 
 /** Lagezentrum: knapp; Podcast: locker; Assistent: persönlich wie ein Freund, mit Begrüßung */
 export type Tone = 'lagezentrum' | 'podcast' | 'assistent';
@@ -75,6 +83,35 @@ export interface Fact {
   /** z. B. "A3": Buchstabe der Meldung in der Folge, Nummer des Fakts */
   id: string;
   text: string;
+  /** Art des Fakts (ab Schema 3) */
+  kind?: FactKind;
+  /** Index der Quelle in story.sources (ab Schema 3; 0 = Hauptquelle) */
+  source?: number;
+}
+
+/** Eintrag der Zeitleiste „Vorgeschichte“. Die Zeitangabe steht wörtlich in einem der Fakten. */
+export interface TimelineEntry {
+  /** Zeitangabe wie im Fakt („2019“, „März 2024“, „7. Oktober 2023“) oder „heute“ für das aktuelle Ereignis */
+  date: string;
+  /** Was damals geschah, kurz */
+  label: string;
+  facts: string[];
+}
+
+/** Beteiligter mit seiner Position („Wer steht wo“); der Name steht wörtlich in einem der Fakten. */
+export interface Actor {
+  name: string;
+  /** Wer das ist, z. B. „Betreiber des Werks“ */
+  role: string;
+  /** Was er will oder sagt, mit Zuschreibung wie im Fakt; keine Einordnung in Lager */
+  position: string;
+  facts: string[];
+}
+
+/** Schritt einer Ursache-Wirkung-Kette; nur, wenn die Fakten den Zusammenhang ausdrücklich nennen. */
+export interface ChainStep {
+  label: string;
+  facts: string[];
 }
 
 /** Weiterer Ort einer Meldung; bekommt einen eigenen Pin, sobald er genannt wird */
@@ -156,15 +193,26 @@ export interface Story {
   /** „Kurz gesagt“ für Details und Endbildschirm */
   brief: string;
   figure?: Figure;
+  /** Hauptquelle (= sources[0], falls sources da ist) */
   source: Source;
+  /** Alle Quellen der Meldung, Hauptquelle zuerst (ab Schema 3) */
+  sources?: Source[];
+  /** Beruht auf einer eigenen Recherche eines Mediums (Enthüllung); redaktionelle Einschätzung, ab Schema 3 */
+  investigative?: boolean;
   /** Schlagwort für die Zusammenfassung am Ende */
   short: string;
   facts: Fact[];
+  /** Teil „Hintergrund“ bei Aufmacher und Fokus: IDs der Fakten mit Art „hintergrund“ (ab Schema 3) */
+  background?: { facts: string[] };
   /** Einblendungen: Symbol, Vergleich, Termin und Archivbilder erscheinen beim passenden Wort */
   symbol?: SymbolId;
   comparison?: Comparison;
   deadline?: Deadline;
   images?: ArchiveImage[];
+  /** Erklär-Einblendungen aus geprüften Fakten (ab Schema 3): Vorgeschichte, Wer steht wo, Ursache und Wirkung */
+  timeline?: TimelineEntry[];
+  actors?: Actor[];
+  chain?: ChainStep[];
 }
 
 export interface MarketItem {
@@ -206,9 +254,13 @@ export interface Briefing {
   script: Line[];
   /** Gemischte Audiodatei der Folge: src mit Musikbett, voice nur Stimmen (Pfade relativ zum Datenordner) */
   audio?: { src: string; voice: string; dur: number };
-  /** Wie das Update entstanden ist (Modell, Kosten in US-Dollar, Drehbuch von Claude oder einfache Fassung) */
-  meta?: { model: string; costUsd: number; script?: 'claude' | 'einfach' };
+  /** Wie das Update entstanden ist (Modell, Modell je Schritt, Kosten in US-Dollar, Drehbuch von Claude oder einfache Fassung) */
+  meta?: { model: string; models?: Record<string, string>; costUsd: number; script?: 'claude' | 'einfach' };
 }
+
+/** Kann die App diesen Tag abspielen? Version 2 und 3 (3 ergänzt nur Felder). */
+export const isPlayable = (b: { schema?: unknown; script?: unknown } | null | undefined): boolean =>
+  Boolean(b && typeof b.schema === 'number' && SUPPORTED_SCHEMAS.includes(b.schema) && Array.isArray(b.script));
 
 export interface DayIndex {
   schema: number;

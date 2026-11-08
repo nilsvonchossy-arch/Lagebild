@@ -1,7 +1,8 @@
-// Folge planen: welche Meldung Aufmacher, Meldung oder „Kurz notiert“ wird, wie viel Zeit sie bekommt
+// Folge planen: welche Meldung Aufmacher, Fokus, Meldung oder „Kurz notiert“ wird, wie viel Zeit sie bekommt
 // und in welcher Reihenfolge sie läuft. Ohne KI, damit es nachvollziehbar bleibt.
 // Regeln aus docs/video-analyse-conflictly.md, Abschnitt 10.3: Aufmacher 30–45 s, Meldung 15–25 s,
 // Kurz notiert 5–10 s; Tiefe nur, wenn die Quelle genug Fakten hergibt.
+// Dazu „Im Fokus“ (60–90 s) für große Enthüllungen und Meldungen mit Relevanz 5, höchstens einer pro Folge.
 import { geoDistance } from 'd3-geo';
 import type { Weight } from '../src/shared/config.ts';
 import type { Format } from '../src/shared/types.ts';
@@ -9,11 +10,13 @@ import type { Format } from '../src/shared/types.ts';
 export interface PlanInput {
   relevance: number;
   weight: Weight;
-  /** Anzahl geprüfter Fakten */
+  /** Anzahl geprüfter Fakten (mit Hintergrund-Fakten) */
   facts: number;
   lon: number;
   lat: number;
   minPerDay?: boolean;
+  /** Eigene Recherche eines Mediums (Enthüllung), geprüft gegen den Quelltext */
+  investigative?: boolean;
 }
 
 export interface PlanItem {
@@ -26,19 +29,35 @@ export interface PlanItem {
 
 const BONUS: Record<Weight, number> = { aus: -9, kurz: -1, normal: 0, ausfuehrlich: 1 };
 
-/** Wichtigkeit aus Relevanz und Gewichtung des Themas */
-export const score = (s: PlanInput): number => s.relevance + BONUS[s.weight] + (s.minPerDay ? 0.5 : 0);
+/** Wichtigkeit aus Relevanz und Gewichtung des Themas; Enthüllungen gehen bei gleicher Relevanz vor */
+export const score = (s: PlanInput): number => s.relevance + BONUS[s.weight] + (s.minPerDay ? 0.5 : 0) + (s.investigative ? 0.3 : 0);
 
 /** Feste Teile: Vorlauf, Zusammenfassung und Abschlussformel; Marktdaten; Frage und Pause je Meldung */
 export const OVERHEAD = { base: 14, markets: 13, perStory: 1.8 };
+
+/** Fokus braucht Stoff für 60 Sekunden: so viele geprüfte Fakten mindestens */
+export const FOKUS_MIN_FACTS = 9;
+/** Zeit, die nach einem eigenen Fokus-Block für weitere Meldungen bleiben soll */
+const FOKUS_RESERVE = 20;
+
+/** Große Enthüllung oder Meldung mit Relevanz 5, die vertieft werden darf und genug Stoff hat */
+export const fokusCandidate = (s: PlanInput): boolean =>
+  s.weight !== 'aus' && s.weight !== 'kurz' && s.facts >= FOKUS_MIN_FACTS && (s.relevance >= 5 || (Boolean(s.investigative) && s.relevance >= 4));
 
 /** Zielzeit eines Formats; ohne genug Fakten wird es kürzer („Tiefe braucht Stoff“). */
 export function targetSeconds(format: Format, s: PlanInput): number {
   const material = 6 + s.facts * 5.5;
   if (format === 'kurz') return 7;
+  if (format === 'fokus') return Math.round(Math.max(60, Math.min(material, s.weight === 'ausfuehrlich' ? 90 : 75)));
   if (format === 'aufmacher') return Math.round(Math.max(15, Math.min(material, s.weight === 'ausfuehrlich' && s.facts >= 7 ? 45 : 38)));
   return Math.round(Math.max(12, Math.min(material, s.weight === 'ausfuehrlich' && s.facts >= 5 ? 25 : 20)));
 }
+
+/** Ab dieser Relevanz bekommen große Meldungen einen Teil „Hintergrund“ */
+export const BACKGROUND_MIN_RELEVANCE = 4;
+
+/** Bekommt diese Meldung einen Teil „Hintergrund“? Aufmacher und Fokus mit Relevanz ab 4. */
+export const wantsBackground = (format: Format, relevance: number): boolean => (format === 'aufmacher' || format === 'fokus') && relevance >= BACKGROUND_MIN_RELEVANCE;
 
 const dist = (a: PlanInput, b: PlanInput): number => geoDistance([a.lon, a.lat], [b.lon, b.lat]);
 
@@ -68,13 +87,28 @@ export function planEpisode(input: PlanInput[], minutes: number, withMarkets: bo
 
   // Aufmacher: die wichtigste Meldung, die vertieft werden darf und genug Stoff hat
   const lead = order.find(i => input[i]!.weight !== 'kurz' && input[i]!.facts >= 4) ?? order.find(i => input[i]!.weight !== 'kurz') ?? order[0]!;
+  // Fokus: höchstens einer, die wichtigste große Enthüllung bzw. Meldung mit Relevanz 5
+  const fokus = order.find(i => fokusCandidate(input[i]!));
   const chosen = new Map<number, PlanItem>();
-  const leadFormat: Format = input[lead]!.weight === 'kurz' ? 'kurz' : 'aufmacher';
-  chosen.set(lead, { index: lead, format: leadFormat, seconds: targetSeconds(leadFormat, input[lead]!) });
+  const leadFormat: Format = input[lead]!.weight === 'kurz' ? 'kurz' : fokus === lead ? 'fokus' : 'aufmacher';
+  chosen.set(lead, { index: lead, format: leadFormat, seconds: Math.min(targetSeconds(leadFormat, input[lead]!), Math.max(15, budget - OVERHEAD.perStory)) });
   budget -= chosen.get(lead)!.seconds + OVERHEAD.perStory;
 
+  // Eigener Fokus-Block direkt nach dem Aufmacher, wenn die Zeit reicht
+  let fokusAfterLead: number | null = null;
+  if (fokus !== undefined && fokus !== lead) {
+    const sec = targetSeconds('fokus', input[fokus]!);
+    const room = budget - OVERHEAD.perStory - FOKUS_RESERVE;
+    if (room >= 60) {
+      const seconds = Math.min(sec, Math.floor(room));
+      chosen.set(fokus, { index: fokus, format: 'fokus', seconds });
+      budget -= seconds + OVERHEAD.perStory;
+      fokusAfterLead = fokus;
+    }
+  }
+
   for (const i of order) {
-    if (i === lead) continue;
+    if (chosen.has(i)) continue;
     const s = input[i]!;
     const wish: Format = s.weight === 'kurz' || s.facts < 3 || score(s) < 3 ? 'kurz' : 'meldung';
     for (const f of wish === 'meldung' ? (['meldung', 'kurz'] as const) : (['kurz'] as const)) {
@@ -87,11 +121,12 @@ export function planEpisode(input: PlanInput[], minutes: number, withMarkets: bo
     }
   }
 
+  const head = fokusAfterLead === null ? [lead] : [lead, fokusAfterLead];
   const main = [...chosen.values()].filter(p => p.format === 'meldung').map(p => p.index);
-  const kurz = [...chosen.values()].filter(p => p.format === 'kurz' && p.index !== lead).map(p => p.index);
-  const mainRoute = route(main, input, input[lead]!);
-  const last = mainRoute.length ? input[mainRoute[mainRoute.length - 1]!]! : input[lead]!;
-  const sequence = [lead, ...mainRoute, ...route(kurz, input, last)];
+  const kurz = [...chosen.values()].filter(p => p.format === 'kurz' && !head.includes(p.index)).map(p => p.index);
+  const mainRoute = route(main, input, input[head[head.length - 1]!]!);
+  const last = mainRoute.length ? input[mainRoute[mainRoute.length - 1]!]! : input[head[head.length - 1]!]!;
+  const sequence = [...head, ...mainRoute, ...route(kurz, input, last)];
   return {
     items: sequence.map(i => chosen.get(i)!),
     dropped: order.filter(i => !chosen.has(i))

@@ -92,12 +92,17 @@ export function subtitleBlocks(text: string, min = 6, max = 10): Block[] {
 export interface Cue {
   /** Anteil am Text, an dem das Wort beginnt */
   at: number;
-  kind: 'figure' | 'place' | 'comparison' | 'deadline' | 'image';
+  kind: 'figure' | 'place' | 'comparison' | 'deadline' | 'image' | 'timeline' | 'actors' | 'chain';
   /** Index in story.places */
   place?: number;
   /** Index in story.images */
   image?: number;
+  /** Index des Eintrags in story.timeline, story.actors oder story.chain (hebt ihn hervor) */
+  index?: number;
 }
+
+/** Einblendungen, die eine Meldung als „hat eine Grafik“ zählen (sonst zeigt sie ihr Symbol) */
+export const VISUAL_CUES: ReadonlySet<Cue['kind']> = new Set(['comparison', 'deadline', 'image', 'timeline', 'actors', 'chain']);
 
 /** Schreibweisen einer Zahl im Text: 55,7 · 2.000 und 2000 · 28 */
 export function numberVariants(value: number, dec: number): string[] {
@@ -136,14 +141,42 @@ export function deadlinePattern(d: { time?: string; date?: string }): RegExp | n
   return alts.length ? new RegExp(`(?<![\\d])(?:${alts.join('|')})`, 'i') : null;
 }
 
-type CueStory = Pick<Story, 'figure' | 'places' | 'comparison' | 'deadline' | 'images'>;
+/** Zeitangaben für das aktuelle Ereignis in der Zeitleiste („heute“); sie lösen keine Einblendung aus. */
+export const NOW_DATE = /^(heute|jetzt|aktuell|derzeit|zuletzt)$/i;
+
+/** Muster für die Zeitangabe eines Zeitleisten-Eintrags: wörtlich, sonst die Jahreszahl darin; „heute“ hat keins. */
+export function timelinePattern(date: string): RegExp | null {
+  const d = date.trim();
+  if (!d || NOW_DATE.test(d)) return null;
+  const alts = [esc(d).replace(/\s+/g, '\\s+')];
+  const y = /(?<!\d)(1\d{3}|20\d{2})(?!\d)/.exec(d);
+  if (y && y[1] !== d) alts.push(y[1]!);
+  return new RegExp(`(?<![\\p{L}\\p{N}])(?:${alts.join('|')})(?!\\p{N})`, 'iu');
+}
+
+/** Muster für den Namen eines Akteurs: ganz, bei mehreren Wörtern auch das letzte („Eisenkot“ für „Gadi Eisenkot“). */
+export function actorPattern(name: string): RegExp | null {
+  const n = name.trim();
+  if (!n) return null;
+  const parts = n.split(/\s+/);
+  const last = parts[parts.length - 1]!;
+  const alts = [esc(n).replace(/\s+/g, '\\s+')];
+  if (parts.length > 1 && last.length >= 4) alts.push(esc(last));
+  return new RegExp(`(?<![\\p{L}\\p{N}])(?:${alts.join('|')})`, 'iu');
+}
+
+const shares = (a: string[] | undefined, b: string[] | undefined): boolean => Boolean(a?.length && b?.some(x => a.includes(x)));
+
+type CueStory = Pick<Story, 'figure' | 'places' | 'comparison' | 'deadline' | 'images' | 'timeline' | 'actors' | 'chain'>;
 
 /**
  * Wo in einer Zeile die Zahl, ein weiterer Ort, ein Vergleichswert, ein Termin oder ein Bildmotiv genannt wird.
  * Der Vergleich erscheint beim Vergleichswert; nur mit `comparisonAtFigure` (der Dialog nennt keinen
  * anderen Wert) auch bei der Hauptzahl.
+ * Zeitleiste und Akteure erscheinen bei Zeitangabe oder Namen; nennt die Zeile ihn nicht, aber stützt sich
+ * auf einen ihrer Fakten, am Zeilenanfang. Die Ursache-Wirkung-Kette erscheint mit der Ursache (erster Schritt).
  */
-export function cuesFor(story: CueStory, line: Pick<Line, 'text'>, opts: { comparisonAtFigure?: boolean } = {}): Cue[] {
+export function cuesFor(story: CueStory, line: Pick<Line, 'text'> & { facts?: string[] }, opts: { comparisonAtFigure?: boolean } = {}): Cue[] {
   const text = line.text;
   const cues: Cue[] = [];
   const at = (i: number): number => i / text.length;
@@ -176,6 +209,25 @@ export function cuesFor(story: CueStory, line: Pick<Line, 'text'>, opts: { compa
     const m = new RegExp(`(?<![\\p{L}])${esc(name)}`, 'iu').exec(text);
     if (m) cues.push({ at: at(m.index), kind: 'image', image: k });
   });
+  story.timeline?.forEach((e, k) => {
+    const re = timelinePattern(e.date);
+    if (!re) return;
+    const m = re.exec(text);
+    if (m) cues.push({ at: at(m.index), kind: 'timeline', index: k });
+    else if (shares(e.facts, line.facts)) cues.push({ at: 0, kind: 'timeline', index: k });
+  });
+  story.actors?.forEach((a, k) => {
+    const m = actorPattern(a.name)?.exec(text);
+    if (m) cues.push({ at: at(m.index), kind: 'actors', index: k });
+    else if (shares(a.facts, line.facts)) cues.push({ at: 0, kind: 'actors', index: k });
+  });
+  // Die Kette erscheint, wenn die Ursache (erster Schritt) erzählt wird, und läuft dann selbst bis zur Wirkung durch
+  const cause = story.chain?.[0];
+  if (cause && story.chain!.length >= 2) {
+    const i = text.toLowerCase().indexOf(cause.label.toLowerCase());
+    if (i >= 0) cues.push({ at: at(i), kind: 'chain' });
+    else if (shares(cause.facts, line.facts)) cues.push({ at: 0, kind: 'chain' });
+  }
   return cues.sort((a, b) => a.at - b.at);
 }
 
@@ -223,6 +275,8 @@ export interface ToneText {
   next: string[];
   /** Vor dem Block „Kurz notiert“ */
   more: string;
+  /** Frage vor dem Hintergrund-Teil (einfache Fassung) */
+  background: string;
 }
 
 export const TONE_TEXT: Record<Tone, ToneText> = {
@@ -231,14 +285,16 @@ export const TONE_TEXT: Record<Tone, ToneText> = {
     closing: [['LEITUNG', 'Das ist die Lage.'], ['LAGE', 'Wir bleiben dran.']],
     markets: 'Und die Märkte?',
     next: ['Was noch?', 'Weiter.', 'Nächster Punkt?'],
-    more: 'Was noch?'
+    more: 'Was noch?',
+    background: 'Wie kam es dazu?'
   },
   podcast: {
     summary: 'Das Wichtigste:',
     closing: [['LEITUNG', 'Das war es für heute.'], ['LAGE', 'Bis morgen!']],
     markets: 'Und was machen die Märkte?',
     next: ['Okay, was noch?', 'Und dann?', 'Was gibt es noch?'],
-    more: 'Und sonst?'
+    more: 'Und sonst?',
+    background: 'Und wie kam es dazu?'
   },
   // Persönlich wie ein Freund: Vorschau in der Begrüßung statt Zusammenfassung am Ende
   assistent: {
@@ -246,7 +302,8 @@ export const TONE_TEXT: Record<Tone, ToneText> = {
     closing: [['LEITUNG', 'Das war\'s für heute{name}. Ich halt dich auf dem Laufenden.'], ['LAGE', 'Bis morgen!']],
     markets: 'Und an den Börsen?',
     next: ['Was gibt\'s noch?', 'Weiter geht\'s.', 'Und sonst?'],
-    more: 'Und sonst so?'
+    more: 'Und sonst so?',
+    background: 'Und wie kam es dazu?'
   }
 };
 
